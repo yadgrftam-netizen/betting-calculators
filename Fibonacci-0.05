@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fibonacci Calculator</title>
+<style>
+    body { font-family: sans-serif; text-align: center; padding-top: 40px; }
+    button { font-size: 22px; padding: 15px 40px; margin: 10px; }
+    #bet, #loss { font-size: 26px; margin: 20px; }
+</style>
+</head>
+<body>
+
+<h2>Fibonacci Calculator</h2>
+
+<div id="bet">Next Bet: 0.05</div>
+<div id="loss">Total: 0.00</div>
+
+<button onclick="win()">win</button>
+<button onclick="lost()">lost</button>
+
+<script>
+    let fibo = [
+        0.05, 0.05, 0.10, 0.20, 0.30,
+        0.50, 0.80, 1.30, 2.10, 3.40,
+        5.50, 8.90, 14.40, 23.30, 37.70,
+        61.00, 98.70, 159.70, 258.40, 418.10
+    ];
+
+    let step = 1;
+    let totalLoss = 0;
+
+    function update() {
+        let bet = fibo[step - 1].toFixed(2);
+        document.getElementById("bet").innerText = "Next Bet: " + bet;
+        document.getElementById("loss").innerText = "Total: " + totalLoss.toFixed(2);
+    }
+
+    function lost() {
+        totalLoss += fibo[step - 1];
+        step++;
+        if (step > fibo.length) step = fibo.length;
+        update();
+    }
+
+    function win() {
+        step -= 2;
+        if (step < 1) step = 1;
+        update();
+    }
+
+    update();
+</script>
+
+</body>
+</html>

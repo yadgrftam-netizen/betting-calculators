@@ -3,150 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <title>Betting Calculators</title>
+
 <style>
-    body { font-family: sans-serif; text-align: center; padding-top: 30px; }
-    button { font-size: 20px; padding: 12px 30px; margin: 10px; cursor: pointer; }
-    #bet, #loss { font-size: 24px; margin: 15px; }
-    input, select { font-size: 18px; padding: 8px; margin: 10px; }
-    .box { display: none; border: 1px solid #ccc; padding: 20px; margin-top: 20px; border-radius: 10px; }
+  body.light {
+    background: #ffffff;
+    color: #000000;
+  }
+  body.dark {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .theme-btn {
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #dayBtn { background: #f0c040; }
+  #nightBtn { background: #333; color: white; }
+
+  .link-box {
+    margin-top: 30px;
+    padding: 20px;
+    background: #eee;
+    border-radius: 10px;
+  }
+
+  a {
+    display: block;
+    margin: 10px 0;
+    font-size: 18px;
+    text-decoration: none;
+    color: #0077cc;
+  }
+
+  /* Total text bigger */
+  #total {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
+  #winBtn {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+  }
 </style>
 </head>
-<body>
+
+<body class="light">
 
 <h2>Betting Calculators</h2>
 
-<!-- SWITCH BUTTONS -->
-<button onclick="showCalc('martingale')">Martingale</button>
-<button onclick="showCalc('fibonacci')">Fibonacci</button>
+<!-- Theme buttons -->
+<button id="dayBtn" class="theme-btn">Day Mode</button>
+<button id="nightBtn" class="theme-btn">Night Mode</button>
 
-<!-- MARTINGALE BOX -->
-<div id="martingale" class="box">
-    <h3>Martingale Calculator</h3>
+<!-- Total + Win -->
+<p id="total">Total: 0</p>
+<button id="winBtn">Win</button>
 
-    <input id="m_baseInput" type="number" step="0.01" placeholder="Enter Base Amount">
-    <select id="m_currency">
-        <option value="usd.ttr">usd.ttr</option>
-        <option value="tron.trx">tron.trx</option>
-        <option value="ir.toman">ir.toman</option>
-        <option value="ir.rial">ir.rial</option>
-    </select>
-    <button onclick="m_setBase()">Set Base</button>
-
-    <div id="m_bet">Next Bet: 0.00</div>
-    <div id="m_loss">Total: 0.00</div>
-
-    <button onclick="m_win()">win</button>
-    <button onclick="m_lost()">lost</button>
-</div>
-
-<!-- FIBONACCI BOX -->
-<div id="fibonacci" class="box">
-    <h3>Fibonacci Calculator</h3>
-
-    <input id="f_baseInput" type="number" step="0.01" placeholder="Enter Base Amount">
-    <select id="f_currency">
-        <option value="usd.ttr">usd.ttr</option>
-        <option value="tron.trx">tron.trx</option>
-        <option value="ir.toman">ir.toman</option>
-        <option value="ir.rial">ir.rial</option>
-    </select>
-    <button onclick="f_setBase()">Set Base</button>
-
-    <div id="f_bet">Next Bet: 0.00</div>
-    <div id="f_loss">Total: 0.00</div>
-
-    <button onclick="f_win()">win</button>
-    <button onclick="f_lost()">lost</button>
+<!-- Calculator links -->
+<div class="link-box">
+  <a href="martingale.html">Martingale Calculator</a>
+  <a href="fibonacci.html">Fibonacci Calculator</a>
 </div>
 
 <script>
-/* SWITCH VIEW */
-function showCalc(name) {
-    document.getElementById("martingale").style.display = "none";
-    document.getElementById("fibonacci").style.display = "none";
-    document.getElementById(name).style.display = "block";
-}
+  /* Theme switching */
+  const dayBtn = document.getElementById("dayBtn");
+  const nightBtn = document.getElementById("nightBtn");
 
-/* ---------------- MARTINGALE ---------------- */
+  dayBtn.onclick = () => {
+    document.body.className = "light";
+    dayBtn.style.display = "none";
+    nightBtn.style.display = "inline-block";
+  };
 
-let m_base = 0.05;
-let m_currency = "usd.ttr";
-let m_lossStreak = 0;
-let m_totalLoss = 0;
+  nightBtn.onclick = () => {
+    document.body.className = "dark";
+    nightBtn.style.display = "none";
+    dayBtn.style.display = "inline-block";
+  };
 
-function m_currentBet() {
-    return m_base * Math.pow(2, m_lossStreak);
-}
+  /* Total + Win logic */
+  let total = 0;
 
-function m_setBase() {
-    let val = parseFloat(document.getElementById("m_baseInput").value);
-    if (!isNaN(val) && val > 0) m_base = val;
-    m_currency = document.getElementById("m_currency").value;
-    m_update();
-}
-
-function m_update() {
-    let bet = m_currentBet().toFixed(2);
-    document.getElementById("m_bet").innerText = "Next Bet: " + bet + " " + m_currency;
-    document.getElementById("m_loss").innerText = "Total: " + m_totalLoss.toFixed(2) + " " + m_currency;
-}
-
-function m_lost() {
-    m_totalLoss += m_currentBet();
-    m_lossStreak++;
-    m_update();
-}
-
-function m_win() {
-    m_lossStreak = 0;
-    m_update();
-}
-
-m_update();
-
-/* ---------------- FIBONACCI ---------------- */
-
-let f_base = 0.05;
-let f_currency = "usd.ttr";
-
-let f_fibo = [
-    1,1,2,3,5,
-    8,13,21,34,55,
-    89,144,233,377,610,
-    987,1597,2584,4181,6765
-];
-
-let f_step = 1;
-let f_totalLoss = 0;
-
-function f_setBase() {
-    let val = parseFloat(document.getElementById("f_baseInput").value);
-    if (!isNaN(val) && val > 0) f_base = val;
-    f_currency = document.getElementById("f_currency").value;
-    f_update();
-}
-
-function f_update() {
-    let bet = (f_base * f_fibo[f_step - 1]).toFixed(2);
-    document.getElementById("f_bet").innerText = "Next Bet: " + bet + " " + f_currency;
-    document.getElementById("f_loss").innerText = "Total: " + f_totalLoss.toFixed(2) + " " + f_currency;
-}
-
-function f_lost() {
-    f_totalLoss += f_base * f_fibo[f_step - 1];
-    f_step++;
-    if (f_step > f_fibo.length) f_step = f_fibo.length;
-    f_update();
-}
-
-function f_win() {
-    f_step -= 2;
-    if (f_step < 1) f_step = 1;
-    f_update();
-}
-
-f_update();
+  document.getElementById("winBtn").onclick = () => {
+    total = 0;
+    document.getElementById("total").innerText = "Total: 0";
+  };
 </script>
 
 </body>
-  </html>
+</html>

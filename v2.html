@@ -70,7 +70,6 @@
   #winBtn { background: #28a745; color: white; }
   #lostBtn { background: #dc3545; color: white; }
 
-  /* دکمه‌های افقی */
   #buttonRow {
     display: flex;
     gap: 10px;
@@ -81,7 +80,6 @@
     flex: 1;
   }
 
-  /* ⭐ چیدمان افقی سه بخش بالا */
   #topRow {
     display: flex;
     gap: 10px;
@@ -97,9 +95,7 @@
 
 <body class="light">
 
-<h2>Betting Calculator</h2>
-
-<!-- ⭐ سه بخش افقی -->
+<!-- سه بخش افقی -->
 <div id="topRow">
   <select id="calcType">
     <option value="martingale">Martingale</option>
@@ -123,9 +119,8 @@
   <span id="nextBet">Next Bet: 0.05</span>
 </div>
 
-<p id="total">Total: 0</p>
+<p id="total">Total Loss: 0</p>
 
-<!-- دکمه‌های افقی -->
 <div id="buttonRow">
   <button id="winBtn">Win</button>
   <button id="lostBtn">Loss</button>
@@ -174,7 +169,7 @@
 
   function updateDisplay(bet) {
     nextBetText.innerText = "Next Bet: " + currency.value + " " + formatNumber(bet);
-    totalText.innerText = "Total: " + currency.value + " " + formatNumber(total);
+    totalText.innerText = "Total Loss: " + currency.value + " " + formatNumber(total);
   }
 
   function resetAll() {
@@ -274,4 +269,4 @@
 </script>
 
 </body>
-</html>
+  </html>

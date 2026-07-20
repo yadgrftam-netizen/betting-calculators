@@ -15,7 +15,6 @@
   @media (max-width: 600px) {
     body { padding: 10px; font-size: 16px; }
     button, select, input { width: 100%; margin-top: 10px; }
-    #nextBetBox { flex-direction: column; align-items: flex-start; }
   }
 
   body.light { background: #ffffff; color: #000000; }
@@ -37,15 +36,6 @@
     margin-top: 15px;
     border-radius: 8px;
     width: 100%;
-  }
-
-  #total, #nextBetBox {
-    font-size: 28px;
-    font-weight: bold;
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
   }
 
   #copyBtn {
@@ -70,16 +60,7 @@
   #winBtn { background: #28a745; color: white; }
   #lostBtn { background: #dc3545; color: white; }
 
-  #buttonRow {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-  }
-  #buttonRow button {
-    flex: 1;
-  }
-
+  /* سه بخش بالا افقی */
   #topRow {
     display: flex;
     gap: 10px;
@@ -90,12 +71,46 @@
   #topRow input {
     flex: 1;
   }
+
+  /* ارز + Night Mode افقی کنار هم */
+  #currencyRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  #currencyRow select {
+    flex: 1;
+  }
+
+  /* Next Bet + Copy افقی */
+  #nextBetRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  /* Total Loss + Win/Loss افقی */
+  #totalRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 24px;
+    font-weight: bold;
+  }
 </style>
 </head>
 
 <body class="light">
 
-<!-- سه بخش افقی -->
+<!-- سه بخش افقی بالا -->
 <div id="topRow">
   <select id="calcType">
     <option value="martingale">Martingale</option>
@@ -106,26 +121,31 @@
   </select>
 
   <input id="baseBet" type="number" step="0.01" value="0.05" placeholder="Enter base bet">
+</div>
 
+<!-- ارز + Night Mode افقی -->
+<div id="currencyRow">
   <select id="currency">
     <option value="USDT">USDT - Tether</option>
     <option value="TRX">TRX - Tron</option>
     <option value="Toman">IR - Toman</option>
     <option value="Rial">IR - Rial</option>
   </select>
+
+  <button id="themeToggle">Night Mode</button>
 </div>
 
-<div id="nextBetBox">
-  <span id="nextBet">Next Bet: 0.05</span>
+<!-- Next Bet + Copy افقی -->
+<div id="nextBetRow">
+  <span id="nextBet">Next Bet: USDT 0.05</span>
+  <button id="copyBtn">Copy</button>
 </div>
 
-<p id="total">Total Loss: 0</p>
-
-<div id="buttonRow">
+<!-- Total Loss + Win/Loss افقی -->
+<div id="totalRow">
+  <span id="total">Total Loss: USDT 0.00</span>
   <button id="winBtn">Win</button>
   <button id="lostBtn">Loss</button>
-  <button id="themeToggle">Night Mode</button>
-  <button id="copyBtn">Copy</button>
 </div>
 
 <script>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Betting Calculator</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; font-size: 16px; }
+    button, select, input { width: 100%; margin-top: 10px; }
+  }
+
+  body.light { background: #ffffff; color: #000000; }
+  body.dark { background: #1a1a1a; color: #ffffff; }
+
+  #themeToggle {
+    padding: 10px 20px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    background: #444;
+    color: white;
+  }
+
+  select, input {
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 15px;
+    border-radius: 8px;
+    width: 100%;
+  }
+
+  #total, #nextBet {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
+  #winBtn, #lostBtn {
+    padding: 10px 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+  }
+
+  #winBtn { background: #28a745; color: white; }
+  #lostBtn { background: #dc3545; color: white; }
+</style>
+</head>
+
+<body class="light">
+
+<h2>Betting Calculator</h2>
+
+<button id="themeToggle">Night Mode</button>
+
+<select id="calcType">
+  <option value="martingale">Martingale</option>
+  <option value="fibonacci">Fibonacci</option>
+</select>
+
+<select id="currency">
+  <option value="$">$ - Dollar</option>
+  <option value="TRX">TRX - Tron</option>
+  <option value="Toman">IR - Toman</option>
+  <option value="Rial">IR - Rial</option>
+</select>
+
+<input id="baseBet" type="number" step="0.01" value="0.05" placeholder="Enter base bet">
+
+<p id="nextBet">Next Bet: 0.05</p>
+<p id="total">Total: 0</p>
+
+<button id="winBtn">Win</button>
+<button id="lostBtn">Lost</button>
+
+<script>
+  const themeToggle = document.getElementById("themeToggle");
+  themeToggle.onclick = () => {
+    if (document.body.className === "light") {
+      document.body.className = "dark";
+      themeToggle.innerText = "Day Mode";
+    } else {
+      document.body.className = "light";
+      themeToggle.innerText = "Night Mode";
+    }
+  };
+
+  let total = 0;
+
+  const nextBetText = document.getElementById("nextBet");
+  const totalText = document.getElementById("total");
+  const calcType = document.getElementById("calcType");
+  const currency = document.getElementById("currency");
+  const baseBetInput = document.getElementById("baseBet");
+
+  let fibPrev = 0.05;
+  let fibBeforePrev = 0.05;
+
+  function formatNumber(num) {
+    if (currency.value === "Toman" || currency.value === "Rial") {
+      return Math.round(num);
+    }
+    return num.toFixed(2);
+  }
+
+  function updateDisplay(bet) {
+    nextBetText.innerText = "Next Bet: " + currency.value + " " + formatNumber(bet);
+    totalText.innerText = "Total: " + currency.value + " " + formatNumber(total);
+  }
+
+  /* ⭐ اصلاح کامل بخش Win */
+  document.getElementById("winBtn").onclick = () => {
+    total = 0;
+
+    let base = parseFloat(baseBetInput.value);
+
+    fibPrev = base;
+    fibBeforePrev = base;
+
+    updateDisplay(base);
+  };
+
+  document.getElementById("lostBtn").onclick = () => {
+    let base = parseFloat(baseBetInput.value);
+    let bet = base;
+
+    if (calcType.value === "martingale") {
+      bet = bet * 2;
+    }
+
+    else if (calcType.value === "fibonacci") {
+      let nextFib = fibPrev + fibBeforePrev;
+      fibBeforePrev = fibPrev;
+      fibPrev = nextFib;
+      bet = nextFib;
+    }
+
+    total += bet;
+
+    baseBetInput.value = formatNumber(bet);
+
+    updateDisplay(bet);
+  };
+
+  updateDisplay(parseFloat(baseBetInput.value));
+</script>
+
+</body>
+</html>

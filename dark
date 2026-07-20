@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Betting Calculators</title>
+
+<style>
+  body.light {
+    background: #ffffff;
+    color: #000000;
+  }
+  body.dark {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .theme-btn {
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #dayBtn { background: #f0c040; }
+  #nightBtn { background: #333; color: white; }
+
+  .link-box {
+    margin-top: 30px;
+    padding: 20px;
+    background: #eee;
+    border-radius: 10px;
+  }
+
+  a {
+    display: block;
+    margin: 10px 0;
+    font-size: 18px;
+    text-decoration: none;
+    color: #0077cc;
+  }
+
+  /* Total text bigger */
+  #total {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
+  #winBtn {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+</style>
+</head>
+
+<body class="light">
+
+<h2>Betting Calculators</h2>
+
+<!-- Theme buttons -->
+<button id="dayBtn" class="theme-btn">Day Mode</button>
+<button id="nightBtn" class="theme-btn">Night Mode</button>
+
+<!-- Total + Win -->
+<p id="total">Total: 0</p>
+<button id="winBtn">Win</button>
+
+<!-- Calculator links -->
+<div class="link-box">
+  <a href="martingale.html">Martingale Calculator</a>
+  <a href="fibonacci.html">Fibonacci Calculator</a>
+</div>
+
+<script>
+  /* Theme switching */
+  const dayBtn = document.getElementById("dayBtn");
+  const nightBtn = document.getElementById("nightBtn");
+
+  dayBtn.onclick = () => {
+    document.body.className = "light";
+    dayBtn.style.display = "none";
+    nightBtn.style.display = "inline-block";
+  };
+
+  nightBtn.onclick = () => {
+    document.body.className = "dark";
+    nightBtn.style.display = "none";
+    dayBtn.style.display = "inline-block";
+  };
+
+  /* Total + Win logic */
+  let total = 0;
+
+  document.getElementById("winBtn").onclick = () => {
+    total = 0;
+    document.getElementById("total").innerText = "Total: 0";
+  };
+</script>
+
+</body>
+</html>

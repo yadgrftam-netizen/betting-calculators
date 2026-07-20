@@ -80,6 +80,18 @@
   #buttonRow button {
     flex: 1;
   }
+
+  /* ⭐ چیدمان افقی سه بخش بالا */
+  #topRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  #topRow select,
+  #topRow input {
+    flex: 1;
+  }
 </style>
 </head>
 
@@ -87,22 +99,25 @@
 
 <h2>Betting Calculator</h2>
 
-<select id="calcType">
-  <option value="martingale">Martingale</option>
-  <option value="fibonacci">Fibonacci</option>
-  <option value="dalembert">D'Alembert</option>
-  <option value="oscar">Oscar's Grind</option>
-  <option value="labouchere">Labouchere</option>
-</select>
+<!-- ⭐ سه بخش افقی -->
+<div id="topRow">
+  <select id="calcType">
+    <option value="martingale">Martingale</option>
+    <option value="fibonacci">Fibonacci</option>
+    <option value="dalembert">D'Alembert</option>
+    <option value="oscar">Oscar's Grind</option>
+    <option value="labouchere">Labouchere</option>
+  </select>
 
-<select id="currency">
-  <option value="USDT">USDT - Tether</option>
-  <option value="TRX">TRX - Tron</option>
-  <option value="Toman">IR - Toman</option>
-  <option value="Rial">IR - Rial</option>
-</select>
+  <input id="baseBet" type="number" step="0.01" value="0.05" placeholder="Enter base bet">
 
-<input id="baseBet" type="number" step="0.01" value="0.05" placeholder="Enter base bet">
+  <select id="currency">
+    <option value="USDT">USDT - Tether</option>
+    <option value="TRX">TRX - Tron</option>
+    <option value="Toman">IR - Toman</option>
+    <option value="Rial">IR - Rial</option>
+  </select>
+</div>
 
 <div id="nextBetBox">
   <span id="nextBet">Next Bet: 0.05</span>

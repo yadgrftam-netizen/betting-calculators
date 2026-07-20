@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Martingale Calculator</title>
+<style>
+    body { font-family: sans-serif; text-align: center; padding-top: 40px; }
+    button { font-size: 22px; padding: 15px 40px; margin: 10px; }
+    #bet, #loss { font-size: 26px; margin: 20px; }
+</style>
+</head>
+<body>
+
+<h2>Martingale Calculator</h2>
+
+<div id="bet">Next Bet: 0.05</div>
+<div id="loss">Total: 0.00</div>
+
+<button onclick="win()">win</button>
+<button onclick="lost()">lost</button>
+
+<script>
+    let base = 0.05;
+    let lossStreak = 0;
+    let totalLoss = 0;
+
+    function currentBet() {
+        return base * Math.pow(2, lossStreak);
+    }
+
+    function update() {
+        let bet = currentBet().toFixed(2);
+        document.getElementById("bet").innerText = "Next Bet: " + bet;
+        document.getElementById("loss").innerText = "Total: " + totalLoss.toFixed(2);
+    }
+
+    function lost() {
+        totalLoss += currentBet();
+        lossStreak++;
+        update();
+    }
+
+    function win() {
+        lossStreak = 0;
+        update();
+    }
+
+    update();
+</script>
+
+</body>
+</html>

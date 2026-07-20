@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Betting Calculators</title>
+
+<style>
+  body.light { background: #ffffff; color: #000000; }
+  body.dark { background: #1a1a1a; color: #ffffff; }
+
+  .theme-btn {
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #dayBtn { background: #f0c040; }
+  #nightBtn { background: #333; color: white; }
+
+  #total {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+
+  #winBtn, #lostBtn {
+    padding: 10px 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #winBtn { background: #28a745; color: white; }
+  #lostBtn { background: #dc3545; color: white; }
+
+  select {
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 20px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+
+<body class="light">
+
+<h2>Betting Calculators</h2>
+
+<!-- Theme buttons -->
+<button id="dayBtn" class="theme-btn">Day Mode</button>
+<button id="nightBtn" class="theme-btn">Night Mode</button>
+
+<!-- Dropdown -->
+<select id="calcType">
+  <option value="martingale">Martingale</option>
+  <option value="fibonacci">Fibonacci</option>
+</select>
+
+<!-- Display -->
+<p id="nextBet">Next Bet: 0.05</p>
+<p id="total">Total: 0</p>
+
+<button id="winBtn">Win</button>
+<button id="lostBtn">Lost</button>
+
+<script>
+  /* Theme switching */
+  const dayBtn = document.getElementById("dayBtn");
+  const nightBtn = document.getElementById("nightBtn");
+
+  dayBtn.onclick = () => {
+    document.body.className = "light";
+    dayBtn.style.display = "none";
+    nightBtn.style.display = "inline-block";
+  };
+
+  nightBtn.onclick = () => {
+    document.body.className = "dark";
+    nightBtn.style.display = "none";
+    dayBtn.style.display = "inline-block";
+  };
+
+  /* Calculator logic */
+  let total = 0;
+  let bet = 0.05;
+
+  const nextBetText = document.getElementById("nextBet");
+  const totalText = document.getElementById("total");
+  const calcType = document.getElementById("calcType");
+
+  function updateDisplay() {
+    nextBetText.innerText = "Next Bet: " + bet.toFixed(2);
+    totalText.innerText = "Total: " + total.toFixed(2);
+  }
+
+  document.getElementById("winBtn").onclick = () => {
+    total = 0;
+    bet = 0.05;
+    updateDisplay();
+  };
+
+  document.getElementById("lostBtn").onclick = () => {
+    if (calcType.value === "martingale") {
+      bet = bet * 2;
+    } else if (calcType.value === "fibonacci") {
+      bet = bet + 0.05;
+    }
+    total += bet;
+    updateDisplay();
+  };
+
+  updateDisplay();
+</script>
+
+</body>
+</html>

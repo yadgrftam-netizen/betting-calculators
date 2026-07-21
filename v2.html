@@ -104,7 +104,6 @@
     <option value="labouchere">Labouchere</option>
   </select>
 
-  <!-- مقدار پایه از 0.05 به 0.01 تغییر کرد -->
   <input id="baseBet" type="number" step="0.01" value="0.01" placeholder="Enter base bet">
 
   <select id="currency">
@@ -190,6 +189,18 @@
   }
 
   baseBetInput.addEventListener("input", resetAll);
+
+  /* -------------------------
+     🔥 Event Listener جدید
+     ------------------------- */
+  currency.addEventListener("change", () => {
+    if (currency.value === "Toman" || currency.value === "Rial") {
+      baseBetInput.value = 1;
+    } else {
+      baseBetInput.value = 0.01;
+    }
+    resetAll();
+  });
 
   document.getElementById("winBtn").onclick = () => {
     let base = parseFloat(baseBetInput.value) || 0;

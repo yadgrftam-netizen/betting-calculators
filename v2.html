@@ -161,7 +161,7 @@
 
   function formatNumber(num) {
     if (currency.value === "Toman" || currency.value === "Rial") {
-      return Math.round(num);
+      return Math.ceil(num); // اصلاح: گرد کردن رو به بالا برای IR
     }
     return num.toFixed(2);
   }
@@ -190,9 +190,7 @@
 
   baseBetInput.addEventListener("input", resetAll);
 
-  /* -------------------------
-     🔥 Event Listener جدید
-     ------------------------- */
+  // تغییر ارز و تنظیم پایه
   currency.addEventListener("change", () => {
     if (currency.value === "Toman" || currency.value === "Rial") {
       baseBetInput.value = 1;
@@ -286,4 +284,4 @@
 </script>
 
 </body>
-</html>
+  </html>

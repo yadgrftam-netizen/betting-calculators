@@ -1,207 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Betting Calculator</title>
-
-<style>
-  body {
-    margin: 0;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-
-  @media (max-width: 600px) {
-    body { padding: 10px; font-size: 16px; }
-    button, select, input { width: 100%; margin-top: 10px; }
-    #copyBtn { width: 100%; margin-top: 10px; }
-    #nextBetBox { flex-direction: column; align-items: flex-start; }
-  }
-
-  body.light { background: #ffffff; color: #000000; }
-  body.dark { background: #1a1a1a; color: #ffffff; }
-
-  #themeToggle {
-    padding: 10px 20px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    background: #444;
-    color: white;
-  }
-
-  select, input {
-    padding: 10px;
-    font-size: 16px;
-    margin-top: 15px;
-    border-radius: 8px;
-    width: 100%;
-  }
-
-  #total, #nextBetBox {
-    font-size: 28px;
-    font-weight: bold;
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  #copyBtn {
-    padding: 8px 12px;
-    font-size: 14px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    background: #007bff;
-    color: white;
-    transition: background-color 0.3s;
-  }
-
-  #winBtn, #lostBtn {
-    padding: 10px 20px;
-    margin-top: 10px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-  }
-
-  #winBtn { background: #28a745; color: white; }
-  #lostBtn { background: #dc3545; color: white; }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blackjack Basic Strategy Table</title>
+    <style>
+        * { font-family: 'Segoe UI', Tahoma, sans-serif; box-sizing: border-box; }
+        body {
+            background: #1a472a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 20px;
+            padding: 20px;
+        }
+        .container {
+            max-width: 650px;
+            width: 100%;
+            background: #0d2b1a;
+            color: #f5e6c8;
+            padding: 25px 20px 30px;
+            border-radius: 28px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+            border: 2px solid #c9a050;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.7rem;
+            color: #f5d742;
+            margin-top: 0;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 5px #00000055;
+        }
+        .sub {
+            color: #bbd9b5;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            border-bottom: 1px dashed #5f7e5a;
+            padding-bottom: 12px;
+        }
+        .selector-group {
+            background: #1f402a;
+            padding: 18px 12px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            border: 1px solid #4e7546;
+        }
+        .selector-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px 20px;
+            margin: 12px 0;
+        }
+        .selector-row label {
+            font-weight: bold;
+            color: #f0e1b0;
+            min-width: 70px;
+        }
+        select {
+            padding: 8px 15px;
+            border-radius: 40px;
+            border: none;
+            background: #f5f0e0;
+            color: #1d3d1d;
+            font-weight: bold;
+            font-size: 1rem;
+            min-width: 110px;
+            cursor: pointer;
+            outline: 2px solid #c9a050;
+        }
+        select:focus {
+            outline: 3px solid #f5d742;
+        }
+        .result-box {
+            background: #0e1f12;
+            border-radius: 60px;
+            padding: 18px 15px;
+            margin: 20px 0 15px;
+            border: 2px solid #c9a050;
+            box-shadow: inset 0 0 15px #00000077;
+        }
+        .action {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #f5d742;
+            text-shadow: 0 0 20px #f5b74288;
+            letter-spacing: 3px;
+        }
+        .action-desc {
+            font-size: 0.9rem;
+            color: #b8d0b0;
+            margin-top: 5px;
+        }
+        .note {
+            background: #162b1b;
+            padding: 12px 15px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            color: #c5dbbd;
+            border-right: 5px solid #f5d742;
+            text-align: right;
+        }
+        .note strong {
+            color: #f5d742;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #6f8f6a;
+        }
+        @media (max-width: 500px) {
+            h1 { font-size: 1.3rem; }
+            .selector-row { gap: 10px; }
+            select { min-width: 90px; }
+            .action { font-size: 2rem; }
+        }
+    </style>
 </head>
+<body>
+<div class="container">
+    <h1>Blackjack Basic Strategy</h1>
+    <div class="sub">Decision based on your hand and dealer's upcard</div>
 
-<body class="light">
+    <div class="selector-group">
+        <div class="selector-row">
+            <label for="playerHand">Your Hand:</label>
+            <select id="playerHand">
+                <option value="hard8">Hard 8</option>
+                <option value="hard9">Hard 9</option>
+                <option value="hard10">Hard 10</option>
+                <option value="hard11">Hard 11</option>
+                <option value="hard12">Hard 12</option>
+                <option value="hard13">Hard 13</option>
+                <option value="hard14">Hard 14</option>
+                <option value="hard15">Hard 15</option>
+                <option value="hard16" selected>Hard 16</option>
+                <option value="hard17">Hard 17+</option>
+                <option value="soft13">Soft 13-14</option>
+                <option value="soft15">Soft 15-16</option>
+                <option value="soft17">Soft 17</option>
+                <option value="soft18">Soft 18</option>
+                <option value="soft19">Soft 19+</option>
+                <option value="pair2">Pair 2,2</option>
+                <option value="pair3">Pair 3,3</option>
+                <option value="pair4">Pair 4,4</option>
+                <option value="pair5">Pair 5,5</option>
+                <option value="pair6">Pair 6,6</option>
+                <option value="pair7">Pair 7,7</option>
+                <option value="pair8">Pair 8,8</option>
+                <option value="pair9">Pair 9,9</option>
+                <option value="pair10">Pair 10,10</option>
+                <option value="pairA">Pair A,A</option>
+            </select>
+        </div>
 
-<h2>Betting Calculator</h2>
+        <div class="selector-row">
+            <label for="dealerCard">Dealer Card:</label>
+            <select id="dealerCard">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6" selected>6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="A">Ace</option>
+            </select>
+        </div>
+    </div>
 
-<button id="themeToggle">Night Mode</button>
+    <div class="result-box" id="resultBox">
+        <div class="action" id="actionDisplay">Stand</div>
+        <div class="action-desc" id="actionDesc">Recommendation: Keep your hand</div>
+    </div>
 
-<select id="calcType">
-  <option value="martingale">Martingale</option>
-  <option value="fibonacci">Fibonacci</option>
-</select>
-
-<select id="currency">
-  <option value="USDT">USDT - Tether</option>
-  <option value="TRX">TRX - Tron</option>
-  <option value="Toman">IR - Toman</option>
-  <option value="Rial">IR - Rial</option>
-</select>
-
-<input id="baseBet" type="number" step="0.01" value="0.05" placeholder="Enter base bet">
-
-<div id="nextBetBox">
-  <span id="nextBet">Next Bet: 0.05</span>
-  <button id="copyBtn">Copy</button>
+    <div class="note" id="noteDisplay">
+        <strong>Note:</strong> If you have <strong>Hard 16</strong> and dealer shows <strong>6</strong>, the best decision is to <strong>Stand</strong>.
+    </div>
+    <div class="footer">Based on standard rules (6-deck) • For educational purposes only</div>
 </div>
 
-<p id="total">Total: 0</p>
-
-<button id="winBtn">Win</button>
-<button id="lostBtn">Lost</button>
-
 <script>
-  const themeToggle = document.getElementById("themeToggle");
-  themeToggle.onclick = () => {
-    if (document.body.className === "light") {
-      document.body.className = "dark";
-      themeToggle.innerText = "Day Mode";
-    } else {
-      document.body.className = "light";
-      themeToggle.innerText = "Night Mode";
-    }
-  };
+    // ============================================================
+    // Decision dictionary for each state (H=Hit, S=Stand, D=Double, P=Split)
+    // ============================================================
+    const strategy = {
+        // Hard hands
+        hard8:  { 2:'H',3:'H',4:'H',5:'H',6:'H',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard9:  { 2:'D',3:'D',4:'D',5:'D',6:'D',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard10: { 2:'D',3:'D',4:'D',5:'D',6:'D',7:'D',8:'D',9:'D',10:'H',A:'H' },
+        hard11: { 2:'D',3:'D',4:'D',5:'D',6:'D',7:'D',8:'D',9:'D',10:'D',A:'H' },
+        hard12: { 2:'H',3:'H',4:'S',5:'S',6:'S',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard13: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard14: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard15: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard16: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        hard17: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'S',8:'S',9:'S',10:'S',A:'S' },
 
-  let total = 0;
+        // Soft hands
+        soft13: { 2:'H',3:'H',4:'H',5:'D',6:'D',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        soft15: { 2:'H',3:'H',4:'D',5:'D',6:'D',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        soft17: { 2:'D',3:'D',4:'D',5:'D',6:'D',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        soft18: { 2:'D',3:'D',4:'D',5:'D',6:'D',7:'S',8:'S',9:'H',10:'H',A:'H' },
+        soft19: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'S',8:'S',9:'S',10:'S',A:'S' },
 
-  const nextBetText = document.getElementById("nextBet");
-  const totalText = document.getElementById("total");
-  const calcType = document.getElementById("calcType");
-  const currency = document.getElementById("currency");
-  const baseBetInput = document.getElementById("baseBet");
-  const copyBtn = document.getElementById("copyBtn");
+        // Pairs
+        pair2:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'P',8:'H',9:'H',10:'H',A:'H' },
+        pair3:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'P',8:'H',9:'H',10:'H',A:'H' },
+        pair4:  { 2:'H',3:'H',4:'H',5:'P',6:'P',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        pair5:  { 2:'D',3:'D',4:'D',5:'D',6:'D',7:'D',8:'D',9:'D',10:'H',A:'H' },
+        pair6:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'H',8:'H',9:'H',10:'H',A:'H' },
+        pair7:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'P',8:'H',9:'H',10:'H',A:'H' },
+        pair8:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'P',8:'P',9:'P',10:'P',A:'P' },
+        pair9:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'S',8:'P',9:'P',10:'S',A:'S' },
+        pair10: { 2:'S',3:'S',4:'S',5:'S',6:'S',7:'S',8:'S',9:'S',10:'S',A:'S' },
+        pairA:  { 2:'P',3:'P',4:'P',5:'P',6:'P',7:'P',8:'P',9:'P',10:'P',A:'P' },
+    };
 
-  let fibPrev = parseFloat(baseBetInput.value);
-  let fibBeforePrev = parseFloat(baseBetInput.value);
-  let currentBet = parseFloat(baseBetInput.value);
+    // Description for each decision
+    const actionDescMap = {
+        'H': 'Hit – Take another card',
+        'S': 'Stand – Keep your hand',
+        'D': 'Double – Double your bet and take one card',
+        'P': 'Split – Create two separate hands'
+    };
 
-  function formatNumber(num) {
-    if (currency.value === "Toman" || currency.value === "Rial") {
-      return Math.round(num);
-    }
-    return num.toFixed(2);
-  }
-
-  function updateDisplay(bet) {
-    nextBetText.innerText = "Next Bet: " + currency.value + " " + formatNumber(bet);
-    totalText.innerText = "Total: " + currency.value + " " + formatNumber(total);
-  }
-
-  baseBetInput.addEventListener("input", () => {
-    let base = parseFloat(baseBetInput.value) || 0;
-    currentBet = base;
-    fibPrev = base;
-    fibBeforePrev = base;
-    updateDisplay(base);
-  });
-
-  document.getElementById("winBtn").onclick = () => {
-    let base = parseFloat(baseBetInput.value) || 0;
-
-    total = 0;
-    currentBet = base;
-
-    fibPrev = base;
-    fibBeforePrev = base;
-
-    updateDisplay(base);
-  };
-
-  document.getElementById("lostBtn").onclick = () => {
-    let base = parseFloat(baseBetInput.value) || 0;
-
-    if (calcType.value === "martingale") {
-      currentBet = currentBet * 2;
+    // Special notes for specific cases
+    const noteMap = {
+        'hard16_6': 'With Hard 16 against dealer 6, the best decision is to Stand (dealer is weak).',
+        'hard16_10': 'With Hard 16 against dealer 10, you should Hit even though the risk is high.',
+    };
+    function getNoteKey(playerVal, dealerVal) {
+        return playerVal + '_' + dealerVal;
     }
 
-    else if (calcType.value === "fibonacci") {
-      let nextFib = fibPrev + fibBeforePrev;
-      fibBeforePrev = fibPrev;
-      fibPrev = nextFib;
-      currentBet = nextFib;
+    // ============================================================
+    // Main update logic
+    // ============================================================
+    function updateStrategy() {
+        const playerSelect = document.getElementById('playerHand');
+        const dealerSelect = document.getElementById('dealerCard');
+        const actionDisplay = document.getElementById('actionDisplay');
+        const actionDesc = document.getElementById('actionDesc');
+        const noteDisplay = document.getElementById('noteDisplay');
+
+        const playerKey = playerSelect.value;
+        const dealerKey = dealerSelect.value;
+
+        // Get decision from dictionary
+        const action = (strategy[playerKey] && strategy[playerKey][dealerKey]) ? strategy[playerKey][dealerKey] : 'S';
+        
+        // Display the action letter
+        actionDisplay.textContent = actionDescMap[action] ? action : 'S';
+        actionDesc.textContent = actionDescMap[action] || 'Stand';
+
+        // Show special note if available
+        const noteKey = getNoteKey(playerKey, dealerKey);
+        if (noteMap[noteKey]) {
+            noteDisplay.innerHTML = noteMap[noteKey];
+        } else {
+            // General note
+            let playerName = playerSelect.options[playerSelect.selectedIndex].text;
+            let dealerName = dealerSelect.options[dealerSelect.selectedIndex].text;
+            noteDisplay.innerHTML = `For ${playerName} against dealer ${dealerName}, the recommended action is ${actionDescMap[action] || 'Stand'}.`;
+        }
     }
 
-    total += currentBet;
-    updateDisplay(currentBet);
-  };
+    // Attach events
+    document.getElementById('playerHand').addEventListener('change', updateStrategy);
+    document.getElementById('dealerCard').addEventListener('change', updateStrategy);
 
-  /* ⭐ دکمهٔ Copy → تغییر رنگ آبی → زرد → آبی */
-  copyBtn.onclick = () => {
-    let fullText = nextBetText.innerText;
-    fullText = fullText.replace("Next Bet: ", "");
-    let parts = fullText.split(" ");
-    let numberOnly = parts[1];
-    navigator.clipboard.writeText(numberOnly);
-
-    copyBtn.innerText = "Copied!";
-    copyBtn.style.backgroundColor = "#ffcc00";
-
-    setTimeout(() => {
-      copyBtn.style.backgroundColor = "#007bff";
-      copyBtn.innerText = "Copy";
-    }, 1000);
-  };
-
-  updateDisplay(parseFloat(baseBetInput.value));
+    // Run on load (default: Hard 16 vs dealer 6)
+    window.onload = updateStrategy;
 </script>
-
 </body>
-</html>
+  </html>

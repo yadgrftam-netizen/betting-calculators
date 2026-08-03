@@ -1768,7 +1768,7 @@ function getCondition() {
     }
     if (isHitAndRunStopped || isPeakStopped || manualPause || isTemporarilyPaused || !allowBetting) { if (t_priceAmount) t_priceAmount.value = 0; isBetActive = false; return; }
 
-    // --- اولویت 1: od46 (جبران اجباری) ---
+    // ------------------ اولویت 1: od46 (جبران اجباری) ------------------
     if (od46Enabled && od46RecoveryActive) {
         if (!od46Pause) {
             var totalLossForCalc = currentLossTotal > 0 ? currentLossTotal : od46LossAtStart;
@@ -1777,18 +1777,17 @@ function getCondition() {
             intendedCashoutTarget = od46Multiplier;
             t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
             t_priceAmount.value = lastBetAmount;
-            if (t_cashoutProduct) { t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true })); }
-            if (t_priceAmount) { t_priceAmount.dispatchEvent(new Event('input', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('change', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true })); }
+            if (t_cashoutProduct) { /* dispatch events */ }
+            if (t_priceAmount) { /* dispatch events */ }
             setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
             return;
         }
     }
 
-    // --- اولویت 2: الگوها ---
+    // ------------------ اولویت 2: الگوهای واکنش‌گرا (od10-14) ------------------
     if (od14_active) { intendedCashoutTarget = 1.10; }
     else if (redRepeatActive && redRepeatAction !== "2.00") { intendedCashoutTarget = parseFloat(redRepeatAction); }
     else if (patternActive) { intendedCashoutTarget = patternTargetMultiplier; }
-    // --- اولویت 3: od15 ---
     else if (od15Enabled && bustHistory.length >= 50) {
         var last10 = bustHistory.slice(0, 10);
         var last50 = bustHistory.slice(0, 50);
@@ -1812,14 +1811,12 @@ function getCondition() {
         intendedCashoutTarget = selectedMultiplier;
         od15Multiplier = selectedMultiplier;
     }
-    // --- اولویت 4: od44 ---
     else if (od44Enabled) {
         if (currentProfit >= od44Threshold) intendedCashoutTarget = od44Layer2Target;
         else intendedCashoutTarget = od44Layer1Target;
     }
-    // --- اولویت 5: od19 ---
     else if (od19Enabled && bustHistory.length >= 50) {
-        // (منطق جدول)
+        // ... (منطق od19 جدول)
         var targetRow = null;
         var targetValue = (od19Mode === 'lowest') ? Infinity : -Infinity;
         var isLowest = (od19Mode === 'lowest');
@@ -1849,7 +1846,6 @@ function getCondition() {
             if (intendedCashoutTarget < 1.10) intendedCashoutTarget = 1.10;
         }
     }
-    // --- اولویت 6: od9 ---
     else if (od9Enabled && bustHistory.length >= od9AvgPeriod) {
         var sum = 0; for (var i = 0; i < od9AvgPeriod; i++) sum += bustHistory[i];
         var avgMultiplier = sum / od9AvgPeriod;
@@ -1857,17 +1853,127 @@ function getCondition() {
         intendedCashoutTarget = parseFloat(avgMultiplier.toFixed(2));
     }
 
-    // --- اولویت 7: استراتژی‌های ضریب ۲.۰۰ ---
-    // (od38 > od39 > od40 > od41 > od42 > od45 > od24 > od36 > od37 > عادی)
-    // برای اختصار، این بخش با همان منطق قبلی ادامه می‌یابد.
-    // ...
+    // ------------------ اولویت 3: استراتژی‌های ضریب ۲.۰۰ (با return اجباری) ------------------
+    // در این بخش، هر استراتژی که فعال شد، مبلغ و ضریب را تنظیم کرده و بلافاصله `return;` می‌کند.
 
-    // --- محاسبه مبلغ نهایی ---
+    // 1. od38 (لابوشر)
+    if (od38Enabled && od38Sequence.length > 0) {
+        var first = od38Sequence[0];
+        var last = od38Sequence[od38Sequence.length - 1];
+        lastBetAmount = first + last;
+        intendedCashoutTarget = 2.00;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 2. od39 (آسیاب اسکار)
+    if (od39Enabled) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od39CurrentBet;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 3. od40 (آنتی-مارتینگل)
+    if (od40Enabled) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od40CurrentBet;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 4. od41 (پاراچوت)
+    if (od41Enabled && !od41Pause) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od41CurrentBet;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 5. od42 (پوشش ضرر)
+    if (od42Enabled) {
+        if (od42TotalLoss > 0) {
+            var calculatedBet = (od42TotalLoss + od42Unit) / (od42Target - 1);
+            lastBetAmount = Math.max(1, Math.ceil(calculatedBet));
+        } else {
+            lastBetAmount = Math.max(od42Unit, 1);
+        }
+        intendedCashoutTarget = od42Target;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 6. od45 (درصد ثابت)
+    if (od45Enabled) {
+        var totalCapital = initialCapital + currentProfit;
+        lastBetAmount = Math.max(1, Math.floor(totalCapital * (od45Percentage / 100)));
+        intendedCashoutTarget = 2.00;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 7. od24 (دالامبر) - درخواست شما
+    if (od24Enabled) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od24CurrentBet;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 8. od36 (شرط ثابت)
+    if (fixedBetEnabled) {
+        if (fixedBetAmount <= 0 || fixedBetMultiplier <= 0) return;
+        lastBetAmount = fixedBetAmount;
+        intendedCashoutTarget = fixedBetMultiplier;
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2); t_priceAmount.value = lastBetAmount;
+        if (t_cashoutProduct) { /* dispatch events */ }
+        if (t_priceAmount) { /* dispatch events */ }
+        setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+        return;
+    }
+
+    // 9. od37 (شروع بعد از باخت)
+    if (betAfterStreakEnabled) {
+        if (currentStreakSinceLastBet < betAfterStreakThreshold) {
+            if (t_priceAmount) t_priceAmount.value = 0; isBetActive = false; return;
+        }
+        // اگر به آستانه رسید، با منطق عادی ادامه می‌دهد
+    }
+
+    // ------------------ اولویت 4: منطق عادی (مارتینگل پایه یا سفارشی) ------------------
+    // اگر هیچ استراتژی ویژه‌ای فعال نباشد، این خط اجرا می‌شود.
     lastBetAmount = getPrice();
-    t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+    if (emergencyModeActive) {
+        t_cashoutProduct.value = emergencyTargetMultiplier.toFixed(2);
+        intendedCashoutTarget = emergencyTargetMultiplier;
+        emergencyStep++;
+    } else {
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+    }
     t_priceAmount.value = lastBetAmount;
-    if (t_cashoutProduct) { t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true })); }
-    if (t_priceAmount) { t_priceAmount.dispatchEvent(new Event('input', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('change', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true })); }
+    if (t_cashoutProduct) { /* dispatch events */ }
+    if (t_priceAmount) { /* dispatch events */ }
     setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
 }
 

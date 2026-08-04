@@ -4,109 +4,82 @@ var t_times = 99999;
 var numberOneCount = 0;
 var damage = 0;
 var counter = 0;
+
 var currentLossTotal = 0;
 var lastBetAmount = 0;
+
 var emergencyModeActive = false;
 var emergencyStep = 0;
 var emergencyHistory = [];
 var emergencyTargetMultiplier = 3.0;
+
 var intendedCashoutTarget = 2.0;
 var isBetActive = false;
 var isTemporarilyPaused = false;
 var manualPause = true;
+
 var bustHistory = [];
 var fullHistory = [];
+
 var allowBetting = false;
+
 var consecutiveLow179 = 0;
 
-// ---------- متغیرهای od1 تا od4 ----------
-var od1Enabled = false;
-var od1Threshold = 7;
-var od1Multiplier = 2.00;
-var od1ConsecutiveLosses = 0;
+var streakDetectionEnabled = false;
+var streakThreshold = 7;
 
-var od2Enabled = false;
-var od2Threshold = 60;
-var od2Multiplier = 2.00;
+var low180DetectionEnabled = false;
+var low180Threshold = 60;
 
-var od4Enabled = false;
-var od4Threshold = 55;
-var od4Multiplier = 2.00;
+var below2DetectionEnabled = false;
+var maxAllowedBelow2 = 52;
 
-// ---------- متغیرهای od5 تا od9 ----------
-var customMartingaleSequence = [];
-var trendFilterEnabled = false;          // od6
-var od7Enabled = false;                 // od7
-var od7Threshold = 1000000;             // od7
-var od8Enabled = false;                 // od8
-var od8ConsecutiveLosses = 0;           // od8
-var od9Enabled = false;                 // od9
-var od9AvgPeriod = 2;                   // od9
+var longTermDetectionEnabled = false;
+var longTermThreshold = 55;
 
-// ---------- متغیرهای od10 تا od14 (الگوهای واکنش‌گرا) ----------
-var patternDetectionEnabled = false;     // od10
-var patternRedStreakThreshold = 4;
-var patternActive = false;
-var patternTargetMultiplier = 1.20;      // od10
-
-var patternAllDetectionEnabled = false;  // od11
-var specificPatternActive = false;
-var specificTargetMultiplier = 1.50;
-var od11_active = false;                 // پرچم افزایش مبلغ
-
-var redRepeatDetectionEnabled = false;   // od12
-var redRepeatThreshold = 4;
-var redRepeatActive = false;
-var redRepeatAction = "3.00";            // od12
-
-var percentPattern50Enabled = false;     // od13
-var percentPatternAction = "2.00";
-var percentPatternActive = false;
-var od13_active = false;                 // پرچم کاهش مبلغ
-
-var percentPatternAllEnabled = false;    // od14
-var od14_active = false;                 // پرچم پناهگاه ایمن
-
-// ---------- متغیرهای od15 ----------
-var od15Enabled = false;
-var od15Multiplier = 2.00;
-
-// ---------- متغیرهای od16 تا od18 ----------
 var takeProfitEnabled = false;
 var takeProfitPercent = 10;
+
 var stopLossEnabled = false;
 var stopLossPercent = 20;
+
+var initialCapital = 100;
+var currentProfit = 0;
+var isHitAndRunStopped = false;
+var stopReason = "";
+var virtualProfit = 0;
+var stopLossAccum = 0;
+
 var trailingStopEnabled = false;
 var trailingStopPercent = 10;
 var peakCapital = 0;
 var isPeakStopped = false;
 
-// ---------- متغیرهای od19 ----------
-var od19Enabled = false;
-var od19Mode = 'highest';
-var od19Column = 3;
+var customMartingaleSequence = [];
 
-// ---------- متغیرهای od20 تا od24 ----------
-var positionSizingEnabled = false;
-var riskPercent = 1;
-var scalingEnabled = false;
-var scalingLevel1 = 1.5;
-var scalingPercent1 = 50;
-var scalingPartialDone = false;
-var breakevenEnabled = false;
-var breakevenThreshold = 1.3;
-var trailingTPEnabled = false;
-var trailingTPTarget = 2.0;
-var trailingTPPeak = 0;
-var trailingTPPeakSet = false;
-var od24Enabled = false;                 // دالامبر
-var od24BaseBet = 1;
-var od24CurrentBet = 1;
+var patternDetectionEnabled = false;
+var patternRedStreakThreshold = 4;
+var patternTargetMultiplier = 2.00;
+var patternActive = false;
 
-// ---------- متغیرهای od25 تا od31 (کامبوها) ----------
+var patternAllDetectionEnabled = false;
+var specificTargetMultiplier = 0;
+var specificPatternActive = false;
+
+var redRepeatDetectionEnabled = false;
+var redRepeatThreshold = 4;
+var redRepeatAction = "2.00";
+var redRepeatActive = false;
+
+var percentPattern50Enabled = false;
+var percentPatternAllEnabled = false;
+var percentPatternAction = "2.00";
+var percentPatternActive = false;
+
 var comboModeEnabled = false;
 var comboTrailingActivated = false;
 var comboTrailingTargetProfit = 0;
+
 var comboMartingaleEnabled = false;
 var comboVolatilityEnabled = false;
 var comboShieldEnabled = false;
@@ -114,82 +87,11 @@ var comboFastEnabled = false;
 var comboSqueezeEnabled = false;
 var comboDiversifyEnabled = false;
 
-// ---------- متغیرهای od32 تا od35 ----------
-var resetModeEnabled = false;
-var resetDropThreshold = 15;
-var resetModeTriggered = false;
-var od33Enabled = false;                 // استراتژی Kelly
-var conservativeEnabled = false;         // od34
-var liquidityEnabled = false;            // od35
-
-// ---------- متغیرهای od36 تا od46 ----------
-var fixedBetEnabled = false;             // od36
-var fixedBetAmount = 2;
-var fixedBetMultiplier = 2.00;
-
-var betAfterStreakEnabled = false;       // od37
-var betAfterStreakThreshold = 3;
-var currentStreakSinceLastBet = 0;
-
-var od38Enabled = false;                 // لابوشر
-var od38Sequence = [1, 2, 3];
-var od38CurrentBet = 0;
-
-var od39Enabled = false;                 // آسیاب اسکار
-var od39BaseUnit = 1;
-var od39CurrentBet = 1;
-var od39SessionProfit = 0;
-
-var od40Enabled = false;                 // آنتی-مارتینگل
-var od40BaseBet = 1;
-var od40MaxStreak = 3;
-var od40CurrentBet = 1;
-var od40WinStreak = 0;
-var od40Multiplier = 2.00;
-
-var od41Enabled = false;                 // پاراچوت
-var od41BaseBet = 1;
-var od41ParachuteLimit = 10;
-var od41CurrentBet = 1;
-var od41SessionProfit = 0;
-var od41Pause = false;
-
-var od42Enabled = false;                 // پوشش ضرر
-var od42Target = 2.00;
-var od42Unit = 1;
-var od42TotalLoss = 0;
-
-var od43Enabled = false;                 // زمان‌بندی
-var od43Time = 5;
-var od43StartTime = 0;
-
-var od44Enabled = false;                 // لایه‌بندی پیش‌رونده
-var od44Layer1Target = 1.50;
-var od44Layer2Target = 3.00;
-var od44Threshold = 10;
-
-var od45Enabled = false;                 // درصد ثابت
-var od45Percentage = 2;
-
-var od46Enabled = false;                 // جبران اجباری
-var od46Target = 10;
-var od46MaxRounds = 3;
-var od46Multiplier = 2.00;
-var od46RecoveryActive = false;
-var od46CurrentRound = 0;
-var od46LossAtStart = 0;
-var od46Pause = false;
-
-// ---------- متغیرهای دیگر ----------
-var currentProfit = 0;
-var isHitAndRunStopped = false;
-var stopReason = "";
-var virtualProfit = 0;
-var stopLossAccum = 0;
 var resetModeEnabled = false;
 var resetDropThreshold = 15;
 var resetModeTriggered = false;
 var sessionHistory = [];
+
 var adaptiveLearningEnabled = false;
 var autoActionEnabled = false;
 var aggressiveEnabled = false;
@@ -199,17 +101,15 @@ var hourlyStats = {};
 var autoSaveIntervalId = null;
 var localStorageKey = "omidCrashHourlyStats";
 var timeSlotInterval = 30;
+
 var md5History = [];
 var hashHistory = [];
 var fakeHashRecord = null;
 var md5Selector = '.h-col-5 a.show-code';
 var hashSelector = '.h-col-6 a.show-code';
-var initialLoadDone = false;
-var statsTableCreated = false;
 
-// ============================================================
-//  ثابت‌ها (ضرایب و دنباله‌ها)
-// ============================================================
+var initialLoadDone = false;
+
 const STATS_DATA = [
     { id: 'A', coeff: 1.10, fair: 90.9 },
     { id: 'B', coeff: 1.20, fair: 83.3 },
@@ -229,19 +129,90 @@ const OLD_SEQ_1_80 = [2, 4, 9, 21, 47, 106, 238, 536, 1206, 2713, 6104, 13734, 3
 const FIBO_SEQ_3 = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352, 24157817, 39088169, 63245986, 102334155];
 const FIBO_SEQ_4 = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352, 24157817, 39088169, 63245986, 102334155];
 
-// ============================================================
-//  ارجاع به المان‌های DOM
-// ============================================================
+var statsTableCreated = false;
 var f_game_waiting = game_waiting;
 var f_game_busted = game_busted;
 var f_game_update = game_update;
 var f_game_cash_out = game_cash_out;
+
 var box = document.getElementsByClassName('game-controls')[0];
 var t_cashoutProduct = document.getElementsByClassName('cashout-amount')[0];
 var t_priceAmount = document.getElementsByClassName('game-amount')[0];
 var t_setCashBtn = document.getElementsByClassName("place-bet")[0];
 var t_setCashCancelBtn = document.getElementsByClassName("place-bet-cancel")[0];
 var h_information = $('div.user-name');
+
+// ============================================================
+//  متغیرهای استراتژی‌های ویژه (od36 تا od46)
+// ============================================================
+
+// od36 - شرطبندی با مبلغ و ضریب ثابت
+var fixedBetEnabled = false;
+var fixedBetAmount = 2;
+var fixedBetMultiplier = 2.00;
+
+// od37 - شروع شرطبندی بعد از چندین باخت
+var betAfterStreakEnabled = false;
+var betAfterStreakThreshold = 3;
+var currentStreakSinceLastBet = 0;
+
+// od38 - استراتژی لابوشر
+var od38Enabled = false;
+var od38Sequence = [1, 2, 3];
+var od38CurrentBet = 0;
+
+// od39 - استراتژی آسیاب اسکار
+var od39Enabled = false;
+var od39BaseUnit = 1;
+var od39CurrentBet = 1;
+var od39SessionProfit = 0;
+
+// od40 - استراتژی آنتی-مارتینگل (پارولی)
+var od40Enabled = false;
+var od40BaseBet = 1;
+var od40MaxStreak = 3;
+var od40CurrentBet = 1;
+var od40WinStreak = 0;
+var od40Multiplier = 2.00;
+
+// od41 - استراتژی پاراچوت
+var od41Enabled = false;
+var od41BaseBet = 1;
+var od41ParachuteLimit = 10;
+var od41CurrentBet = 1;
+var od41SessionProfit = 0;
+var od41Pause = false;
+
+// od42 - استراتژی پوشش ضرر
+var od42Enabled = false;
+var od42Target = 2.00;
+var od42Unit = 1;
+var od42TotalLoss = 0;
+
+// od43 - نقد کردن در زمان‌های خاص (در game_update پیاده‌سازی شده است)
+var od43Enabled = false;
+var od43Time = 5;
+var od43StartTime = 0;
+
+// od44 - لایه‌بندی پیش‌رونده
+var od44Enabled = false;
+var od44Layer1Target = 1.50;
+var od44Layer2Target = 3.00;
+var od44Threshold = 10;
+
+// od45 - استراتژی درصد ثابت
+var od45Enabled = false;
+var od45Percentage = 2;
+
+// od46 - استراتژی جبران اجباری
+var od46Enabled = false;
+var od46Target = 10;
+var od46MaxRounds = 3;
+var od46Multiplier = 2.00;
+var od46RecoveryActive = false;
+var od46CurrentRound = 0;
+var od46LossAtStart = 0;
+var od46Pause = false;
 
 // ============================================================
 //  توابع اصلی
@@ -362,10 +333,12 @@ function updateStatsTable() {
 
 function autoFetchHistoryFromDOM() {
     if (initialLoadDone) return;
+
     var rows = document.querySelectorAll('div.crash-row');
     var tempHistory = [];
     var tempMD5 = [];
     var tempHASH = [];
+
     rows.forEach(row => {
         var coeff = row.querySelector('.h-col-1');
         if(coeff) {
@@ -374,6 +347,7 @@ function autoFetchHistoryFromDOM() {
                 tempHistory.push(val);
             }
         }
+
         var md5Elem = row.querySelector(md5Selector);
         if (md5Elem) {
             var md5Text = md5Elem.innerText.trim();
@@ -381,6 +355,7 @@ function autoFetchHistoryFromDOM() {
                 tempMD5.push(md5Text);
             }
         }
+
         var hashElem = row.querySelector(hashSelector);
         if (hashElem) {
             var hashText = hashElem.innerText.trim();
@@ -389,6 +364,7 @@ function autoFetchHistoryFromDOM() {
             }
         }
     });
+
     if (tempHistory.length > 0) {
         bustHistory = tempHistory.slice(-50);
         fullHistory = tempHistory;
@@ -403,8 +379,6 @@ function autoFetchHistoryFromDOM() {
         checkBettingCondition(bustHistory);
         getInformation();
         updateStatsTable();
-        updateMD5List();
-        updateHashList();
         if (md5History.length > 0 && bustHistory.length > 0) {
             setTimeout(autoVerifyLastHash, 1000);
         }
@@ -470,9 +444,6 @@ function updateHitAndRunDisplay() {
     }
 }
 
-// ============================================================
-//  تابع createManualInputBox (با تمام آیتم‌های od1 تا od46 و حذف od3)
-// ============================================================
 function createManualInputBox() {
     var HR = '<div style="border-bottom: 1px solid #888; margin: 8px 0;"></div>';
 
@@ -486,86 +457,56 @@ function createManualInputBox() {
                 <button id="copyManualHistory" style="background:#007bff; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">[od60] کپی ۵۰ ضریب آخر B2</button>
             </div>
 
-            <!-- ========================================= -->
-            <!--  od1-4. لایه‌های امنیتی پایه (با حذف od3)  -->
-            <!-- ========================================= -->
             <details style="margin-bottom:10px; border:1px solid #eee; padding:5px; border-radius:4px;">
                 <summary style="font-weight:bold; cursor:pointer;">A. مدیریت ریسک</summary>
                 <div style="padding:10px; direction:rtl; text-align:right;">
+
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
-                        <summary style="cursor:pointer;">od1-4. لایه‌های امنیتی پایه</summary>
+                        <summary style="cursor:pointer;">od1-5. لایه‌های امنیتی پایه</summary>
                         <div style="padding:10px;">
                             <div style="border:1px solid #ddd; background:#f0f8ff; padding:10px; margin:5px 0; border-radius:5px;">
                                 <!-- od1 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="streakToggleCheckbox"> <b>[od1]</b> توقف پس از باخت پیاپی زیر ضریب انتخابی
-                                        <input type="number" id="streakThresholdInput" value="7" style="width:50px;">
+                                        <input type="checkbox" id="streakToggleCheckbox" ${streakDetectionEnabled ? 'checked' : ''}> <b>[od1]</b> توقف پس از باخت پیاپی <input type="number" id="streakThresholdInput" value="${streakThreshold}" style="width:50px;">
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od1</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">توقف ربات وقتی که تعداد باخت‌های پیاپی زیر ضریب انتخابی رخ داد.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر تعداد باخت‌های متوالی به آستانه تعیین‌شده برسد، ربات متوقف می‌شود.</div>
                                     </details>
-                                </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:5px; padding-left:20px; margin-bottom:10px;">
-                                    <label>ضریب انتخابی od1:</label>
-                                    <button class="od1-preset" data-mult="1.10" style="background:black; color:white;">1.10</button>
-                                    <button class="od1-preset" data-mult="1.20" style="background:grey; color:white;">1.20</button>
-                                    <button class="od1-preset" data-mult="1.30" style="background:brown; color:white;">1.30</button>
-                                    <button class="od1-preset" data-mult="1.50" style="background:purple; color:white;">1.50</button>
-                                    <button class="od1-preset" data-mult="1.80" style="background:#28a745; color:white;">1.80</button>
-                                    <button class="od1-preset" data-mult="2.00" style="background:yellow; color:black;">2.00</button>
-                                    <button class="od1-preset" data-mult="3.00" style="background:orange; color:white;">3.00</button>
-                                    <button class="od1-preset" data-mult="4.00" style="background:red; color:white;">4.00</button>
-                                    <span style="color:white; font-weight:bold; margin-left:10px;">ضریب فعلی: <span id="od1MultiplierDisplay">2.00</span></span>
                                 </div>
                                 ${HR}
                                 <!-- od2 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="low180ToggleCheckbox"> <b>[od2]</b> توقف درصدی ضریب انتخابی ۵۰ دور اخیر
-                                        <input type="number" id="low180ThresholdInput" value="60" style="width:50px;">%
+                                        <input type="checkbox" id="low180ToggleCheckbox" ${low180DetectionEnabled ? 'checked' : ''}> <b>[od2]</b> توقف اگر درصد زیر ۱.۸۰ از حد مجاز بیشتر شود <input type="number" id="low180ThresholdInput" value="${low180Threshold}" style="width:50px;">%
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od2</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">توقف ربات اگر درصد تنظیم‌شده ضریب انتخابی در فیلد عددی از درصد ضریب ۵۰ دور اخیر تاریخچه همان ضریب بیشتر شود.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر درصد ضریب‌های زیر ۱.۸۰ در ۵۰ دور اخیر از مقدار تعیین‌شده بیشتر شود، ربات متوقف می‌شود.</div>
                                     </details>
                                 </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:5px; padding-left:20px; margin-bottom:10px;">
-                                    <label>ضریب انتخابی od2:</label>
-                                    <button class="od2-preset" data-mult="1.10" style="background:black; color:white;">1.10</button>
-                                    <button class="od2-preset" data-mult="1.20" style="background:grey; color:white;">1.20</button>
-                                    <button class="od2-preset" data-mult="1.30" style="background:brown; color:white;">1.30</button>
-                                    <button class="od2-preset" data-mult="1.50" style="background:purple; color:white;">1.50</button>
-                                    <button class="od2-preset" data-mult="1.80" style="background:#28a745; color:white;">1.80</button>
-                                    <button class="od2-preset" data-mult="2.00" style="background:yellow; color:black;">2.00</button>
-                                    <button class="od2-preset" data-mult="3.00" style="background:orange; color:white;">3.00</button>
-                                    <button class="od2-preset" data-mult="4.00" style="background:red; color:white;">4.00</button>
-                                    <span style="color:white; font-weight:bold; margin-left:10px;">ضریب فعلی: <span id="od2MultiplierDisplay">2.00</span></span>
+                                ${HR}
+                                <!-- od3 -->
+                                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
+                                    <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                                        <input type="checkbox" id="below2ToggleCheckbox" ${below2DetectionEnabled ? 'checked' : ''}> <b>[od3]</b> توقف اگر درصد زیر ۲.۰۰ از حد مجاز بیشتر شود <input type="number" id="below2ThresholdInput" value="${maxAllowedBelow2}" style="width:50px;">%
+                                    </label>
+                                    <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
+                                        <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od3</summary>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر درصد ضریب‌های زیر ۲.۰۰ در ۵۰ دور اخیر از مقدار تعیین‌شده بیشتر شود، ربات متوقف می‌شود.</div>
+                                    </details>
                                 </div>
                                 ${HR}
                                 <!-- od4 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="longTermToggleCheckbox"> <b>[od4]</b> توقف درصدی بلندمدت ضریب انتخابی
-                                        <input type="number" id="longTermThresholdInput" value="55" style="width:50px;">%
+                                        <input type="checkbox" id="longTermToggleCheckbox" ${longTermDetectionEnabled ? 'checked' : ''}> <b>[od4]</b> توقف بر اساس آمار بلندمدت <input type="number" id="longTermThresholdInput" value="${longTermThreshold}" style="width:50px;">%
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od4</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">توقف ربات اگر درصد تنظیم‌شده ضریب انتخابی در فیلد عددی از درصد کل تاریخچه همان ضریب در جدول بیشتر شود.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر درصد ضریب‌های زیر ۲.۰۰ در کل تاریخچه از آستانه تعیین‌شده بیشتر شود، ربات قفل می‌شود.</div>
                                     </details>
-                                </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:5px; padding-left:20px; margin-bottom:10px;">
-                                    <label>ضریب انتخابی od4:</label>
-                                    <button class="od4-preset" data-mult="1.10" style="background:black; color:white;">1.10</button>
-                                    <button class="od4-preset" data-mult="1.20" style="background:grey; color:white;">1.20</button>
-                                    <button class="od4-preset" data-mult="1.30" style="background:brown; color:white;">1.30</button>
-                                    <button class="od4-preset" data-mult="1.50" style="background:purple; color:white;">1.50</button>
-                                    <button class="od4-preset" data-mult="1.80" style="background:#28a745; color:white;">1.80</button>
-                                    <button class="od4-preset" data-mult="2.00" style="background:yellow; color:black;">2.00</button>
-                                    <button class="od4-preset" data-mult="3.00" style="background:orange; color:white;">3.00</button>
-                                    <button class="od4-preset" data-mult="4.00" style="background:red; color:white;">4.00</button>
-                                    <span style="color:white; font-weight:bold; margin-left:10px;">ضریب فعلی: <span id="od4MultiplierDisplay">2.00</span></span>
                                 </div>
                                 ${HR}
                                 <!-- od5 -->
@@ -584,9 +525,6 @@ function createManualInputBox() {
 
                     ${HR}
 
-                    <!-- ========================================= -->
-                    <!--  od6-9. لایه‌های پیشرفته و الگوها         -->
-                    <!-- ========================================= -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
                         <summary style="cursor:pointer;">od6-9. لایه‌های پیشرفته</summary>
                         <div style="padding:10px;">
@@ -605,35 +543,33 @@ function createManualInputBox() {
                                 <!-- od7 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od7ToggleCheckbox"> <b>[od7]</b> شرطبندی بعد از بازیکنان ...بزودی...
-                                        <input type="number" id="od7ThresholdInput" placeholder="مبلغ (مثلا 1000000)" style="width:100px;">
+                                        <input type="checkbox" id="delayToggleCheckbox"> <b>[od7]</b> تأخیر شرط‌گذاری <input type="number" id="delayInput" value="1" style="width:50px;">
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od7</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">در هنگام شروع دور جدید بازی ربات جمع کل پول شرطبندی شده توسط کاربران قبل از شروع بازی که 6 ثانیه طول می کشد را حساب می کند سپس تصمیم به شرطبندی می کند مثال اگر جمع کل پول از 1 میلیون تومان بیشتر باشد شرطبندی نمی کند.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">ربات چند ثانیه (مقدار قابل تنظیم) پس از شروع بازی صبر می‌کند تا از کراش‌های لحظه‌ای در امان باشد.</div>
                                     </details>
                                 </div>
                                 ${HR}
                                 <!-- od8 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od8ToggleCheckbox"> <b>[od8]</b> تشخیص باخت‌های پیاپی
+                                        <input type="checkbox" id="instantCrashToggleCheckbox"> <b>[od8]</b> تشخیص کراش لحظه‌ای <input type="number" id="instantCrashThreshold" value="3" style="width:50px;">
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od8</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">شمارش ضریب‌های زیر 1.05 در 3 باخت پیاپی و توقف ربات پس از رخ دادن 3 باخت زیر 1.05.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر تعداد ضریب‌های زیر ۱.۰۵ در ۲۰ دور اخیر از آستانه بیشتر شود، ربات استراحت می‌کند.</div>
                                     </details>
                                 </div>
                                 ${HR}
                                 <!-- od9 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od9ToggleCheckbox"> <b>[od9]</b> تنظیم خودکار ضریب با میانگین
-                                        <input type="number" id="od9AvgInput" placeholder="تعداد دور (پیش‌فرض 2)" style="width:60px;">
+                                        <input type="checkbox" id="autoTargetToggleCheckbox"> <b>[od9]</b> تنظیم خودکار ضریب بر اساس میانگین ۵ دور <input type="number" id="autoTargetLow" value="1.5" style="width:50px;">x / <input type="number" id="autoTargetHigh" value="2.5" style="width:50px;">x
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od9</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">تنظیم خودکار ضریب برداشت دور بعدی بر اساس میانگین چند دور اخیر قرار میگرد مثال در فیلد عددی 2 نوشته شود 2 ضریب اخر را باهم جمع می کند بعد تقسیم بر همان عدد فیلد می کند و نتیجه بدست امده را در ضریب برداشت دور بعدی قرار میدهد.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر میانگین ۵ دور اخیر پایین باشد، ضریب خروج را کاهش می‌دهد و اگر بالا باشد، افزایش می‌دهد.</div>
                                     </details>
                                 </div>
                             </div>
@@ -642,67 +578,62 @@ function createManualInputBox() {
 
                     ${HR}
 
-                    <!-- ========================================= -->
-                    <!--  od10-14. الگوهای واکنش‌گرا (جدید)       -->
-                    <!-- ========================================= -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
-                        <summary style="cursor:pointer;">od10-14. الگوهای واکنش‌گرا</summary>
+                        <summary style="cursor:pointer;">od10-14. تشخیص الگوهای آماری</summary>
                         <div style="padding:10px;">
                             <div style="border:1px solid #ddd; background:#f0f8ff; padding:10px; margin:5px 0; border-radius:5px;">
                                 <!-- od10 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="patternToggleCheckbox"> <b>[od10]</b> سیگنال فرار زودهنگام
-                                        <input type="number" id="patternRedStreakInput" value="4" style="width:50px;">
+                                        <input type="checkbox" id="patternToggleCheckbox"> <b>[od10]</b> الگوی قرمز/سبز <input type="number" id="patternRedStreakInput" value="4" style="width:50px;">
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od10</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر در ۵ دور اخیر، بیش از N بار ضریب زیر ۱.۸۰ باشد، ضریب خروج به‌طور موقت روی ۱.۲۰ تنظیم می‌شود.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر در ۵ دور اخیر، بیش از N بار (قابل تنظیم) ضریب زیر ۱.۸۰ (قرمز) دیده شود، ربات به ضریب هدف (مثلاً ۲.۰۰) تغییر می‌کند.</div>
                                     </details>
                                 </div>
                                 ${HR}
                                 <!-- od11 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="patternAllToggleCheckbox"> <b>[od11]</b> سیگنال افزایش ریسک
+                                        <input type="checkbox" id="patternAllToggleCheckbox"> <b>[od11]</b> الگوی اختصاصی هر ضریب
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od11</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر یک ضریب خاص (مثلاً ۱.۵۰) در ۵۰ دور اخیر زیاد تکرار شود، مبلغ شرط ۲۰٪ افزایش می‌یابد.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر تعداد وقوع یک ضریب خاص (مثلاً ۱.۵۰) در ۵۰ دور اخیر از آستانه‌اش بیشتر شود، ربات فوراً به همان ضریب تغییر می‌کند.</div>
                                     </details>
                                 </div>
                                 ${HR}
                                 <!-- od12 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="redRepeatToggleCheckbox"> <b>[od12]</b> سیگنال روند صعودی
-                                        <input type="number" id="redRepeatThresholdInput" value="4" style="width:50px;">
+                                        <input type="checkbox" id="redRepeatToggleCheckbox"> <b>[od12]</b> الگوی تکراری قرمز <input type="number" id="redRepeatThresholdInput" value="4" style="width:50px;">
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od12</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر ضریب‌های بین ۰ تا ۱.۷۹ در ۱۰ دور اخیر زیاد تکرار شوند، ضریب خروج روی ۳.۰۰ تنظیم می‌شود.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر یک ضریب در محدوده ۰.۰۰ تا ۱.۷۹ (مثلاً ۱.۵۰) زیاد تکرار شود، ربات به ضریب بالاتر می‌رود یا متوقف می‌شود.</div>
                                     </details>
                                 </div>
                                 ${HR}
                                 <!-- od13 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="percent50ToggleCheckbox"> <b>[od13]</b> سیگنال فشرده‌سازی سرمایه
+                                        <input type="checkbox" id="percent50ToggleCheckbox"> <b>[od13]</b> الگوی درصدی ۵۰ دور
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od13</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر درصد ضریب‌های زیر ۲.۰۰ در ۵۰ دور اخیر بیش از ۶۰٪ باشد، مبلغ شرط ۵۰٪ کاهش می‌یابد.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">درصد وقوع هر ضریب را در ۵۰ دور اخیر محاسبه می‌کند و اگر از آستانه‌اش بیشتر شود، واکنش نشان می‌دهد.</div>
                                     </details>
                                 </div>
                                 ${HR}
                                 <!-- od14 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="percentAllToggleCheckbox"> <b>[od14]</b> سیگنال پناهگاه ایمن
+                                        <input type="checkbox" id="percentAllToggleCheckbox"> <b>[od14]</b> الگوی درصدی کل تاریخچه
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od14</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر درصد ضریب‌های زیر ۲.۰۰ در کل تاریخچه بیش از ۷۰٪ باشد، مبلغ به ۱ و ضریب به ۱.۱۰ کاهش می‌یابد.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">درصد وقوع هر ضریب را در کل تاریخچه محاسبه می‌کند و اگر از آستانه‌اش بیشتر شود، واکنش نشان می‌دهد.</div>
                                     </details>
                                 </div>
                             </div>
@@ -711,20 +642,18 @@ function createManualInputBox() {
 
                     ${HR}
 
-                    <!-- ========================================= -->
-                    <!--  od15. نوسان‌یاب تطبیقی                   -->
-                    <!-- ========================================= -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
-                        <summary style="cursor:pointer;">od15. نوسان‌یاب تطبیقی</summary>
+                        <summary style="cursor:pointer;">od15. مدیریت نوسان‌پذیری (ATR)</summary>
                         <div style="padding:10px;">
                             <div style="border:1px solid #ddd; background:#f0f8ff; padding:10px; margin:5px 0; border-radius:5px;">
+                                <!-- od15 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od15ToggleCheckbox"> <b>[od15]</b> نوسان‌یاب تطبیقی
+                                        <input type="checkbox" id="volatilityToggleCheckbox"> <b>[od15]</b> مدیریت نوسان‌پذیری (ATR) <input type="number" id="volatilityMultiplier" value="1.5" style="width:50px;">x
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od15</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">استراتژی نوسان‌یاب تطبیقی ; نوسان بازار را با دو امار ۱۰ ضریب اخر تاریخچه و ۵۰ ضریب اخر می‌سنجد و با یک ضریب پویا (k) ضریب خروج را بین ۱.۱۰ تا ۲.۰۰ تنظیم می‌کند.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">اگر نوسان (انحراف معیار) ۱۰ دور اخیر بالا باشد، ضریب خروج را روی مقدار تعیین‌شده تنظیم می‌کند.</div>
                                     </details>
                                 </div>
                             </div>
@@ -738,7 +667,6 @@ function createManualInputBox() {
                 <summary style="font-weight:bold; cursor:pointer;">B. مدیریت سرمایه</summary>
                 <div style="padding:10px; direction:rtl; text-align:right;">
 
-                    <!-- od16-18 -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
                         <summary style="cursor:pointer;">od16-18. حد سود/ضرر</summary>
                         <div style="padding:10px;">
@@ -778,9 +706,9 @@ function createManualInputBox() {
                             </div>
                         </div>
                     </details>
+
                     ${HR}
 
-                    <!-- od19-24 -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
                         <summary style="cursor:pointer;">od19-24. استراتژی‌های پیشرفته</summary>
                         <div style="padding:10px;">
@@ -788,24 +716,12 @@ function createManualInputBox() {
                                 <!-- od19 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od19ToggleCheckbox"> <b>[od19]</b> تنظیم خودکار ضریب از درصد جدول
+                                        <input type="checkbox" id="rrToggleCheckbox"> <b>[od19]</b> نسبت ریسک به ریوارد <input type="number" id="rrRatio" value="2" style="width:50px;">x
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od19</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">با انتخاب یکی از گزینه ها (پایین ترین یا بالاترین درصد) و یکی از ستون های جدول با شماره های 3 یا 4 یا 5 یا 6، درصد های سلول ها ی ستون انتخاب شده را برسی می کند و ضریب دور بعدی برداشت را بر اساس انتخاب های کاربر و اطلاعات موجود در جدول قرار میدهد.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">هدف سود را بر اساس ریسک تعیین می‌کند. (مثلاً با ریسک ۱۰، نسبت ۱:۳ یعنی هدف سود ۳۰).</div>
                                     </details>
-                                </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:10px; padding-left:20px; margin-bottom:5px;">
-                                    <label><input type="checkbox" id="od19HighestCheckbox"> بالاترین درصد</label>
-                                    <label><input type="checkbox" id="od19LowestCheckbox"> پایین‌ترین درصد</label>
-                                </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:5px; padding-left:20px;">
-                                    <label>ستون جدول:</label>
-                                    <button class="od19-col-btn" data-col="3" style="background:#6f42c1; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer;">ستون سوم</button>
-                                    <button class="od19-col-btn" data-col="4" style="background:#007bff; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer;">ستون چهارم</button>
-                                    <button class="od19-col-btn" data-col="5" style="background:#17a2b8; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer;">ستون پنجم</button>
-                                    <button class="od19-col-btn" data-col="6" style="background:#28a745; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer;">ستون ششم</button>
-                                    <span style="color:white; font-weight:bold; margin-left:10px;">ستون فعلی: <span id="od19ColumnDisplay">3</span></span>
                                 </div>
                                 ${HR}
                                 <!-- od20 -->
@@ -852,15 +768,14 @@ function createManualInputBox() {
                                     </details>
                                 </div>
                                 ${HR}
-                                <!-- od24 (دالامبر) -->
+                                <!-- od24 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od24ToggleCheckbox"> <b>[od24]</b> استراتژی شرطبندی دالامبر
-                                        <input type="number" id="od24BaseBetInput" placeholder="مبلغ پایه (پیش‌فرض 1)" style="width:80px;">
+                                        <input type="checkbox" id="diversificationToggleCheckbox"> <b>[od24]</b> تنوع‌بخشی <input type="number" id="diversificationAccounts" value="2" style="width:50px;">
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od24</summary>
-                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">ضریب روی 2.00 قرار داده میشود. بعد از هر باخت، مبلغ شرط یک واحد به اندازه مبلغ پایه افزایش می‌ده و بعد از هر برد، یک واحد به اندازه مبلغ پایه کاهش می‌ده. هدف این است که با تعداد برد و باخت برابر، در نهایت به اندازه تعداد بردهایت سود کنی.</div>
+                                        <div style="padding:6px 10px; font-size:13px; color:#e0e0e0; background:#222; border:1px solid #555; border-radius:4px; margin-top:4px; max-width:260px;">سرمایه را به چند حساب مجزا تقسیم می‌کند تا ریسک کلی کاهش یابد.</div>
                                     </details>
                                 </div>
                             </div>
@@ -869,7 +784,6 @@ function createManualInputBox() {
 
                     ${HR}
 
-                    <!-- od25-31 (کامبوها) -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
                         <summary style="cursor:pointer;">od25-31. استراتژی‌های ترکیبی</summary>
                         <div style="padding:10px;">
@@ -956,7 +870,6 @@ function createManualInputBox() {
 
                     ${HR}
 
-                    <!-- od32-35 -->
                     <details style="margin-bottom:5px; border:1px solid #eee; padding:5px; border-radius:4px;">
                         <summary style="cursor:pointer;">od32-35. مدیریت پیشرفته</summary>
                         <div style="padding:10px;">
@@ -975,7 +888,7 @@ function createManualInputBox() {
                                 <!-- od33 -->
                                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:5px; gap:5px;">
                                     <label style="flex:1; min-width:150px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-                                        <input type="checkbox" id="od33ToggleCheckbox"> <b>[od33]</b> استراتژی Kelly
+                                        <input type="checkbox" id="kellyToggleCheckbox"> <b>[od33]</b> استراتژی Kelly
                                     </label>
                                     <details style="font-size:12px; background:#ff0000; color:#ffffff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;">
                                         <summary style="outline:none; font-weight:bold; color:#ffffff;">راهنمای od33</summary>
@@ -1241,6 +1154,7 @@ function createManualInputBox() {
                             </div>
                         </div>
                     </details>
+
                 </div>
             </details>
         </div>
@@ -1271,17 +1185,16 @@ function createManualInputBox() {
     h_information.after("<div class='top-link' style='direction:rtl; text-align:right;'><h4 id='hadi-box'><b>" + t_times + "</b><br><span style='color:#00ffff; font-size:12px;'>ربات نصب شد</span></h4></div> ");
     $('div.top-link.user-name').after(robotSettingsHTML + statsTableHTML + customMultiplierPanelHTML);
 
-    // ======================== رویدادهای کامل ========================
-    // (تمام event listenerها در اینجا اضافه می‌شوند)
-    
-    // دکمه‌های preset
-    document.querySelectorAll('.presetBtn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            applyPreset(parseFloat(this.getAttribute('data-mult')));
+    var presetBtns = document.querySelectorAll('.presetBtn');
+    if (presetBtns.length > 0) {
+        presetBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var mult = parseFloat(this.getAttribute('data-mult'));
+                applyPreset(mult);
+            });
         });
-    });
+    }
 
-    // دکمه پاز/فعال
     var pauseBtn = document.getElementById('manualPauseBtn');
     if (pauseBtn) {
         pauseBtn.addEventListener('click', function() {
@@ -1289,299 +1202,240 @@ function createManualInputBox() {
             this.innerHTML = manualPause ? 'فعال کردن ربات' : 'توقف ربات';
             this.style.background = manualPause ? '#28a745' : '#ffc107';
             this.style.color = manualPause ? 'white' : 'black';
-            checkBettingCondition(bustHistory);
-            getInformation();
+            if (!manualPause) { checkBettingCondition(bustHistory); getInformation(); if (!isBetActive && allowBetting && bustHistory.length>=50) getCondition(); }
+            else { if (isBetActive) { t_setCashCancelBtn.click(); isBetActive=false; } checkBettingCondition(bustHistory); getInformation(); }
         });
     }
 
-    // کپی تاریخچه
-    document.getElementById('manualCopyFullHistoryBtn')?.addEventListener('click', function() {
-        if (!fullHistory || fullHistory.length === 0) { alert("هیچ ضریبی ثبت نشده است!"); return; }
-        var formatted = fullHistory.map(v => v.toFixed(2)+"---\n").join('');
-        navigator.clipboard.writeText(formatted).then(() => {
-            this.innerHTML = "کپی شد!"; this.style.background = "#17a2b8";
-            setTimeout(() => { this.innerHTML = "کپی کل ضرایب"; this.style.background = "#6f42c1"; }, 1500);
+    var copyFullBtn = document.getElementById('manualCopyFullHistoryBtn');
+    if (copyFullBtn) {
+        copyFullBtn.addEventListener('click', function() {
+            if (!fullHistory || fullHistory.length === 0) { alert("هیچ ضریبی ثبت نشده است!"); return; }
+            var formatted = fullHistory.map(v => v.toFixed(2)+"---\n").join('');
+            navigator.clipboard.writeText(formatted).then(() => {
+                this.innerHTML = "کپی شد!";
+                this.style.background = "#17a2b8";
+                setTimeout(() => { this.innerHTML = "کپی کل ضرایب"; this.style.background = "#6f42c1"; }, 1500);
+            }).catch(err => alert("خطا در کپی: " + err));
         });
-    });
+    }
 
-    document.getElementById('copyManualHistory')?.addEventListener('click', function() {
-        if (!bustHistory || bustHistory.length === 0) { alert("ابتدا باید ضرایب بارگذاری شوند!"); return; }
-        var formatted = bustHistory.map(v => v.toFixed(2)+"---\n").join('');
-        navigator.clipboard.writeText(formatted).then(() => {
-            this.innerHTML = "کپی شد!"; this.style.background = "#17a2b8";
-            setTimeout(() => { this.innerHTML = "کپی ۵۰ ضریب"; this.style.background = "#007bff"; }, 1500);
+    var copyHistBtn = document.getElementById('copyManualHistory');
+    if (copyHistBtn) {
+        copyHistBtn.addEventListener('click', function() {
+            if (!bustHistory || bustHistory.length === 0) { alert("ابتدا باید ضرایب بارگذاری شوند!"); return; }
+            var formatted = bustHistory.map(v => v.toFixed(2)+"---\n").join('');
+            navigator.clipboard.writeText(formatted).then(() => {
+                this.innerHTML = "کپی شد!";
+                this.style.background = "#17a2b8";
+                setTimeout(() => { this.innerHTML = "کپی ۵۰ ضریب"; this.style.background = "#007bff"; }, 1500);
+            }).catch(err => alert("خطا در کپی: " + err));
         });
-    });
+    }
 
-    // od1
-    document.getElementById('streakToggleCheckbox')?.addEventListener('change', function() { od1Enabled = this.checked; checkBettingCondition(bustHistory); getInformation(); });
-    document.getElementById('streakThresholdInput')?.addEventListener('input', function() { od1Threshold = parseInt(this.value) || 7; });
-    document.querySelectorAll('.od1-preset').forEach(function(btn) {
-        btn.addEventListener('click', function() { od1Multiplier = parseFloat(this.getAttribute('data-mult')); document.getElementById('od1MultiplierDisplay').textContent = od1Multiplier.toFixed(2); });
-    });
-
-    // od2
-    document.getElementById('low180ToggleCheckbox')?.addEventListener('change', function() { od2Enabled = this.checked; checkBettingCondition(bustHistory); getInformation(); });
-    document.getElementById('low180ThresholdInput')?.addEventListener('input', function() { od2Threshold = parseInt(this.value) || 60; });
-    document.querySelectorAll('.od2-preset').forEach(function(btn) {
-        btn.addEventListener('click', function() { od2Multiplier = parseFloat(this.getAttribute('data-mult')); document.getElementById('od2MultiplierDisplay').textContent = od2Multiplier.toFixed(2); });
-    });
-
-    // od4
-    document.getElementById('longTermToggleCheckbox')?.addEventListener('change', function() { od4Enabled = this.checked; checkBettingCondition(bustHistory); getInformation(); });
-    document.getElementById('longTermThresholdInput')?.addEventListener('input', function() { od4Threshold = parseInt(this.value) || 55; });
-    document.querySelectorAll('.od4-preset').forEach(function(btn) {
-        btn.addEventListener('click', function() { od4Multiplier = parseFloat(this.getAttribute('data-mult')); document.getElementById('od4MultiplierDisplay').textContent = od4Multiplier.toFixed(2); });
-    });
-
-    // od5
-    document.getElementById('martingaleInput')?.addEventListener('input', function(e) {
-        var inputText = e.target.value.trim();
-        if (inputText === "") { customMartingaleSequence = []; return; }
-        var matches = inputText.match(/\d+\.?\d*/g);
-        if (matches && matches.length > 0) {
-            var sequence = matches.map(num => parseFloat(num)).filter(num => !isNaN(num) && num > 0);
-            if (sequence.length === 1) {
-                var base = sequence[0];
-                var gen = [];
-                for (var i = 0; i < 10; i++) { gen.push(base); base = base * 2; }
-                customMartingaleSequence = gen;
-            } else {
-                customMartingaleSequence = sequence;
+    var martInput = document.getElementById('martingaleInput');
+    if (martInput) {
+        martInput.addEventListener('input', function(e) {
+            var inputText = e.target.value.trim();
+            if (inputText === "") { customMartingaleSequence = []; return; }
+            var matches = inputText.match(/\d+\.?\d*/g);
+            if (matches && matches.length > 0) {
+                var sequence = matches.map(num => parseFloat(num)).filter(num => !isNaN(num) && num > 0);
+                if (sequence.length === 1) {
+                    var base = sequence[0];
+                    var gen = [];
+                    for (var i = 0; i < 10; i++) { gen.push(base); base = base * 2; }
+                    customMartingaleSequence = gen;
+                } else {
+                    customMartingaleSequence = sequence;
+                }
+                console.log("دنباله مارتینگل تنظیم شد:", customMartingaleSequence);
             }
+        });
+    }
+
+    var initCap = document.getElementById('initialCapitalInput');
+    if (initCap) {
+        initCap.addEventListener('input', function(e) {
+            var val = parseFloat(e.target.value);
+            if (isNaN(val) || val < 10) { initialCapital = 100; e.target.value = 100; }
+            else initialCapital = val;
+            currentProfit = 0; virtualProfit = 0; stopLossAccum = 0; isHitAndRunStopped = false; stopReason = "";
+            peakCapital = initialCapital; isPeakStopped = false; lossCounter = 0; emergencyModeActive = false; emergencyStep = 0;
+            emergencyHistory = []; damage = 0; currentLossTotal = 0; consecutiveLow179 = 0;
+            updateHitAndRunDisplay();
+            console.log("سرمایه اولیه تنظیم شد: " + initialCapital);
+        });
+    }
+
+    var tpCheckbox = document.getElementById('takeProfitCheckbox');
+    if (tpCheckbox) tpCheckbox.addEventListener('change', function(e) { takeProfitEnabled = e.target.checked; });
+    var tpInput = document.getElementById('takeProfitInput');
+    if (tpInput) tpInput.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 1) { takeProfitPercent = 10; e.target.value = ""; }
+        else takeProfitPercent = val;
+        updateHitAndRunDisplay();
+    });
+
+    var slCheckbox = document.getElementById('stopLossCheckbox');
+    if (slCheckbox) slCheckbox.addEventListener('change', function(e) { stopLossEnabled = e.target.checked; });
+    var slInput = document.getElementById('stopLossInput');
+    if (slInput) slInput.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 1) { stopLossPercent = 20; e.target.value = ""; }
+        else stopLossPercent = val;
+        updateHitAndRunDisplay();
+    });
+
+    var tsCheckbox = document.getElementById('trailingStopCheckbox');
+    if (tsCheckbox) tsCheckbox.addEventListener('change', function(e) {
+        trailingStopEnabled = e.target.checked;
+        if (trailingStopEnabled) {
+            syncInitialCapitalFromSite();
+            peakCapital = initialCapital; isPeakStopped = false;
+            lossCounter = 0; emergencyModeActive = false; emergencyStep = 0; emergencyHistory = [];
+            damage = 0; currentLossTotal = 0; consecutiveLow179 = 0; currentProfit = 0; virtualProfit = 0; stopLossAccum = 0;
+            isHitAndRunStopped = false; stopReason = "";
+        }
+        updatePeakDisplay();
+    });
+    var tsInput = document.getElementById('trailingStopInput');
+    if (tsInput) tsInput.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 1) { trailingStopPercent = 10; e.target.value = ""; }
+        else trailingStopPercent = val;
+        updatePeakDisplay();
+    });
+
+    var streakToggle = document.getElementById('streakToggleCheckbox');
+    if (streakToggle) streakToggle.addEventListener('change', function(e) { streakDetectionEnabled = e.target.checked; checkBettingCondition(bustHistory); getInformation(); });
+    var streakInput = document.getElementById('streakThresholdInput');
+    if (streakInput) streakInput.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 1) { streakThreshold = 7; e.target.value = 7; }
+        else streakThreshold = val;
+        checkBettingCondition(bustHistory); getInformation();
+    });
+
+    var low180Toggle = document.getElementById('low180ToggleCheckbox');
+    if (low180Toggle) low180Toggle.addEventListener('change', function(e) { low180DetectionEnabled = e.target.checked; checkBettingCondition(bustHistory); getInformation(); });
+    var low180Input = document.getElementById('low180ThresholdInput');
+    if (low180Input) low180Input.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 30) { low180Threshold = 60; e.target.value = 60; }
+        else low180Threshold = val;
+        checkBettingCondition(bustHistory); getInformation();
+    });
+
+    var longTermToggle = document.getElementById('longTermToggleCheckbox');
+    if (longTermToggle) longTermToggle.addEventListener('change', function(e) { longTermDetectionEnabled = e.target.checked; checkBettingCondition(bustHistory); getInformation(); });
+    var longTermInput = document.getElementById('longTermThresholdInput');
+    if (longTermInput) longTermInput.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 30) { longTermThreshold = 55; e.target.value = 55; }
+        else longTermThreshold = val;
+        checkBettingCondition(bustHistory); getInformation();
+    });
+
+    var below2Toggle = document.getElementById('below2ToggleCheckbox');
+    if (below2Toggle) below2Toggle.addEventListener('change', function(e) { below2DetectionEnabled = e.target.checked; checkBettingCondition(bustHistory); getInformation(); });
+    var below2Input = document.getElementById('below2ThresholdInput');
+    if (below2Input) below2Input.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 30) { maxAllowedBelow2 = 52; e.target.value = 52; }
+        else maxAllowedBelow2 = val;
+        checkBettingCondition(bustHistory); getInformation();
+    });
+
+    var resetBtns = document.querySelectorAll('.reset-hit-and-run-btn');
+    if (resetBtns.length > 0) {
+        resetBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                syncInitialCapitalFromSite();
+                var chipsElement = document.querySelector('div.top-link.chips-amount');
+                if (chipsElement) {
+                    var text = chipsElement.innerText.trim();
+                    var extractedNumber = parseInt(text.replace(/[^0-9]/g, ''));
+                    if (!isNaN(extractedNumber) && extractedNumber > 0) initialCapital = extractedNumber;
+                }
+                var inputField = document.getElementById('initialCapitalInput');
+                if (inputField) {
+                    var manualVal = parseInt(inputField.value);
+                    if (!isNaN(manualVal) && manualVal >= 10) initialCapital = manualVal;
+                    inputField.value = initialCapital;
+                }
+                currentProfit = 0; virtualProfit = 0; stopLossAccum = 0; isHitAndRunStopped = false; stopReason = "";
+                peakCapital = initialCapital; isPeakStopped = false; lossCounter = 0; emergencyModeActive = false; emergencyStep = 0;
+                emergencyHistory = []; damage = 0; currentLossTotal = 0; consecutiveLow179 = 0; allowBetting = true; isTemporarilyPaused = false;
+                checkBettingCondition(bustHistory); getInformation(); updateHitAndRunDisplay(); updatePeakDisplay(); updateStatsTable();
+                console.log("سرمایه جدید: " + initialCapital);
+            });
+        });
+    }
+
+    var probBtn = document.getElementById('calcProbabilityBtn');
+    if (probBtn) probBtn.addEventListener('click', function() { calculateProbability(); });
+    var sessionBtn = document.getElementById('analyzeSessionBtn');
+    if (sessionBtn) sessionBtn.addEventListener('click', function() { analyzeSession(); });
+    var formBtn1 = document.getElementById('calcFormulasBtn');
+    if (formBtn1) formBtn1.addEventListener('click', function() { updateFormulaAnalysis(); });
+    var formBtn2 = document.getElementById('calcFormulasBtn2');
+    if (formBtn2) formBtn2.addEventListener('click', function() { updateFormulaAnalysis(); });
+    var expK = document.getElementById('exp_k_input');
+    if (expK) expK.addEventListener('input', function() { updateFormulaAnalysis(); });
+    var expInv = document.getElementById('exp_inv_lambda_input');
+    if (expInv) expInv.addEventListener('input', function() { updateFormulaAnalysis(); });
+    var verifyBtn = document.getElementById('verifyHashBtn');
+    if (verifyBtn) verifyBtn.addEventListener('click', function() { verifyHash(); });
+
+    var dupBtn = document.getElementById('checkDuplicatesBtn');
+    if (dupBtn) dupBtn.addEventListener('click', function() { checkDuplicates(); });
+    var copyFake = document.getElementById('copyFakeRecordBtn');
+    if (copyFake) copyFake.addEventListener('click', function() {
+        if (fakeHashRecord) {
+            var text = "هش جعلی شناسایی شد!\nمحاسبه: "+fakeHashRecord.calculated.toFixed(2)+"\nواقعی: "+fakeHashRecord.actual.toFixed(2)+"\nهش: "+fakeHashRecord.hash;
+            navigator.clipboard.writeText(text).then(() => {
+                this.innerHTML = "✅ کپی شد!";
+                this.style.background = "#28a745";
+                setTimeout(() => { this.innerHTML = "کپی رکورد"; this.style.background = "#c0392b"; }, 2000);
+            });
         }
     });
 
-    // od6
-    document.getElementById('trendFilterToggleCheckbox')?.addEventListener('change', function() { trendFilterEnabled = this.checked; checkBettingCondition(bustHistory); getInformation(); });
-
-    // od7
-    document.getElementById('od7ToggleCheckbox')?.addEventListener('change', function() { od7Enabled = this.checked; });
-    document.getElementById('od7ThresholdInput')?.addEventListener('input', function() { od7Threshold = parseInt(this.value) || 1000000; });
-
-    // od8
-    document.getElementById('od8ToggleCheckbox')?.addEventListener('change', function() { od8Enabled = this.checked; });
-
-    // od9
-    document.getElementById('od9ToggleCheckbox')?.addEventListener('change', function() { od9Enabled = this.checked; });
-    document.getElementById('od9AvgInput')?.addEventListener('input', function() { od9AvgPeriod = parseInt(this.value) || 2; });
-
-    // od10
-    document.getElementById('patternToggleCheckbox')?.addEventListener('change', function() { patternDetectionEnabled = this.checked; });
-    document.getElementById('patternRedStreakInput')?.addEventListener('input', function() { patternRedStreakThreshold = parseInt(this.value) || 4; });
-
-    // od11
-    document.getElementById('patternAllToggleCheckbox')?.addEventListener('change', function() { patternAllDetectionEnabled = this.checked; });
-
-    // od12
-    document.getElementById('redRepeatToggleCheckbox')?.addEventListener('change', function() { redRepeatDetectionEnabled = this.checked; });
-    document.getElementById('redRepeatThresholdInput')?.addEventListener('input', function() { redRepeatThreshold = parseInt(this.value) || 4; });
-
-    // od13
-    document.getElementById('percent50ToggleCheckbox')?.addEventListener('change', function() { percentPattern50Enabled = this.checked; });
-
-    // od14
-    document.getElementById('percentAllToggleCheckbox')?.addEventListener('change', function() { percentPatternAllEnabled = this.checked; });
-
-    // od15
-    document.getElementById('od15ToggleCheckbox')?.addEventListener('change', function() { od15Enabled = this.checked; });
-
-    // od16-18
-    document.getElementById('takeProfitCheckbox')?.addEventListener('change', function() { takeProfitEnabled = this.checked; checkBettingCondition(bustHistory); getInformation(); });
-    document.getElementById('takeProfitInput')?.addEventListener('input', function() { takeProfitPercent = parseInt(this.value) || 10; updateHitAndRunDisplay(); });
-    document.getElementById('stopLossCheckbox')?.addEventListener('change', function() { stopLossEnabled = this.checked; checkBettingCondition(bustHistory); getInformation(); });
-    document.getElementById('stopLossInput')?.addEventListener('input', function() { stopLossPercent = parseInt(this.value) || 20; updateHitAndRunDisplay(); });
-    document.getElementById('trailingStopCheckbox')?.addEventListener('change', function() { trailingStopEnabled = this.checked; peakCapital = initialCapital + currentProfit; isPeakStopped = false; checkBettingCondition(bustHistory); getInformation(); });
-    document.getElementById('trailingStopInput')?.addEventListener('input', function() { trailingStopPercent = parseInt(this.value) || 10; updateHitAndRunDisplay(); });
-
-    // od19
-    document.getElementById('od19ToggleCheckbox')?.addEventListener('change', function() { od19Enabled = this.checked; });
-    document.getElementById('od19HighestCheckbox')?.addEventListener('change', function() { if (this.checked) { od19Mode = 'highest'; document.getElementById('od19LowestCheckbox').checked = false; } });
-    document.getElementById('od19LowestCheckbox')?.addEventListener('change', function() { if (this.checked) { od19Mode = 'lowest'; document.getElementById('od19HighestCheckbox').checked = false; } });
-    document.querySelectorAll('.od19-col-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() { od19Column = parseInt(this.getAttribute('data-col')); document.getElementById('od19ColumnDisplay').textContent = od19Column; });
+    var saveDataBtn = document.getElementById('saveDataBtn');
+    if (saveDataBtn) saveDataBtn.addEventListener('click', function() { saveDataToLocal(); });
+    var loadDataBtn = document.getElementById('loadDataBtn');
+    if (loadDataBtn) loadDataBtn.addEventListener('click', function() { loadDataFromLocal(); });
+    var adLearn = document.getElementById('adaptiveLearningToggleCheckbox');
+    if (adLearn) adLearn.addEventListener('change', function(e) {
+        adaptiveLearningEnabled = e.target.checked;
+        if (!adaptiveLearningEnabled && autoSaveIntervalId) { clearInterval(autoSaveIntervalId); autoSaveIntervalId=null; }
+        else if (adaptiveLearningEnabled && document.getElementById('autoSaveToggleCheckbox').checked) startAutoSave();
+        updateAdaptiveDisplay();
     });
-
-    // od20
-    document.getElementById('positionSizingToggleCheckbox')?.addEventListener('change', function() { positionSizingEnabled = this.checked; });
-    document.getElementById('riskPercentInput')?.addEventListener('input', function() { riskPercent = parseInt(this.value) || 1; });
-
-    // od21
-    document.getElementById('scalingToggleCheckbox')?.addEventListener('change', function() { scalingEnabled = this.checked; scalingPartialDone = false; });
-    document.getElementById('scalingLevel1')?.addEventListener('input', function() { scalingLevel1 = parseFloat(this.value) || 1.5; });
-    document.getElementById('scalingPercent1')?.addEventListener('input', function() { scalingPercent1 = parseInt(this.value) || 50; });
-
-    // od22
-    document.getElementById('breakevenToggleCheckbox')?.addEventListener('change', function() { breakevenEnabled = this.checked; });
-    document.getElementById('breakevenThreshold')?.addEventListener('input', function() { breakevenThreshold = parseFloat(this.value) || 1.3; });
-
-    // od23
-    document.getElementById('trailingTPToggleCheckbox')?.addEventListener('change', function() { trailingTPEnabled = this.checked; trailingTPPeak = 0; trailingTPPeakSet = false; });
-    document.getElementById('trailingTPTarget')?.addEventListener('input', function() { trailingTPTarget = parseFloat(this.value) || 2.0; });
-
-    // od24
-    document.getElementById('od24ToggleCheckbox')?.addEventListener('change', function() { od24Enabled = this.checked; if (this.checked) { od24CurrentBet = od24BaseBet; } });
-    document.getElementById('od24BaseBetInput')?.addEventListener('input', function() { od24BaseBet = parseInt(this.value) || 1; od24CurrentBet = od24BaseBet; });
-
-    // od25-31 (کامبوها) - هر کدام با منطق خاص خود
-    document.getElementById('comboModeToggleCheckbox')?.addEventListener('change', function() {
-        comboModeEnabled = this.checked;
-        if (this.checked) {
-            riskPercent = 2; intendedCashoutTarget = 3.0; trailingStopEnabled = true; trailingStopPercent = 10; stopLossEnabled = true; stopLossPercent = 5;
-            document.getElementById('riskPercentInput').value = 2; document.getElementById('stopLossCheckbox').checked = true; document.getElementById('stopLossInput').value = 5;
-            document.getElementById('trailingStopCheckbox').checked = true; document.getElementById('trailingStopInput').value = 10;
-        }
+    var autoSave = document.getElementById('autoSaveToggleCheckbox');
+    if (autoSave) autoSave.addEventListener('change', function(e) {
+        autoSaveEnabled = e.target.checked;
+        if (autoSaveEnabled && adaptiveLearningEnabled) startAutoSave();
+        else if (autoSaveIntervalId) { clearInterval(autoSaveIntervalId); autoSaveIntervalId=null; }
     });
-    // سایر کامبوها به همین ترتیب... (برای اختصار فقط ساختار کلی)
-    document.getElementById('comboMartingaleToggleCheckbox')?.addEventListener('change', function() { comboMartingaleEnabled = this.checked; });
-    document.getElementById('comboVolatilityToggleCheckbox')?.addEventListener('change', function() { comboVolatilityEnabled = this.checked; });
-    document.getElementById('comboShieldToggleCheckbox')?.addEventListener('change', function() { comboShieldEnabled = this.checked; });
-    document.getElementById('comboFastToggleCheckbox')?.addEventListener('change', function() { comboFastEnabled = this.checked; });
-    document.getElementById('comboSqueezeToggleCheckbox')?.addEventListener('change', function() { comboSqueezeEnabled = this.checked; });
-    document.getElementById('comboDiversifyToggleCheckbox')?.addEventListener('change', function() { comboDiversifyEnabled = this.checked; });
-
-    // od32
-    document.getElementById('resetModeToggleCheckbox')?.addEventListener('change', function() { resetModeEnabled = this.checked; resetModeTriggered = false; });
-    document.getElementById('resetDropPercent')?.addEventListener('input', function() { resetDropThreshold = parseInt(this.value) || 15; });
-
-    // od33
-    document.getElementById('od33ToggleCheckbox')?.addEventListener('change', function() { od33Enabled = this.checked; });
-
-    // od34
-    document.getElementById('conservativeToggleCheckbox')?.addEventListener('change', function() { conservativeEnabled = this.checked; });
-
-    // od35
-    document.getElementById('liquidityToggleCheckbox')?.addEventListener('change', function() { liquidityEnabled = this.checked; });
-
-    // od36
-    document.getElementById('fixedBetToggleCheckbox')?.addEventListener('change', function() { fixedBetEnabled = this.checked; });
-    document.getElementById('fixedBetAmountInput')?.addEventListener('input', function() { fixedBetAmount = parseInt(this.value) || 2; });
-    document.getElementById('fixedBetMultiplierInput')?.addEventListener('input', function() { fixedBetMultiplier = parseFloat(this.value) || 2.00; });
-
-    // od37
-    document.getElementById('betAfterStreakToggleCheckbox')?.addEventListener('change', function() { betAfterStreakEnabled = this.checked; currentStreakSinceLastBet = 0; });
-    document.getElementById('betAfterStreakThresholdInput')?.addEventListener('input', function() { betAfterStreakThreshold = parseInt(this.value) || 3; });
-
-    // od38
-    document.getElementById('od38ToggleCheckbox')?.addEventListener('change', function() { od38Enabled = this.checked; if (this.checked) { intendedCashoutTarget = 2.00; } });
-    document.getElementById('od38SequenceInput')?.addEventListener('input', function(e) {
-        var inputText = e.target.value.trim();
-        if (inputText === "") { od38Sequence = [1, 2, 3]; return; }
-        var matches = inputText.match(/\d+/g);
-        if (matches && matches.length > 0) {
-            od38Sequence = matches.map(num => parseInt(num)).filter(num => !isNaN(num) && num > 0);
-            if (od38Sequence.length === 0) od38Sequence = [1, 2, 3];
-        }
+    var autoAction = document.getElementById('autoActionToggleCheckbox');
+    if (autoAction) autoAction.addEventListener('change', function(e) { autoActionEnabled = e.target.checked; });
+    var aggressive = document.getElementById('aggressiveActionCheckbox');
+    if (aggressive) aggressive.addEventListener('change', function(e) { aggressiveEnabled = e.target.checked; });
+    var defensive = document.getElementById('defensiveActionCheckbox');
+    if (defensive) defensive.addEventListener('change', function(e) { defensiveEnabled = e.target.checked; });
+    var timeSlot = document.getElementById('timeSlotInterval');
+    if (timeSlot) timeSlot.addEventListener('input', function(e) {
+        var val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val>=5 && val<=60) { timeSlotInterval=val; updateAdaptiveDisplay(); }
     });
-
-    // od39
-    document.getElementById('od39ToggleCheckbox')?.addEventListener('change', function() { od39Enabled = this.checked; if (this.checked) { intendedCashoutTarget = 2.00; od39CurrentBet = od39BaseUnit; od39SessionProfit = 0; } });
-    document.getElementById('od39BaseUnitInput')?.addEventListener('input', function() { od39BaseUnit = parseInt(this.value) || 1; od39CurrentBet = od39BaseUnit; });
-
-    // od40
-    document.getElementById('od40ToggleCheckbox')?.addEventListener('change', function() { od40Enabled = this.checked; if (this.checked) { intendedCashoutTarget = 2.00; od40CurrentBet = od40BaseBet; od40WinStreak = 0; } });
-    document.getElementById('od40BaseBetInput')?.addEventListener('input', function() { od40BaseBet = parseInt(this.value) || 1; od40CurrentBet = od40BaseBet; });
-    document.getElementById('od40MaxStreakInput')?.addEventListener('input', function() { od40MaxStreak = parseInt(this.value) || 3; });
-
-    // od41
-    document.getElementById('od41ToggleCheckbox')?.addEventListener('change', function() { od41Enabled = this.checked; if (this.checked) { intendedCashoutTarget = 2.00; od41CurrentBet = od41BaseBet; od41SessionProfit = 0; od41Pause = false; } });
-    document.getElementById('od41BaseBetInput')?.addEventListener('input', function() { od41BaseBet = parseInt(this.value) || 1; od41CurrentBet = od41BaseBet; });
-    document.getElementById('od41ParachuteInput')?.addEventListener('input', function() { od41ParachuteLimit = parseInt(this.value) || 10; });
-
-    // od42
-    document.getElementById('od42ToggleCheckbox')?.addEventListener('change', function() { od42Enabled = this.checked; if (this.checked) { od42TotalLoss = 0; } });
-    document.getElementById('od42TargetInput')?.addEventListener('input', function() { od42Target = parseFloat(this.value) || 2.00; });
-    document.getElementById('od42UnitInput')?.addEventListener('input', function() { od42Unit = parseInt(this.value) || 1; });
-
-    // od43
-    document.getElementById('od43ToggleCheckbox')?.addEventListener('change', function() { od43Enabled = this.checked; });
-    document.getElementById('od43TimeInput')?.addEventListener('input', function() { od43Time = parseFloat(this.value) || 5; });
-
-    // od44
-    document.getElementById('od44ToggleCheckbox')?.addEventListener('change', function() { od44Enabled = this.checked; });
-    document.getElementById('od44Layer1Input')?.addEventListener('input', function() { od44Layer1Target = parseFloat(this.value) || 1.50; });
-    document.getElementById('od44Layer2Input')?.addEventListener('input', function() { od44Layer2Target = parseFloat(this.value) || 3.00; });
-    document.getElementById('od44ThresholdInput')?.addEventListener('input', function() { od44Threshold = parseInt(this.value) || 10; });
-
-    // od45
-    document.getElementById('od45ToggleCheckbox')?.addEventListener('change', function() { od45Enabled = this.checked; if (this.checked) { intendedCashoutTarget = 2.00; } });
-    document.getElementById('od45PercentageInput')?.addEventListener('input', function() { od45Percentage = parseInt(this.value) || 2; });
-
-    // od46
-    document.getElementById('od46ToggleCheckbox')?.addEventListener('change', function() { od46Enabled = this.checked; if (this.checked) { od46RecoveryActive = false; od46Pause = false; } });
-    document.getElementById('od46TargetInput')?.addEventListener('input', function() { od46Target = parseInt(this.value) || 10; });
-    document.getElementById('od46MaxRoundsInput')?.addEventListener('input', function() { od46MaxRounds = parseInt(this.value) || 3; });
-    document.getElementById('od46MultiplierInput')?.addEventListener('input', function() { od46Multiplier = parseFloat(this.value) || 2.00; });
 
     updateHitAndRunDisplay();
     updatePeakDisplay();
     setTimeout(syncInitialCapitalFromSite, 1000);
     setTimeout(updateFormulaAnalysis, 500);
-}setTimeout(updateFormulaAnalysis, 500);
-}
-
-function updateMD5List() {
-    var container = document.getElementById('md5ListContainer');
-    if (!container) return;
-    if (md5History.length === 0) {
-        container.innerHTML = '<div style="color:#888; text-align:center;">هیچ MD5 یافت نشد.</div>';
-        return;
-    }
-    var html = '';
-    for (var i=0; i<md5History.length; i++) {
-        var md5 = md5History[i];
-        var id = 'copy_md5_' + i;
-        html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:3px 0;">';
-        html += '<span style="color:#0f0;">#'+(i+1)+': '+md5+'</span>';
-        html += '<button id="'+id+'" style="background:#555; border:none; color:white; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px;">کپی</button>';
-        html += '</div>';
-    }
-    container.innerHTML = html;
-    for (var j=0; j<md5History.length; j++) {
-        var btn = document.getElementById('copy_md5_'+j);
-        if (btn) {
-            btn.addEventListener('click', (function(md5Text) {
-                return function() {
-                    navigator.clipboard.writeText(md5Text).then(function() {
-                        btn.innerHTML = "✅"; btn.style.background = "#28a745";
-                        setTimeout(function(){ btn.innerHTML="کپی"; btn.style.background="#555"; }, 1500);
-                    }).catch(() => { alert("خطا در کپی"); });
-                };
-            })(md5History[j]));
-        }
-    }
-}
-
-function updateHashList() {
-    var container = document.getElementById('hashListContainer');
-    if (!container) return;
-    if (hashHistory.length === 0) {
-        container.innerHTML = '<div style="color:#888; text-align:center;">هیچ HASH یافت نشد.</div>';
-        return;
-    }
-    var html = '';
-    for (var i=0; i<hashHistory.length; i++) {
-        var hash = hashHistory[i];
-        var id = 'copy_hash_' + i;
-        html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:3px 0;">';
-        html += '<span style="color:#0f0;">#'+(i+1)+': '+hash.substring(0,10)+'...'+hash.substring(hash.length-10)+'</span>';
-        html += '<button id="'+id+'" style="background:#555; border:none; color:white; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px;">کپی</button>';
-        html += '</div>';
-    }
-    container.innerHTML = html;
-    for (var j=0; j<hashHistory.length; j++) {
-        var btn = document.getElementById('copy_hash_'+j);
-        if (btn) {
-            btn.addEventListener('click', (function(hashText) {
-                return function() {
-                    navigator.clipboard.writeText(hashText).then(function() {
-                        btn.innerHTML = "✅"; btn.style.background = "#28a745";
-                        setTimeout(function(){ btn.innerHTML="کپی"; btn.style.background="#555"; }, 1500);
-                    }).catch(() => { alert("خطا در کپی"); });
-                };
-            })(hashHistory[j]));
-        }
-    }
 }
 
 function checkDuplicates() {
@@ -1589,7 +1443,9 @@ function checkDuplicates() {
     if (!display) return;
     display.style.color = "#ffd700";
     display.innerHTML = "در حال بررسی...";
+
     var duplicateResults = [];
+
     var md5Map = {};
     for (var i=0; i<md5History.length; i++) {
         var md5 = md5History[i];
@@ -1603,6 +1459,7 @@ function checkDuplicates() {
             duplicateResults.push("🔴 MD5 تکراری: <b>"+key+"</b> (تکرار در ضریب‌های: " + coefs.join(", ") + ")");
         }
     }
+
     var hashMap = {};
     for (var j=0; j<hashHistory.length; j++) {
         var hash = hashHistory[j];
@@ -1616,6 +1473,7 @@ function checkDuplicates() {
             duplicateResults.push("🔴 HASH تکراری: <b>"+key.substring(0,15)+"...</b> (تکرار در ضریب‌های: " + coefs.join(", ") + ")");
         }
     }
+
     if (duplicateResults.length === 0) {
         display.innerHTML = "✅ هیچ MD5 یا HASH تکراری در ۵۰ دور اخیر یافت نشد.";
         display.style.color = "#2ecc71";
@@ -1626,9 +1484,50 @@ function checkDuplicates() {
 }
 
 function md5(str) {
-    // (تابع md5 همان کد قبلی است و در اینجا برای حفظ یکپارچگی کامل آورده شده است)
-    // ...
-    return "";
+    function toBytes(s) {
+        var bytes = [];
+        for (var i = 0; i < s.length; i++) {
+            var c = s.charCodeAt(i);
+            if (c < 0x80) bytes.push(c);
+            else if (c < 0x800) { bytes.push(0xc0 | (c >> 6)); bytes.push(0x80 | (c & 0x3f)); }
+            else if (c < 0xd800 || c >= 0xe000) { bytes.push(0xe0 | (c >> 12)); bytes.push(0x80 | ((c >> 6) & 0x3f)); bytes.push(0x80 | (c & 0x3f)); }
+            else { i++; var c2 = s.charCodeAt(i); var c3 = ((c & 0x3ff) << 10) + (c2 & 0x3ff) + 0x10000; bytes.push(0xf0 | (c3 >> 18)); bytes.push(0x80 | ((c3 >> 12) & 0x3f)); bytes.push(0x80 | ((c3 >> 6) & 0x3f)); bytes.push(0x80 | (c3 & 0x3f)); }
+        }
+        return bytes;
+    }
+    var bytes = toBytes(str);
+    var len = bytes.length;
+    var bitLen = len * 8;
+    bytes.push(0x80);
+    while ((bytes.length % 64) !== 56) bytes.push(0x00);
+    for (var i = 0; i < 8; i++) { bytes.push((bitLen >>> (i * 8)) & 0xff); }
+
+    function leftRotate(x, c) { return (x << c) | (x >>> (32 - c)); }
+    function F(x, y, z) { return (x & y) | (~x & z); }
+    function G(x, y, z) { return (x & z) | (y & ~z); }
+    function H(x, y, z) { return x ^ y ^ z; }
+    function I(x, y, z) { return y ^ (x | ~z); }
+
+    var K = [0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391];
+    var S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+
+    var a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+    for (var i = 0; i < bytes.length; i += 64) {
+        var A = a0, B = b0, C = c0, D = d0;
+        var M = [];
+        for (var j = 0; j < 16; j++) { M[j] = bytes[i + j * 4] | (bytes[i + j * 4 + 1] << 8) | (bytes[i + j * 4 + 2] << 16) | (bytes[i + j * 4 + 3] << 24); }
+        for (var k = 0; k < 64; k++) {
+            var g, f;
+            if (k < 16) { f = F(B, C, D); g = k; }
+            else if (k < 32) { f = G(B, C, D); g = (5 * k + 1) % 16; }
+            else if (k < 48) { f = H(B, C, D); g = (3 * k + 5) % 16; }
+            else { f = I(B, C, D); g = (7 * k) % 16; }
+            var temp = D; D = C; C = B; B = B + leftRotate((A + f + K[k] + M[g]) & 0xffffffff, S[k]); A = temp;
+        }
+        a0 = (a0 + A) & 0xffffffff; b0 = (b0 + B) & 0xffffffff; c0 = (c0 + C) & 0xffffffff; d0 = (d0 + D) & 0xffffffff;
+    }
+    function toHex(num) { var str = ''; for (var i = 0; i < 4; i++) { str += ('0' + ((num >>> (i * 8)) & 0xff).toString(16)).slice(-2); } return str; }
+    return toHex(a0) + toHex(b0) + toHex(c0) + toHex(d0);
 }
 
 function getCurrentSlotKey() {
@@ -1638,24 +1537,19 @@ function getCurrentSlotKey() {
     if (end > 60) end = 60;
     return h.toString().padStart(2,'0') + ":" + slot.toString().padStart(2,'0') + "-" + end.toString().padStart(2,'0');
 }
-
 function saveDataToLocal() {
     try { var key = document.getElementById('localStorageKeyInput').value.trim() || localStorageKey; localStorage.setItem(key, JSON.stringify(hourlyStats)); } catch(e){}
 }
-
 function loadDataFromLocal() {
     try { var key = document.getElementById('localStorageKeyInput').value.trim() || localStorageKey; var stored = localStorage.getItem(key); if (stored) { hourlyStats = JSON.parse(stored); ensureHourlyStatsStructure(); updateAdaptiveDisplay(); } else alert("هیچ داده‌ای یافت نشد."); } catch(e){}
 }
-
 function ensureHourlyStatsStructure() {
     for (var key in hourlyStats) { if (!hourlyStats[key].games) hourlyStats[key].games = 0; if (!hourlyStats[key].wins) hourlyStats[key].wins = 0; if (!hourlyStats[key].totalMultiplier) hourlyStats[key].totalMultiplier = 0; }
 }
-
 function startAutoSave() {
     if (autoSaveIntervalId) clearInterval(autoSaveIntervalId);
     autoSaveIntervalId = setInterval(function() { if (adaptiveLearningEnabled && autoSaveEnabled) saveDataToLocal(); }, 300000);
 }
-
 function updateHourlyStats(win, multiplier) {
     if (!adaptiveLearningEnabled) return;
     var slot = getCurrentSlotKey();
@@ -1665,7 +1559,6 @@ function updateHourlyStats(win, multiplier) {
     if (!autoSaveEnabled && hourlyStats[slot].games % 10 === 0) saveDataToLocal();
     updateAdaptiveDisplay();
 }
-
 function getAdaptiveRecommendation() {
     if (!adaptiveLearningEnabled) return {action:"normal", reason:"غیرفعال"};
     var slot = getCurrentSlotKey();
@@ -1679,7 +1572,6 @@ function getAdaptiveRecommendation() {
     }
     return {action:"neutral", reason:"حالت متعادل. برد "+winRate.toFixed(1)+"%"};
 }
-
 function updateAdaptiveDisplay() {
     if (!document.getElementById('currentSlotDisplay')) return;
     var slot = getCurrentSlotKey();
@@ -1704,9 +1596,26 @@ function updateAdaptiveDisplay() {
 }
 
 function updateFormulaAnalysis() {
-    // (همان کد قبلی)
+    if (!document.getElementById('f1_50')) return;
+    if (bustHistory.length < 2) {
+        ['f1_50','f1_all','f2_50','f2_all','f3_50','f3_all','f4_50','f4_all'].forEach(id => document.getElementById(id).textContent = "نیاز به داده");
+        return;
+    }
+    var k = parseFloat(document.getElementById('exp_k_input').value) || 2.0;
+    var lambda = parseFloat(document.getElementById('exp_inv_lambda_input').value) || 0.5;
+    function calcF1(d) { var c=0; for(var i=0;i<d.length;i++){var M=d[i]; if(M>99){var X=1-(99/M); if(X>0.01&&X<0.99)c++;}} return (c/d.length)*100; }
+    function calcF2(d,k){var c=0,maxM=Math.exp(k); for(var i=0;i<d.length;i++){var M=d[i]; if(M>=1&&M<=maxM){var X=Math.log(M)/k; if(X>0.01&&X<0.99)c++;}} return (c/d.length)*100; }
+    function calcF3(d,lambda){var c=0; for(var i=0;i<d.length;i++){var M=d[i]; if(M>=1){var X=1-Math.exp(-lambda*(M-1)); if(X>0.01&&X<0.99)c++;}} return (c/d.length)*100; }
+    function calcF4(d){var Y=4503599627370496,c=0; for(var i=0;i<d.length;i++){var M=d[i]; var X=(100*Y*(1+M))/(M+100); if(Math.abs(X-Math.round(X))<1e-6)c++;} return (c/d.length)*100; }
+    document.getElementById('f1_50').textContent = calcF1(bustHistory).toFixed(1)+"%";
+    document.getElementById('f1_all').textContent = calcF1(fullHistory).toFixed(1)+"%";
+    document.getElementById('f2_50').textContent = calcF2(bustHistory,k).toFixed(1)+"%";
+    document.getElementById('f2_all').textContent = calcF2(fullHistory,k).toFixed(1)+"%";
+    document.getElementById('f3_50').textContent = calcF3(bustHistory,lambda).toFixed(1)+"%";
+    document.getElementById('f3_all').textContent = calcF3(fullHistory,lambda).toFixed(1)+"%";
+    document.getElementById('f4_50').textContent = calcF4(bustHistory).toFixed(1)+"%";
+    document.getElementById('f4_all').textContent = calcF4(fullHistory).toFixed(1)+"%";
 }
-
 function calculateMultiplierFromHash(hash) {
     if (!hash || hash.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(hash)) throw new Error("هش نامعتبر");
     var parts=[]; for(var i=0;i<hash.length;i+=4) parts.push(hash.substring(i,i+4));
@@ -1718,11 +1627,38 @@ function calculateMultiplierFromHash(hash) {
     if(mult < 0) mult = Math.abs(mult);
     return parseFloat(mult.toFixed(2));
 }
-
 function verifyHash() {
-    // (همان کد قبلی)
-}
+    var hash = document.getElementById('hashInput').value.trim();
+    var userMD5 = document.getElementById('md5Input').value.trim();
 
+    if (!hash || hash.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(hash)) {
+        document.getElementById('hashResultMultiplier').textContent = "خطا";
+        document.getElementById('hashResultStatus').textContent = "❌ SHA256 نامعتبر است!";
+        return;
+    }
+
+    try {
+        var multiplier = calculateMultiplierFromHash(hash);
+        document.getElementById('hashResultMultiplier').textContent = multiplier.toFixed(2);
+
+        var status = "✅ ضریب محاسبه شد: " + multiplier.toFixed(2);
+
+        if (userMD5.length > 0) {
+            var computedMD5 = md5(hash).toLowerCase();
+            if (computedMD5 === userMD5.toLowerCase()) {
+                status += " | 🟢 MD5 تأیید شد! (هش جعل‌ناپذیر است)";
+            } else {
+                status = "❌ MD5 نادرست! هش محاسبه‌شده با هش واردشده مطابقت ندارد. (هش احتمالاً دستکاری شده است)";
+                document.getElementById('hashResultStatus').textContent = status;
+                return;
+            }
+        }
+        document.getElementById('hashResultStatus').textContent = status;
+    } catch(e) {
+        document.getElementById('hashResultMultiplier').textContent = "خطا";
+        document.getElementById('hashResultStatus').textContent = "❌ " + e.message;
+    }
+}
 function autoVerifyLastHash() {
     var statusEl = document.getElementById('autoVerifyStatus');
     var fakeContainer = document.getElementById('fakeHashRecordContainer');
@@ -1752,7 +1688,6 @@ function autoVerifyLastHash() {
         statusEl.textContent = "❌ خطا: " + e.message; statusEl.style.color = "#e74c3c";
     }
 }
-
 function calculateProbability() {
     var target = parseFloat(document.getElementById('probTargetInput').value);
     if (isNaN(target) || target <= 0) { document.getElementById('probDisplay50').textContent = "نامعتبر"; document.getElementById('probDisplayAll').textContent = "نامعتبر"; document.getElementById('probDisplayFinal').textContent = "نامعتبر"; return; }
@@ -1766,7 +1701,6 @@ function calculateProbability() {
     var finalProb = (prob50 * 0.6) + (probAll * 0.4);
     document.getElementById('probDisplayFinal').textContent = finalProb.toFixed(1)+"%";
 }
-
 function analyzeSession() {
     var minutes = parseInt(document.getElementById('sessionRange').value) || 5;
     var now = Date.now();
@@ -1780,12 +1714,10 @@ function analyzeSession() {
     document.getElementById('avgSessionMultiplier').textContent = avg.toFixed(2) + "x";
     document.getElementById('sessionRecommendation').textContent = rec;
 }
-
 function updatePeakDisplay() {
     var peakDisplay = document.getElementById('peakValueDisplay');
     if (peakDisplay) peakDisplay.textContent = peakCapital;
 }
-
 function applyPreset(multiplier) {
     var sequence;
     if (multiplier === 1.10) sequence = OLD_SEQ_1_10;
@@ -1831,7 +1763,6 @@ function checkHitAndRun() {
     }
     isHitAndRunStopped = false; stopReason = "";
 }
-
 function checkTrailingStop() {
     if (!trailingStopEnabled || isPeakStopped) return;
     var currentBalance = initialCapital + currentProfit;
@@ -1842,48 +1773,24 @@ function checkTrailingStop() {
         console.log("حد ضرر شناور: موجودی " + currentBalance + " از قله " + peakCapital + " بیش از " + trailingStopPercent + "% افت کرد. آستانه: " + threshold);
     }
 }
-
 function checkBettingCondition(historyData) {
     if (!historyData || historyData.length === 0) { allowBetting = false; isTemporarilyPaused = true; return; }
     checkTrailingStop(); if (isPeakStopped) return;
     checkHitAndRun(); if (isHitAndRunStopped) return;
     if (manualPause) { allowBetting = false; isTemporarilyPaused = true; return; }
-
-    // od1, od2, od4
-    if (od1Enabled && od1ConsecutiveLosses >= od1Threshold) { allowBetting = false; isTemporarilyPaused = true; return; }
-    if (od2Enabled && historyData.length >= 50) {
-        var countOd2 = 0; for (var i = 0; i < 50; i++) { if (historyData[i] >= od2Multiplier) countOd2++; }
-        var actualPercent = (countOd2 / 50) * 100;
-        if (od2Threshold > actualPercent) { allowBetting = false; isTemporarilyPaused = true; return; }
+    if (longTermDetectionEnabled && fullHistory.length >= 50) {
+        var countBelow2Long = 0; for (var i = 0; i < fullHistory.length; i++) { if (fullHistory[i] < 2.00) countBelow2Long++; }
+        var percLong = (countBelow2Long / fullHistory.length) * 100;
+        if (percLong > longTermThreshold) { allowBetting = false; isTemporarilyPaused = true; return; }
     }
-    if (od4Enabled && fullHistory.length >= 50) {
-        var countOd4 = 0; for (var i = 0; i < fullHistory.length; i++) { if (fullHistory[i] >= od4Multiplier) countOd4++; }
-        var actualPercent = (countOd4 / fullHistory.length) * 100;
-        if (od4Threshold > actualPercent) { allowBetting = false; isTemporarilyPaused = true; return; }
-    }
-
-    // od6
-    if (trendFilterEnabled && historyData.length >= 50) {
-        var last10Avg = 0, last50Avg = 0;
-        for (var i = 0; i < 10; i++) last10Avg += historyData[i];
-        for (var i = 0; i < 50; i++) last50Avg += historyData[i];
-        last10Avg /= 10; last50Avg /= 50;
-        if (last10Avg < last50Avg) { allowBetting = false; isTemporarilyPaused = true; return; }
-    }
-    // od8
-    if (od8Enabled && od8ConsecutiveLosses >= 3) { allowBetting = false; isTemporarilyPaused = true; return; }
-    // od32
-    if (resetModeEnabled && !resetModeTriggered) {
-        var currentBalance = initialCapital + currentProfit;
-        if (peakCapital > 0 && currentBalance < peakCapital * (1 - resetDropThreshold / 100)) { resetModeTriggered = true; }
-    }
-    // od41 & od46 Pause
-    if (od41Pause) { allowBetting = false; isTemporarilyPaused = true; return; }
-    if (od46Pause) { allowBetting = false; isTemporarilyPaused = true; return; }
-
+    if (streakDetectionEnabled && consecutiveLow179 >= streakThreshold) { allowBetting = false; isTemporarilyPaused = true; return; }
+    var total = historyData.length; var countBelow2 = 0; var countBelow180 = 0;
+    for (var j = 0; j < total; j++) { var v = historyData[j]; if (v < 2.00) countBelow2++; if (v < 1.80) countBelow180++; }
+    var percentBelow2 = (countBelow2 / total) * 100; var percentBelow180 = (countBelow180 / total) * 100;
+    if (low180DetectionEnabled && percentBelow180 > low180Threshold) { allowBetting = false; isTemporarilyPaused = true; return; }
+    if (below2DetectionEnabled && percentBelow2 > maxAllowedBelow2) { allowBetting = false; isTemporarilyPaused = true; return; }
     allowBetting = true; isTemporarilyPaused = false;
 }
-
 function getOptimizedAmount() {
     if (customMartingaleSequence.length > 0 && lossCounter < customMartingaleSequence.length) return customMartingaleSequence[lossCounter];
     var baseSequence = [2,3,7,15,31,63,127,255,511,1023];
@@ -1897,185 +1804,742 @@ function getOptimizedAmount() {
     }
     return 1;
 }
-
 function increaseBetAfterLoss() { lossCounter++; if (lossCounter === 10 && !emergencyModeActive) { emergencyModeActive = true; emergencyStep = 0; emergencyHistory = []; } }
 function resetBetAfterWin() { if (!emergencyModeActive) lossCounter = 0; else { emergencyModeActive = false; emergencyStep = 0; emergencyHistory = []; } }
 
+// ============================================================
+//  تابع getPrice (نسخه اصلاح‌شده برای پشتیبانی از استراتژی‌های ویژه)
+// ============================================================
 function getPrice() {
     var baseAmount = getOptimizedAmount();
+
+    // الگوهای واکنش‌گرا (od10-14) - این‌ها مبلغ را تغییر می‌دهند
     if (od14_active) return 1;
     if (od13_active) return Math.max(1, Math.floor(baseAmount * 0.5));
     if (od11_active) return Math.max(1, Math.floor(baseAmount * 1.2));
+
+    // od20 - حجم شرط بر اساس درصد سرمایه
     if (positionSizingEnabled) {
         var totalCapital = initialCapital + currentProfit;
         var bet = totalCapital * (riskPercent / 100);
         return Math.max(1, Math.floor(bet));
     }
+
+    // od33 - استراتژی Kelly
     if (od33Enabled && fullHistory.length >= 50) {
-        var winRate = 0; for (var i = 0; i < 50; i++) if (fullHistory[i] >= 2.0) winRate++;
+        var winRate = 0;
+        for (var i = 0; i < 50; i++) {
+            if (fullHistory[i] >= 2.0) winRate++;
+        }
         winRate = (winRate / 50) * 100;
         var kellyFraction = (winRate - (100 - winRate)) / 100;
-        if (kellyFraction > 0) { var totalCapital = initialCapital + currentProfit; return Math.max(1, Math.floor(totalCapital * kellyFraction)); }
+        if (kellyFraction > 0) {
+            var totalCapital = initialCapital + currentProfit;
+            return Math.max(1, Math.floor(totalCapital * kellyFraction));
+        }
     }
+
+    // od45 - درصد ثابت
     if (od45Enabled) {
         var totalCapital = initialCapital + currentProfit;
         return Math.max(1, Math.floor(totalCapital * (od45Percentage / 100)));
     }
-    if (conservativeEnabled && lossCounter >= 3) { return Math.max(1, Math.floor(baseAmount * 0.5)); }
-    if (liquidityEnabled && (initialCapital + currentProfit) < (initialCapital * 0.5)) { return 0.5; }
-    if (resetModeTriggered) { return 2; }
+
+    // od34 - حالت محافظه‌کار
+    if (conservativeEnabled && lossCounter >= 3) {
+        return Math.max(1, Math.floor(baseAmount * 0.5));
+    }
+
+    // od35 - سپر نقدینگی
+    if (liquidityEnabled && (initialCapital + currentProfit) < (initialCapital * 0.5)) {
+        return 0.5;
+    }
+
+    // od32 - بازگشت به پایه
+    if (resetModeTriggered) {
+        return 2;
+    }
+
+    // بازگشت به مارتینگل پایه
     return baseAmount;
 }
 
+// ============================================================
+//  تابع getCondition (نسخه نهایی با اولویت‌بندی دقیق و return)
+// ============================================================
 function getCondition() {
     if (bustHistory.length < 50) {
-        if (t_cashoutProduct) { t_cashoutProduct.value = "0.00"; t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true })); }
-        intendedCashoutTarget = 0; if (t_priceAmount) t_priceAmount.value = 0; isBetActive = false; return;
-    }
-    if (isHitAndRunStopped || isPeakStopped || manualPause || isTemporarilyPaused || !allowBetting) { if (t_priceAmount) t_priceAmount.value = 0; isBetActive = false; return; }
-
-    // --- اولویت 1: od46 (جبران اجباری) ---
-    if (od46Enabled && od46RecoveryActive) {
-        if (!od46Pause) {
-            var totalLossForCalc = currentLossTotal > 0 ? currentLossTotal : od46LossAtStart;
-            var calculatedBet = (totalLossForCalc + 1) / (od46Multiplier - 1);
-            lastBetAmount = Math.max(1, Math.ceil(calculatedBet));
-            intendedCashoutTarget = od46Multiplier;
-            t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
-            t_priceAmount.value = lastBetAmount;
-            if (t_cashoutProduct) { t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true })); }
-            if (t_priceAmount) { t_priceAmount.dispatchEvent(new Event('input', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('change', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true })); }
-            setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
-            return;
+        if (t_cashoutProduct) {
+            t_cashoutProduct.value = "0.00";
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
         }
+        intendedCashoutTarget = 0;
+        if (t_priceAmount) t_priceAmount.value = 0;
+        isBetActive = false;
+        console.log("در انتظار تکمیل ۵۰ ضریب... (" + bustHistory.length + "/50)");
+        return;
     }
 
-    // --- اولویت 2: الگوها ---
-    if (od14_active) { intendedCashoutTarget = 1.10; }
-    else if (redRepeatActive && redRepeatAction !== "2.00") { intendedCashoutTarget = parseFloat(redRepeatAction); }
-    else if (patternActive) { intendedCashoutTarget = patternTargetMultiplier; }
-    // --- اولویت 3: od15 ---
-    else if (od15Enabled && bustHistory.length >= 50) {
+    if (isHitAndRunStopped || isPeakStopped || manualPause || isTemporarilyPaused || !allowBetting) {
+        if (t_priceAmount) t_priceAmount.value = 0;
+        isBetActive = false;
+        return;
+    }
+
+    // ============================================
+    //  اولویت 1: od46 - جبران اجباری
+    // ============================================
+    if (od46Enabled && od46RecoveryActive && !od46Pause) {
+        var totalLossForCalc = currentLossTotal > 0 ? currentLossTotal : od46LossAtStart;
+        var calculatedBet = (totalLossForCalc + 1) / (od46Multiplier - 1);
+        lastBetAmount = Math.max(1, Math.ceil(calculatedBet));
+        intendedCashoutTarget = od46Multiplier;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // ============================================
+    //  اولویت 2: الگوهای واکنش‌گرا (od10-14) - ضریب متغیر
+    // ============================================
+    if (od14_active) {
+        intendedCashoutTarget = 1.10;
+    } else if (redRepeatActive && redRepeatAction !== "2.00") {
+        intendedCashoutTarget = parseFloat(redRepeatAction);
+    } else if (patternActive) {
+        intendedCashoutTarget = patternTargetMultiplier;
+    } else if (od15Enabled && bustHistory.length >= 50) {
+        // استراتژی نوسان‌یاب تطبیقی
         var last10 = bustHistory.slice(0, 10);
         var last50 = bustHistory.slice(0, 50);
-        var sum10 = 0; for (var i = 0; i < 10; i++) sum10 += last10[i];
+        var sum10 = 0, sum50 = 0;
+        for (var i = 0; i < 10; i++) sum10 += last10[i];
+        for (var i = 0; i < 50; i++) sum50 += last50[i];
         var mean10 = sum10 / 10;
-        var variance10 = 0; for (var i = 0; i < 10; i++) variance10 += Math.pow(last10[i] - mean10, 2);
-        variance10 = variance10 / 10;
-        var std10 = Math.sqrt(variance10);
-        var sum50 = 0; for (var i = 0; i < 50; i++) sum50 += last50[i];
         var mean50 = sum50 / 50;
-        var variance50 = 0; for (var i = 0; i < 50; i++) variance50 += Math.pow(last50[i] - mean50, 2);
-        variance50 = variance50 / 50;
+
+        var variance10 = 0, variance50 = 0;
+        for (var i = 0; i < 10; i++) variance10 += Math.pow(last10[i] - mean10, 2);
+        for (var i = 0; i < 50; i++) variance50 += Math.pow(last50[i] - mean50, 2);
+        variance10 /= 10;
+        variance50 /= 50;
+        var std10 = Math.sqrt(variance10);
         var std50 = Math.sqrt(variance50);
+
         var cv = std50 / mean50;
-        var k = cv + 0.1;
-        k = Math.max(0.5, Math.min(1.5, k));
-        var exitRaw = mean10 - k * std10;
-        exitRaw = Math.max(1.01, exitRaw);
+        var k = Math.max(0.5, Math.min(1.5, cv + 0.1));
+        var exitRaw = Math.max(1.01, mean10 - k * std10);
+
         var multipliers = [1.10, 1.20, 1.30, 1.50, 1.80, 2.00];
-        var selectedMultiplier = multipliers.reduce(function(prev, curr) { return (Math.abs(curr - exitRaw) < Math.abs(prev - exitRaw) ? curr : prev); });
+        var selectedMultiplier = multipliers.reduce(function(prev, curr) {
+            return (Math.abs(curr - exitRaw) < Math.abs(prev - exitRaw) ? curr : prev);
+        });
         intendedCashoutTarget = selectedMultiplier;
         od15Multiplier = selectedMultiplier;
-    }
-    // --- اولویت 4: od44 ---
-    else if (od44Enabled) {
-        if (currentProfit >= od44Threshold) intendedCashoutTarget = od44Layer2Target;
-        else intendedCashoutTarget = od44Layer1Target;
-    }
-    // --- اولویت 5: od19 ---
-    else if (od19Enabled && bustHistory.length >= 50) {
-        // (منطق جدول)
+    } else if (od44Enabled) {
+        if (currentProfit >= od44Threshold) {
+            intendedCashoutTarget = od44Layer2Target;
+        } else {
+            intendedCashoutTarget = od44Layer1Target;
+        }
+    } else if (od19Enabled && bustHistory.length >= 50) {
+        // جدول آماری - منطق کامل
         var targetRow = null;
         var targetValue = (od19Mode === 'lowest') ? Infinity : -Infinity;
         var isLowest = (od19Mode === 'lowest');
+
         for (var i = 0; i < STATS_DATA.length; i++) {
             var row = STATS_DATA[i];
             var coeff = row.coeff;
             var fair = row.fair;
-            var count50 = 0; for (var j = 0; j < 50; j++) { if (bustHistory[j] >= coeff) count50++; }
+
+            var count50 = 0;
+            for (var j = 0; j < 50; j++) {
+                if (bustHistory[j] >= coeff) count50++;
+            }
             var cVal = (count50 / 50) * 100;
             var dVal = 100 - cVal;
-            var countAll = 0; for (var k = 0; k < fullHistory.length; k++) { if (fullHistory[k] >= coeff) countAll++; }
+
+            var countAll = 0;
+            for (var k = 0; k < fullHistory.length; k++) {
+                if (fullHistory[k] >= coeff) countAll++;
+            }
             var eVal = fullHistory.length > 0 ? (countAll / fullHistory.length) * 100 : 0;
+
             var colValue = 0;
             if (od19Column === 3) colValue = fair;
             else if (od19Column === 4) colValue = cVal;
             else if (od19Column === 5) colValue = dVal;
             else if (od19Column === 6) colValue = eVal;
+
             if (isLowest) {
-                if (colValue < targetValue) { targetValue = colValue; targetRow = row; }
+                if (colValue < targetValue) {
+                    targetValue = colValue;
+                    targetRow = row;
+                }
             } else {
-                if (colValue > targetValue) { targetValue = colValue; targetRow = row; }
+                if (colValue > targetValue) {
+                    targetValue = colValue;
+                    targetRow = row;
+                }
             }
         }
+
         if (targetRow) {
             intendedCashoutTarget = targetRow.coeff;
             if (intendedCashoutTarget > 4.00) intendedCashoutTarget = 4.00;
             if (intendedCashoutTarget < 1.10) intendedCashoutTarget = 1.10;
         }
-    }
-    // --- اولویت 6: od9 ---
-    else if (od9Enabled && bustHistory.length >= od9AvgPeriod) {
-        var sum = 0; for (var i = 0; i < od9AvgPeriod; i++) sum += bustHistory[i];
+    } else if (od9Enabled && bustHistory.length >= od9AvgPeriod) {
+        var sum = 0;
+        for (var i = 0; i < od9AvgPeriod; i++) {
+            sum += bustHistory[i];
+        }
         var avgMultiplier = sum / od9AvgPeriod;
-        if (avgMultiplier < 1.10) avgMultiplier = 1.10; if (avgMultiplier > 4.00) avgMultiplier = 4.00;
+        if (avgMultiplier < 1.10) avgMultiplier = 1.10;
+        if (avgMultiplier > 4.00) avgMultiplier = 4.00;
         intendedCashoutTarget = parseFloat(avgMultiplier.toFixed(2));
     }
 
-    // --- اولویت 7: استراتژی‌های ضریب ۲.۰۰ ---
-    // (od38 > od39 > od40 > od41 > od42 > od45 > od24 > od36 > od37 > عادی)
-    // برای اختصار، این بخش با همان منطق قبلی ادامه می‌یابد.
-    // ...
+    // ============================================
+    //  اولویت 3: استراتژی‌های با ضریب ۲.۰۰ (با return اجباری)
+    // ============================================
 
-    // --- محاسبه مبلغ نهایی ---
+    // 1. od38 - لابوشر
+    if (od38Enabled && od38Sequence.length > 0) {
+        var first = od38Sequence[0];
+        var last = od38Sequence[od38Sequence.length - 1];
+        lastBetAmount = first + last;
+        intendedCashoutTarget = 2.00;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 2. od39 - آسیاب اسکار
+    if (od39Enabled) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od39CurrentBet;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 3. od40 - آنتی-مارتینگل
+    if (od40Enabled) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od40CurrentBet;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 4. od41 - پاراچوت
+    if (od41Enabled && !od41Pause) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od41CurrentBet;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 5. od42 - پوشش ضرر
+    if (od42Enabled) {
+        if (od42TotalLoss > 0) {
+            var calculatedBet = (od42TotalLoss + od42Unit) / (od42Target - 1);
+            lastBetAmount = Math.max(1, Math.ceil(calculatedBet));
+        } else {
+            lastBetAmount = Math.max(od42Unit, 1);
+        }
+        intendedCashoutTarget = od42Target;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 6. od45 - درصد ثابت
+    if (od45Enabled) {
+        var totalCapital = initialCapital + currentProfit;
+        lastBetAmount = Math.max(1, Math.floor(totalCapital * (od45Percentage / 100)));
+        intendedCashoutTarget = 2.00;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 7. od24 - دالامبر
+    if (od24Enabled) {
+        intendedCashoutTarget = 2.00;
+        lastBetAmount = od24CurrentBet;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // 8. od36 - شرط ثابت
+    if (fixedBetEnabled) {
+        if (fixedBetAmount <= 0 || fixedBetMultiplier <= 0) return;
+        lastBetAmount = fixedBetAmount;
+        intendedCashoutTarget = fixedBetMultiplier;
+
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+        t_priceAmount.value = lastBetAmount;
+
+        if (t_cashoutProduct) {
+            t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+            t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        if (t_priceAmount) {
+            t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+            t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+        }
+        setTimeout(function() {
+            t_setCashBtn.click();
+            isBetActive = true;
+        }, 400);
+        return;
+    }
+
+    // ============================================
+    //  اولویت 4: od37 - شروع بعد از باخت (با مارتینگل عادی)
+    // ============================================
+    if (betAfterStreakEnabled) {
+        if (currentStreakSinceLastBet < betAfterStreakThreshold) {
+            if (t_priceAmount) t_priceAmount.value = 0;
+            isBetActive = false;
+            return;
+        }
+        // اگر به آستانه رسیده، به خط بعدی برود (از مارتینگل پایه استفاده کند)
+    }
+
+    // ============================================
+    //  اولویت 5: مارتینگل عادی (پایه یا سفارشی)
+    // ============================================
     lastBetAmount = getPrice();
-    t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+
+    if (emergencyModeActive) {
+        intendedCashoutTarget = emergencyTargetMultiplier;
+        t_cashoutProduct.value = emergencyTargetMultiplier.toFixed(2);
+        emergencyStep++;
+    } else {
+        t_cashoutProduct.value = intendedCashoutTarget.toFixed(2);
+    }
+
     t_priceAmount.value = lastBetAmount;
-    if (t_cashoutProduct) { t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true })); t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true })); }
-    if (t_priceAmount) { t_priceAmount.dispatchEvent(new Event('input', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('change', { bubbles: true })); t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true })); }
-    setTimeout(() => { t_setCashBtn.click(); isBetActive = true; }, 400);
+
+    if (t_cashoutProduct) {
+        t_cashoutProduct.dispatchEvent(new Event('input', { bubbles: true }));
+        t_cashoutProduct.dispatchEvent(new Event('change', { bubbles: true }));
+        t_cashoutProduct.dispatchEvent(new Event('blur', { bubbles: true }));
+    }
+    if (t_priceAmount) {
+        t_priceAmount.dispatchEvent(new Event('input', { bubbles: true }));
+        t_priceAmount.dispatchEvent(new Event('change', { bubbles: true }));
+        t_priceAmount.dispatchEvent(new Event('blur', { bubbles: true }));
+    }
+
+    setTimeout(function() {
+        t_setCashBtn.click();
+        isBetActive = true;
+        console.log("شرط بسته شد: مبلغ " + lastBetAmount + " و ضریب " + intendedCashoutTarget.toFixed(2) + "x");
+    }, 400);
 }
+
+// ============================================================
+//  تابع game_busted (نسخه اصلاح‌شده برای پشتیبانی از استراتژی‌های ویژه)
+// ============================================================
+game_busted = (function () {
+    return function (str) {
+        var currentValue = 0;
+        if (str && str.amount) currentValue = str.amount / 100;
+
+        if (currentValue > 0) {
+            bustHistory.unshift(currentValue);
+            if (bustHistory.length > 50) bustHistory.pop();
+            fullHistory.push(currentValue);
+
+            if (lastBetAmount > 0) {
+                var isWin = (justCashedOut || currentValue >= intendedCashoutTarget);
+
+                if (isWin) {
+                    var profitGain = lastBetAmount * (currentValue - 1);
+                    currentProfit += profitGain;
+                    stopLossAccum = 0;
+                    virtualProfit += getBaseBet();
+
+                    // به‌روزرسانی استراتژی‌های ویژه در حالت برد
+
+                    // od37 - شروع بعد از باخت
+                    if (betAfterStreakEnabled) currentStreakSinceLastBet = 0;
+
+                    // od24 - دالامبر
+                    if (od24Enabled) {
+                        od24CurrentBet = Math.max(od24BaseBet, od24CurrentBet - od24BaseBet);
+                    }
+
+                    // od38 - لابوشر
+                    if (od38Enabled && od38Sequence.length > 0) {
+                        od38Sequence.shift();
+                        if (od38Sequence.length > 0) od38Sequence.pop();
+                    }
+
+                    // od39 - آسیاب اسکار
+                    if (od39Enabled) {
+                        od39SessionProfit += profitGain;
+                        if (od39SessionProfit >= od39BaseUnit) {
+                            od39SessionProfit = 0;
+                            od39CurrentBet = Math.max(od39BaseUnit, 1);
+                        } else {
+                            od39CurrentBet = od39CurrentBet + od39BaseUnit;
+                        }
+                    }
+
+                    // od40 - آنتی-مارتینگل
+                    if (od40Enabled) {
+                        od40CurrentBet = od40CurrentBet * 2;
+                        od40WinStreak++;
+                        if (od40WinStreak >= od40MaxStreak) {
+                            od40CurrentBet = Math.max(od40BaseBet, 1);
+                            od40WinStreak = 0;
+                        }
+                    }
+
+                    // od41 - پاراچوت
+                    if (od41Enabled) {
+                        od41SessionProfit += profitGain;
+                        if (od41SessionProfit >= 0) {
+                            od41CurrentBet = Math.max(od41BaseBet, 1);
+                            od41SessionProfit = 0;
+                        }
+                    }
+
+                    // od42 - پوشش ضرر
+                    if (od42Enabled) {
+                        od42TotalLoss = 0;
+                    }
+
+                    // od46 - جبران اجباری
+                    if (od46Enabled && od46RecoveryActive) {
+                        od46CurrentRound++;
+                        if (currentLossTotal <= 0) {
+                            od46RecoveryActive = false;
+                            od46Pause = false;
+                            od46CurrentRound = 0;
+                        } else if (od46CurrentRound >= od46MaxRounds) {
+                            od46RecoveryActive = false;
+                            od46Pause = true;
+                            od46CurrentRound = 0;
+                        }
+                    }
+
+                } else {
+                    // حالت باخت
+                    currentProfit -= lastBetAmount;
+                    stopLossAccum += lastBetAmount;
+
+                    // od37
+                    if (betAfterStreakEnabled) currentStreakSinceLastBet++;
+
+                    // od24 - دالامبر
+                    if (od24Enabled) od24CurrentBet += od24BaseBet;
+
+                    // od38 - لابوشر
+                    if (od38Enabled) od38Sequence.push(lastBetAmount);
+
+                    // od40 - آنتی-مارتینگل (ریست به پایه در باخت)
+                    if (od40Enabled) {
+                        od40CurrentBet = Math.max(od40BaseBet, 1);
+                        od40WinStreak = 0;
+                    }
+
+                    // od41 - پاراچوت
+                    if (od41Enabled) {
+                        od41SessionProfit -= lastBetAmount;
+                        if (od41SessionProfit <= -od41ParachuteLimit) {
+                            od41Pause = true;
+                            od41CurrentBet = Math.max(od41BaseBet, 1);
+                            od41SessionProfit = 0;
+                        } else {
+                            od41CurrentBet += od41BaseBet;
+                        }
+                    }
+
+                    // od42 - پوشش ضرر
+                    if (od42Enabled) od42TotalLoss += lastBetAmount;
+
+                    // od46 - جبران اجباری
+                    if (od46Enabled && od46RecoveryActive) {
+                        od46CurrentRound++;
+                        if (od46CurrentRound >= od46MaxRounds) {
+                            od46RecoveryActive = false;
+                            od46Pause = true;
+                            od46CurrentRound = 0;
+                        }
+                    }
+                }
+
+                // شروع حالت جبران اجباری (اگر هنوز فعال نشده و ضرر به هدف رسید)
+                if (od46Enabled && !od46RecoveryActive && currentLossTotal >= od46Target) {
+                    od46RecoveryActive = true;
+                    od46CurrentRound = 0;
+                    od46LossAtStart = currentLossTotal;
+                    od46Pause = false;
+                }
+
+                // غیرفعال کردن مارتینگل معمولی وقتی استراتژی‌های ویژه فعال هستند
+                if (!fixedBetEnabled && !od24Enabled && !od33Enabled && !od38Enabled && !od39Enabled && !od40Enabled && !od41Enabled && !od42Enabled && !od45Enabled && !od46Enabled) {
+                    if (isWin) {
+                        resetBetAfterWin();
+                    } else {
+                        if (emergencyModeActive) emergencyHistory.push(lastBetAmount);
+                        increaseBetAfterLoss();
+                        damage++;
+                        currentLossTotal += lastBetAmount;
+                        if (currentValue < intendedCashoutTarget) numberOneCount++;
+                    }
+                }
+
+            } else {
+                // اگر شرطی بسته نشده است
+                if (betAfterStreakEnabled && currentValue > 0) {
+                    currentStreakSinceLastBet++;
+                }
+            }
+        }
+
+        // استخراج MD5 و HASH از DOM (اگر نیاز باشد)
+        if (initialLoadDone) {
+            var rows = document.querySelectorAll('div.crash-row');
+            if (rows.length > 0) {
+                var lastRow = rows[0];
+                var md5Elem = lastRow.querySelector(md5Selector);
+                if (md5Elem) {
+                    var md5Text = md5Elem.innerText.trim();
+                    if (md5Text.length === 32 && /^[0-9a-fA-F]{32}$/.test(md5Text)) {
+                        md5History.unshift(md5Text);
+                        if (md5History.length > 50) md5History.pop();
+                    }
+                }
+                var hashElem = lastRow.querySelector(hashSelector);
+                if (hashElem) {
+                    var hashText = hashElem.innerText.trim();
+                    if (hashText.length === 64 && /^[0-9a-fA-F]{64}$/.test(hashText)) {
+                        hashHistory.unshift(hashText);
+                        if (hashHistory.length > 50) hashHistory.pop();
+                    }
+                }
+                // اینجا updateMD5List و updateHashList حذف شده‌اند
+            }
+        }
+
+        if (currentValue > 0 && currentValue < 1.80) { consecutiveLow179++; } else if (currentValue >= 1.80) { consecutiveLow179 = 0; }
+        checkBettingCondition(bustHistory);
+        getInformation();
+        updateStatsTable();
+
+        if (adaptiveLearningEnabled) {
+            var isWin = (justCashedOut || currentValue >= intendedCashoutTarget);
+            updateHourlyStats(isWin, currentValue);
+            updateAdaptiveDisplay();
+        }
+
+        sessionHistory.push({ time: Date.now(), value: currentValue });
+        if (sessionHistory.length > 200) sessionHistory.shift();
+        updateFormulaAnalysis();
+
+        if (isBetActive) {
+            var isEmergencyTargetHit = emergencyModeActive && currentValue >= emergencyTargetMultiplier;
+            var isNormalWin = justCashedOut || (currentValue >= intendedCashoutTarget);
+            if (isNormalWin || isEmergencyTargetHit) {
+                t_times--; counter++;
+                resetBetAfterWin();
+                justCashedOut = false;
+                numberOneCount = 0;
+                damage = 0;
+                currentLossTotal = 0;
+            } else {
+                if (emergencyModeActive) emergencyHistory.push(lastBetAmount);
+                increaseBetAfterLoss();
+                damage++;
+                currentLossTotal += lastBetAmount;
+                if (currentValue < intendedCashoutTarget) numberOneCount++;
+            }
+        }
+
+        isBetActive = false;
+        f_game_busted.apply(this, arguments);
+    };
+}());
+
+// ============================================================
+//  توابع باقی‌مانده (game_waiting, game_update, game_cash_out, getInformation, clickGameHistory)
+// ============================================================
 
 var justCashedOut = false;
-function fake_stop_algoritm(str) {
-    var t_cachoutBtn = document.getElementsByClassName("place-bet-cashout")[0];
-    if (!t_cachoutBtn) return;
-    var liveMultiplier = str.current / 100;
-    if (fixedBetEnabled) {
-        if (liveMultiplier >= fixedBetMultiplier) { t_cachoutBtn.click(); justCashedOut = true; }
-        return;
-    }
-    if (scalingEnabled) { if (liveMultiplier >= scalingLevel1 && !scalingPartialDone) { scalingPartialDone = true; } }
-    if (breakevenEnabled && liveMultiplier >= breakevenThreshold) { t_cachoutBtn.click(); justCashedOut = true; return; }
-    if (trailingTPEnabled) {
-        if (liveMultiplier >= trailingTPTarget && !trailingTPPeakSet) { trailingTPPeak = liveMultiplier; trailingTPPeakSet = true; }
-        if (trailingTPPeakSet && liveMultiplier < trailingTPPeak - 0.4) { t_cachoutBtn.click(); justCashedOut = true; return; }
-    }
-    if (emergencyModeActive) {
-        if (liveMultiplier >= emergencyTargetMultiplier) { t_cachoutBtn.click(); justCashedOut = true; return; }
-        if (emergencyStep >= 15 && liveMultiplier >= 2.5) { t_cachoutBtn.click(); justCashedOut = true; return; }
-        return;
-    }
-    if (isBetActive && liveMultiplier >= intendedCashoutTarget) { t_cachoutBtn.click(); justCashedOut = true; }
-}
 
 game_waiting = (function () {
     return function (str) {
-        if (od41Pause) { od41Pause = false; allowBetting = true; isTemporarilyPaused = false; }
-        if (od43Enabled) { od43StartTime = Date.now(); }
-        justCashedOut = false; isBetActive = false; getInformation(); getCondition(); f_game_waiting.apply(this, arguments);
+        if (od41Pause) {
+            od41Pause = false;
+            allowBetting = true;
+            isTemporarilyPaused = false;
+        }
+        if (od43Enabled) {
+            od43StartTime = Date.now();
+        }
+        justCashedOut = false;
+        isBetActive = false;
+        getInformation();
+        getCondition();
+        f_game_waiting.apply(this, arguments);
     };
 }());
 
 game_update = (function () {
     return function (str) {
         try {
+            // od43 - نقد کردن در زمان‌های خاص
             if (od43Enabled && isBetActive && !justCashedOut && od43StartTime > 0) {
                 var elapsed = (Date.now() - od43StartTime) / 1000;
                 if (elapsed >= od43Time) {
                     var cashoutBtn = document.getElementsByClassName("place-bet-cashout")[0];
-                    if (cashoutBtn) { cashoutBtn.click(); justCashedOut = true; }
+                    if (cashoutBtn) {
+                        cashoutBtn.click();
+                        justCashedOut = true;
+                    }
                 }
             }
         } catch (e) {}
@@ -2083,152 +2547,11 @@ game_update = (function () {
     };
 }());
 
-game_busted = (function () {
+game_cash_out = (function () {
     return function (str) {
-        var currentValue = 0; if (str && str.amount) currentValue = str.amount / 100;
-        if (currentValue > 0) {
-            bustHistory.unshift(currentValue); if (bustHistory.length > 50) bustHistory.pop(); fullHistory.push(currentValue);
-
-            // od1, od8
-            if (od1Enabled) {
-                if (currentValue > 0 && currentValue < od1Multiplier) od1ConsecutiveLosses++;
-                else if (currentValue >= od1Multiplier) od1ConsecutiveLosses = 0;
-            }
-            if (od8Enabled) {
-                if (currentValue > 0 && currentValue < 1.05) od8ConsecutiveLosses++;
-                else if (currentValue >= 1.05) od8ConsecutiveLosses = 0;
-            }
-
-            // --- الگوهای od10-14 ---
-            if (patternDetectionEnabled && bustHistory.length >= 5) {
-                var countRed = 0; for (var i = 0; i < 5; i++) { if (bustHistory[i] < 1.80) countRed++; }
-                patternActive = (countRed > patternRedStreakThreshold);
-            }
-            if (patternAllDetectionEnabled && bustHistory.length >= 50) {
-                var countSpecific = 0; for (var i = 0; i < 50; i++) { if (Math.abs(bustHistory[i] - 1.50) < 0.01) countSpecific++; }
-                specificPatternActive = (countSpecific > 3);
-                od11_active = specificPatternActive;
-            }
-            if (redRepeatDetectionEnabled && bustHistory.length >= 10) {
-                var countRepeats = 0; for (var i = 0; i < 10; i++) { if (bustHistory[i] > 0 && bustHistory[i] < 1.79) countRepeats++; }
-                redRepeatActive = (countRepeats >= redRepeatThreshold);
-            }
-            if (percentPattern50Enabled && bustHistory.length >= 50) {
-                var count50Below2 = 0; for (var i = 0; i < 50; i++) { if (bustHistory[i] < 2.00) count50Below2++; }
-                var pct50 = (count50Below2 / 50) * 100;
-                od13_active = (pct50 > 60);
-            }
-            if (percentPatternAllEnabled && fullHistory.length >= 50) {
-                var countAllBelow2 = 0; for (var i = 0; i < fullHistory.length; i++) { if (fullHistory[i] < 2.00) countAllBelow2++; }
-                var pctAll = (countAllBelow2 / fullHistory.length) * 100;
-                od14_active = (pctAll > 70);
-            }
-
-            // --- مدیریت سود/ضرر و استراتژی‌ها ---
-            if (lastBetAmount > 0) {
-                if (justCashedOut || currentValue >= intendedCashoutTarget) {
-                    var profitGain = lastBetAmount * (currentValue - 1);
-                    currentProfit += profitGain; stopLossAccum = 0; virtualProfit += getBaseBet();
-                    if (betAfterStreakEnabled) { currentStreakSinceLastBet = 0; }
-                    // od24 (دالامبر)
-                    if (od24Enabled) { od24CurrentBet = Math.max(od24BaseBet, od24CurrentBet - od24BaseBet); }
-                    // od38 (لابوشر)
-                    if (od38Enabled && od38Sequence.length > 0) { od38Sequence.shift(); if (od38Sequence.length > 0) od38Sequence.pop(); }
-                    // od39 (آسیاب اسکار)
-                    if (od39Enabled) {
-                        od39SessionProfit += profitGain;
-                        if (od39SessionProfit >= od39BaseUnit) { od39SessionProfit = 0; od39CurrentBet = Math.max(od39BaseUnit, 1); }
-                        else { od39CurrentBet = od39CurrentBet + od39BaseUnit; }
-                    }
-                    // od40 (آنتی-مارتینگل)
-                    if (od40Enabled) {
-                        od40CurrentBet = od40CurrentBet * 2;
-                        od40WinStreak++;
-                        if (od40WinStreak >= od40MaxStreak) { od40CurrentBet = Math.max(od40BaseBet, 1); od40WinStreak = 0; }
-                    }
-                    // od41 (پاراچوت)
-                    if (od41Enabled) {
-                        od41SessionProfit += profitGain;
-                        if (od41SessionProfit >= 0) { od41CurrentBet = Math.max(od41BaseBet, 1); od41SessionProfit = 0; }
-                    }
-                    // od42 (پوشش ضرر)
-                    if (od42Enabled) { od42TotalLoss = 0; }
-                    // od46 (جبران اجباری)
-                    if (od46Enabled && od46RecoveryActive) {
-                        od46CurrentRound++;
-                        if (currentLossTotal <= 0) { od46RecoveryActive = false; od46Pause = false; od46CurrentRound = 0; }
-                        else if (od46CurrentRound >= od46MaxRounds) { od46RecoveryActive = false; od46Pause = true; od46CurrentRound = 0; }
-                    }
-                } else if (currentValue < intendedCashoutTarget) {
-                    currentProfit -= lastBetAmount; stopLossAccum += lastBetAmount;
-                    if (betAfterStreakEnabled) { currentStreakSinceLastBet++; }
-                    if (od24Enabled) { od24CurrentBet = od24CurrentBet + od24BaseBet; }
-                    if (od38Enabled) { od38Sequence.push(lastBetAmount); }
-                    if (od40Enabled) { od40CurrentBet = Math.max(od40BaseBet, 1); od40WinStreak = 0; }
-                    if (od41Enabled) {
-                        od41SessionProfit -= lastBetAmount;
-                        if (od41SessionProfit <= -od41ParachuteLimit) { od41Pause = true; od41CurrentBet = Math.max(od41BaseBet, 1); od41SessionProfit = 0; }
-                        else { od41CurrentBet = od41CurrentBet + od41BaseBet; }
-                    }
-                    if (od42Enabled) { od42TotalLoss += lastBetAmount; }
-                    if (od46Enabled && od46RecoveryActive) {
-                        od46CurrentRound++;
-                        if (od46CurrentRound >= od46MaxRounds) { od46RecoveryActive = false; od46Pause = true; od46CurrentRound = 0; }
-                    }
-                }
-
-                // --- شروع حالت جبران اجباری ---
-                if (od46Enabled && !od46RecoveryActive && currentLossTotal >= od46Target) {
-                    od46RecoveryActive = true; od46CurrentRound = 0; od46LossAtStart = currentLossTotal; od46Pause = false;
-                }
-
-                // --- غیرفعال کردن مارتینگل معمولی ---
-                if (!fixedBetEnabled && !od24Enabled && !od33Enabled && !od38Enabled && !od39Enabled && !od40Enabled && !od41Enabled && !od42Enabled && !od45Enabled && !od46Enabled) {
-                    if (justCashedOut || currentValue >= intendedCashoutTarget) { resetBetAfterWin(); }
-                    else { if (emergencyModeActive) emergencyHistory.push(lastBetAmount); increaseBetAfterLoss(); damage++; currentLossTotal += lastBetAmount; if (currentValue < intendedCashoutTarget) numberOneCount++; }
-                }
-            } else {
-                if (betAfterStreakEnabled && currentValue > 0) currentStreakSinceLastBet++;
-            }
-
-            if (od43Enabled) od43StartTime = 0;
-        }
-
-        // --- استخراج MD5 و HASH ---
-        if (initialLoadDone) {
-            var rows = document.querySelectorAll('div.crash-row');
-            if (rows.length > 0) {
-                var lastRow = rows[0];
-                var md5Elem = lastRow.querySelector(md5Selector);
-                if (md5Elem) { var md5Text = md5Elem.innerText.trim(); if (md5Text.length === 32 && /^[0-9a-fA-F]{32}$/.test(md5Text)) { md5History.unshift(md5Text); if (md5History.length > 50) md5History.pop(); } }
-                var hashElem = lastRow.querySelector(hashSelector);
-                if (hashElem) { var hashText = hashElem.innerText.trim(); if (hashText.length === 64 && /^[0-9a-fA-F]{64}$/.test(hashText)) { hashHistory.unshift(hashText); if (hashHistory.length > 50) hashHistory.pop(); } }
-                updateMD5List(); updateHashList();
-            }
-        }
-
-        if (currentValue > 0 && currentValue < 1.80) { consecutiveLow179++; } else if (currentValue >= 1.80) { consecutiveLow179 = 0; }
-        checkBettingCondition(bustHistory); getInformation(); updateStatsTable();
-        if (adaptiveLearningEnabled) { var isWin = (justCashedOut || currentValue >= intendedCashoutTarget); updateHourlyStats(isWin, currentValue); updateAdaptiveDisplay(); }
-        sessionHistory.push({ time: Date.now(), value: currentValue }); if (sessionHistory.length > 200) sessionHistory.shift();
-        updateFormulaAnalysis();
-        if (isBetActive) {
-            var isEmergencyTargetHit = emergencyModeActive && currentValue >= emergencyTargetMultiplier;
-            var isNormalWin = justCashedOut || (currentValue >= intendedCashoutTarget);
-            if (isNormalWin || isEmergencyTargetHit) {
-                t_times--; counter++; resetBetAfterWin(); justCashedOut = false; numberOneCount = 0; damage = 0; currentLossTotal = 0;
-            } else {
-                if (emergencyModeActive) emergencyHistory.push(lastBetAmount);
-                increaseBetAfterLoss(); damage++; currentLossTotal += lastBetAmount;
-                if (currentValue < intendedCashoutTarget) numberOneCount++;
-            }
-        }
-        isBetActive = false;
-        f_game_busted.apply(this, arguments);
+        f_game_cash_out.apply(this, arguments);
     };
 }());
-
-game_cash_out = (function () { return function (str) { f_game_cash_out.apply(this, arguments); }; }());
 
 function getInformation() {
     var lines = [];
@@ -2236,41 +2559,74 @@ function getInformation() {
     if (manualPause) { securityHeader = "خطر لایه های امنیتی غیرفعال هستند J1"; securityColor = "red"; }
     else { securityHeader = "ربات بدون تنظیم مدیریت ریسک فعال شد J2"; securityColor = "green"; }
     lines.push("<b style='color:" + securityColor + "; font-size:14px;'>" + securityHeader + "</b>");
-    
-    // (پیام‌های دیگر شامل od1, od2, od4, od7, od8, od9, od10-14, od15, od19, od24, od33, od38-46)
-    // برای اختصار، نمایش پیام‌ها در اینجا به‌روزرسانی شده است.
-    
-    if (od7Enabled) lines.push("<b style='color:orange'>od7 فعال است (شرطبندی بعد از بازیکنان) J7</b>");
-    if (od8Enabled && od8ConsecutiveLosses >= 3) lines.push("<b style='color:red'>توقف به دلیل 3 باخت پیاپی زیر 1.05 J8</b>");
-    if (od9Enabled && bustHistory.length >= od9AvgPeriod) lines.push("<b style='color:blue'>od9 خودکار (میانگین " + od9AvgPeriod + " دور) J9</b>");
-    if (patternActive && patternDetectionEnabled) lines.push("<b style='color:#ffaa00'>od10 فرار زودهنگام: ضریب موقت 1.20 J10</b>");
-    if (od11_active) lines.push("<b style='color:#ffaa00'>od11 افزایش ریسک: مبلغ ۲۰٪ افزایش J11</b>");
-    if (redRepeatActive) lines.push("<b style='color:#ffaa00'>od12 روند صعودی: ضریب 3.00 J12</b>");
-    if (od13_active) lines.push("<b style='color:#ffaa00'>od13 فشرده‌سازی: مبلغ ۵۰٪ کاهش J13</b>");
-    if (od14_active) lines.push("<b style='color:#ffaa00'>od14 پناهگاه ایمن: مبلغ 1 و ضریب 1.10 J14</b>");
-    if (od15Enabled && bustHistory.length >= 50) lines.push("<b style='color:cyan'>od15 نوسان‌یاب تطبیقی: ضریب " + od15Multiplier.toFixed(2) + " J15</b>");
-    if (od19Enabled) lines.push("<b style='color:blue'>od19 فعال (ستون " + od19Column + "، " + od19Mode + ") J19</b>");
-    if (od24Enabled) lines.push("<b style='color:purple'>od24 دالامبر: مبلغ فعلی " + od24CurrentBet + " J24</b>");
-    if (od33Enabled) { var winRate = 0; if (fullHistory.length >= 50) { for (var i = 0; i < 50; i++) if (fullHistory[i] >= 2.00) winRate++; winRate = (winRate / 50) * 100; } lines.push("<b style='color:#00ffaa'>od33 Kelly: نرخ برد " + winRate.toFixed(1) + "% J33</b>"); }
+    if (isHitAndRunStopped) {
+        if (stopReason === "profit") lines.push("<b style='color:purple'>حد سود J3</b>");
+        else if (stopReason === "loss") lines.push("<b style='color:red'>حد ضرر (باخت‌های متوالی: " + stopLossAccum + ") J4</b>");
+    }
+    if (isPeakStopped) lines.push("<b style='color:darkred'>سقوط از قله J5</b>");
+    if (trailingStopEnabled) {
+        var currentBal = initialCapital + currentProfit;
+        var threshold = Math.floor(peakCapital * (1 - trailingStopPercent / 100));
+        lines.push("<b style='color:blue'>قله: " + peakCapital + " | آستانه: " + threshold + " | موجودی: " + currentBal + " J6</b>");
+    }
+    if (bustHistory.length < 50) {
+        lines.push("<b style='color:orange'>ربات منتظر ضرایب تاریخچه بازی است J7</b>");
+    } else {
+        var paused = false;
+        var isAnySecurityLayerEnabled = longTermDetectionEnabled || streakDetectionEnabled || low180DetectionEnabled || below2DetectionEnabled;
+        if (longTermDetectionEnabled && fullHistory.length >= 50) {
+            var cntLT = 0; for (var i = 0; i < fullHistory.length; i++) { if (fullHistory[i] < 2.00) cntLT++; }
+            var percLT = (cntLT / fullHistory.length) * 100;
+            if (percLT > longTermThreshold) { lines.push("<b style='color:purple'>ضریب 2 کمتر از " + longTermThreshold + " درصد است در کل تاریخچه تا این دور J8</b>"); paused = true; }
+        }
+        if (!paused && streakDetectionEnabled && consecutiveLow179 >= streakThreshold) { lines.push("<b style='color:red'>توقف به دلیل باخت مداوم J9</b>"); paused = true; }
+        if (!paused && low180DetectionEnabled) {
+            var cnt180 = 0; for (var j = 0; j < bustHistory.length; j++) { if (bustHistory[j] < 1.80) cnt180++; }
+            var perc180 = (cnt180 / bustHistory.length) * 100;
+            if (perc180 > low180Threshold) { lines.push("<b style='color:red'>ضریب 1.80 کمتر از " + low180Threshold + " درصد در 50 دور اخیر J10</b>"); paused = true; }
+        }
+        if (!paused && below2DetectionEnabled) {
+            var cntB2 = 0; for (var k = 0; k < bustHistory.length; k++) { if (bustHistory[k] < 2.00) cntB2++; }
+            var percB2 = (cntB2 / bustHistory.length) * 100;
+            if (percB2 > maxAllowedBelow2) { lines.push("<b style='color:blue'>ضریب 2 کمتر از " + maxAllowedBelow2 + " درصد در 50 دور اخیر J11</b>"); paused = true; }
+        }
+        if (isAnySecurityLayerEnabled && !paused && !isHitAndRunStopped && !isPeakStopped) {
+            lines.push("<b style='color:green'>امنیت شرطبندی برقرار است J12</b>");
+        }
+    }
+    if (manualPause) lines.push("<b style='color:orange'>درانتظار تنظیم و فعال کردن ربات J13</b>");
+    if (emergencyModeActive) lines.push("<b style='color:#d63384'>ضریب 3 اورژانسی فعال شد J14</b>");
+    var normalText = intendedCashoutTarget.toFixed(2) + 'x';
+    lines.push("<b style='color:red'>ضریب برداشت: " + normalText + " J15</b>");
+
+    // اطلاعات استراتژی‌های ویژه (اختیاری)
+    if (od36Enabled) lines.push("<b style='color:#00ffaa'>od36 شرط ثابت: مبلغ " + fixedBetAmount + " ضریب " + fixedBetMultiplier.toFixed(2) + " J36</b>");
     if (od38Enabled) lines.push("<b style='color:#ffaa00'>od38 لابوشر: رشته [" + od38Sequence.join(', ') + "] J38</b>");
     if (od39Enabled) lines.push("<b style='color:#00ffaa'>od39 آسیاب اسکار: مبلغ " + od39CurrentBet + " J39</b>");
     if (od40Enabled) lines.push("<b style='color:#ffaa00'>od40 آنتی-مارتینگل: مبلغ " + od40CurrentBet + " J40</b>");
     if (od41Enabled) lines.push("<b style='color:#00ffaa'>od41 پاراچوت: مبلغ " + od41CurrentBet + (od41Pause ? " (استراحت)" : "") + " J41</b>");
     if (od42Enabled) lines.push("<b style='color:#00ffaa'>od42 پوشش ضرر: ضریب " + od42Target.toFixed(2) + " J42</b>");
-    if (od43Enabled) { var currentTime = (od43StartTime > 0) ? ((Date.now() - od43StartTime) / 1000).toFixed(1) : "0.0"; lines.push("<b style='color:#ffaa00'>od43 زمان‌بندی: زمان " + currentTime + " ثانیه J43</b>"); }
-    if (od44Enabled) { var currentLayer = (currentProfit >= od44Threshold) ? "پیشرفته" : "پایه"; lines.push("<b style='color:#00ccff'>od44 لایه‌بندی: لایه " + currentLayer + " J44</b>"); }
-    if (od45Enabled) { var totalCapital = initialCapital + currentProfit; var currentBet = Math.max(1, Math.floor(totalCapital * (od45Percentage / 100))); lines.push("<b style='color:#00ffaa'>od45 درصد ثابت: مبلغ " + currentBet + " J45</b>"); }
+    if (od43Enabled) {
+        var currentTime = (od43StartTime > 0) ? ((Date.now() - od43StartTime) / 1000).toFixed(1) : "0.0";
+        lines.push("<b style='color:#ffaa00'>od43 زمان‌بندی: زمان " + currentTime + " ثانیه J43</b>");
+    }
+    if (od44Enabled) {
+        var currentLayer = (currentProfit >= od44Threshold) ? "پیشرفته" : "پایه";
+        lines.push("<b style='color:#00ccff'>od44 لایه‌بندی: لایه " + currentLayer + " J44</b>");
+    }
+    if (od45Enabled) {
+        var totalCapital = initialCapital + currentProfit;
+        var currentBet = Math.max(1, Math.floor(totalCapital * (od45Percentage / 100)));
+        lines.push("<b style='color:#00ffaa'>od45 درصد ثابت: مبلغ " + currentBet + " J45</b>");
+    }
     if (od46Enabled) {
         if (od46Pause) lines.push("<b style='color:red'>od46 جبران اجباری: استراحت اجباری! J46</b>");
         else if (od46RecoveryActive) lines.push("<b style='color:#ffaa00'>od46 جبران اجباری: دور " + od46CurrentRound + "/" + od46MaxRounds + " J46</b>");
         else lines.push("<b style='color:#00ffaa'>od46 جبران اجباری: فعال (منتظر ضرر " + od46Target + ") J46</b>");
     }
 
-    if (manualPause) lines.push("<b style='color:orange'>درانتظار تنظیم و فعال کردن ربات J13</b>");
-    if (emergencyModeActive) lines.push("<b style='color:#d63384'>ضریب 3 اورژانسی فعال شد J14</b>");
-    lines.push("<b style='color:red'>ضریب برداشت: " + intendedCashoutTarget.toFixed(2) + "x J15</b>");
-    
-    var str = lines.join("<br>"); $("h4#hadi-box").html(str);
+    var str = lines.join("<br>");
+    $("h4#hadi-box").html(str);
 }
 
 var historyClickedOnce = false;
@@ -2287,4 +2643,5 @@ function clickGameHistory() {
         setTimeout(clickGameHistory, 1000);
     }
 }
+
 setTimeout(clickGameHistory, 500);

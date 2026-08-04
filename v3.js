@@ -189,7 +189,7 @@ var od42Target = 2.00;
 var od42Unit = 1;
 var od42TotalLoss = 0;
 
-// od43 - نقد کردن در زمان‌های خاص (در game_update پیاده‌سازی شده است)
+// od43 - نقد کردن در زمان‌های خاص
 var od43Enabled = false;
 var od43Time = 5;
 var od43StartTime = 0;
@@ -213,6 +213,13 @@ var od46RecoveryActive = false;
 var od46CurrentRound = 0;
 var od46LossAtStart = 0;
 var od46Pause = false;
+
+// ============================================================
+//  بلوک متغیرهای سازگاری برای جلوگیری از خطای ReferenceError
+//  (این متغیرها به‌روزرسانی می‌شوند تا با کد قدیمی شما سازگار باشند)
+// ============================================================
+var od36Enabled = fixedBetEnabled;
+var od37Enabled = betAfterStreakEnabled;
 
 // ============================================================
 //  توابع اصلی

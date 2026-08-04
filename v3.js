@@ -1191,7 +1191,7 @@ function updateFormulaAnalysis() {
    ============================================ */
 
 function updateMD5List() {
-    const container = document.getElementById('md5ListContainer');
+    var container = document.getElementById('md5ListContainer');
     if (!container) return;
 
     if (md5History.length === 0) {
@@ -1199,40 +1199,42 @@ function updateMD5List() {
         return;
     }
 
-    let html = "";
-    md5History.forEach((md5, i) => {
-        const id = `copy_md5_${i}`;
-        html += `
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:3px 0;">
-                <span style="color:#0f0;">#${i+1}: ${md5}</span>
-                <button id="${id}" style="background:#555; border:none; color:white; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px;">کپی</button>
-            </div>
-        `;
-    });
-
+    var html = '';
+    for (var i = 0; i < md5History.length; i++) {
+        var md5 = md5History[i];
+        var id = 'copy_md5_' + i;
+        html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:3px 0;">';
+        html += '<span style="color:#0f0;">#' + (i + 1) + ': ' + md5 + '</span>';
+        html += '<button id="' + id + '" style="background:#555; border:none; color:white; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px;">کپی</button>';
+        html += '</div>';
+    }
     container.innerHTML = html;
 
-    md5History.forEach((md5, i) => {
-        const btn = document.getElementById(`copy_md5_${i}`);
-        if (!btn) return;
-
-        btn.addEventListener("click", () => {
-            navigator.clipboard.writeText(md5)
-                .then(() => {
-                    btn.textContent = "✅";
-                    btn.style.background = "#28a745";
-                    setTimeout(() => {
-                        btn.textContent = "کپی";
-                        btn.style.background = "#555";
-                    }, 1500);
-                })
-                .catch(() => alert("خطا در کپی"));
-        });
-    });
+    for (var i = 0; i < md5History.length; i++) {
+        var btn = document.getElementById('copy_md5_' + i);
+        if (btn) {
+            btn.addEventListener('click', (function(md5Text) {
+                return function() {
+                    navigator.clipboard.writeText(md5Text)
+                        .then(function() {
+                            btn.innerHTML = '✅';
+                            btn.style.background = '#28a745';
+                            setTimeout(function() {
+                                btn.innerHTML = 'کپی';
+                                btn.style.background = '#555';
+                            }, 1500);
+                        })
+                        .catch(function() {
+                            alert('خطا در کپی');
+                        });
+                };
+            })(md5History[i]));
+        }
+    }
 }
 
 function updateHashList() {
-    const container = document.getElementById('hashListContainer');
+    var container = document.getElementById('hashListContainer');
     if (!container) return;
 
     if (hashHistory.length === 0) {
@@ -1240,38 +1242,39 @@ function updateHashList() {
         return;
     }
 
-    let html = "";
-    hashHistory.forEach((hash, i) => {
-        const id = `copy_hash_${i}`;
-        const shortHash = `${hash.substring(0,10)}...${hash.substring(hash.length-10)}`;
-
-        html += `
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:3px 0;">
-                <span style="color:#0f0;">#${i+1}: ${shortHash}</span>
-                <button id="${id}" style="background:#555; border:none; color:white; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px;">کپی</button>
-            </div>
-        `;
-    });
-
+    var html = '';
+    for (var i = 0; i < hashHistory.length; i++) {
+        var hash = hashHistory[i];
+        var id = 'copy_hash_' + i;
+        var shortHash = hash.substring(0, 10) + '...' + hash.substring(hash.length - 10);
+        html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:3px 0;">';
+        html += '<span style="color:#0f0;">#' + (i + 1) + ': ' + shortHash + '</span>';
+        html += '<button id="' + id + '" style="background:#555; border:none; color:white; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px;">کپی</button>';
+        html += '</div>';
+    }
     container.innerHTML = html;
 
-    hashHistory.forEach((hash, i) => {
-        const btn = document.getElementById(`copy_hash_${i}`);
-        if (!btn) return;
-
-        btn.addEventListener("click", () => {
-            navigator.clipboard.writeText(hash)
-                .then(() => {
-                    btn.textContent = "✅";
-                    btn.style.background = "#28a745";
-                    setTimeout(() => {
-                        btn.textContent = "کپی";
-                        btn.style.background = "#555";
-                    }, 1500);
-                })
-                .catch(() => alert("خطا در کپی"));
-        });
-    });
+    for (var i = 0; i < hashHistory.length; i++) {
+        var btn = document.getElementById('copy_hash_' + i);
+        if (btn) {
+            btn.addEventListener('click', (function(hashText) {
+                return function() {
+                    navigator.clipboard.writeText(hashText)
+                        .then(function() {
+                            btn.innerHTML = '✅';
+                            btn.style.background = '#28a745';
+                            setTimeout(function() {
+                                btn.innerHTML = 'کپی';
+                                btn.style.background = '#555';
+                            }, 1500);
+                        })
+                        .catch(function() {
+                            alert('خطا در کپی');
+                        });
+                };
+            })(hashHistory[i]));
+        }
+    }
 }
 
 function checkDuplicates() {

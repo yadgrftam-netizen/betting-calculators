@@ -1,7 +1,7 @@
-<(function() {
+(function() {
     "use strict";
 
-    // ====================== ۱. استایل‌ها (همانند قبل) ======================
+    // ====================== ۱. استایل‌ها ======================
     const style = document.createElement('style');
     style.textContent = `
         /* استایل‌های قبلی (برای اختصار حذف شدند، اما در کد نهایی کامل هستند) */
@@ -179,8 +179,8 @@
     let lastPlacedBet = 0;
     let betPlaced = false;
     let currentBalance = 600;
-    let fixedTarget = 0;          // هدف ثابت (محاسبه شده در ابتدا)
-    let targetLocked = false;     // اگر true، دیگر target تغییر نمی‌کند
+    let fixedTarget = 0;
+    let targetLocked = false;
     let bustHistory = [];
     let fullHistory = [];
     let initialLoadDone = false;
@@ -617,7 +617,6 @@
         document.getElementById('bot-status').textContent = '✅ ربات با موفقیت بارگذاری شد';
         document.querySelectorAll('.bot-input').forEach(input => { input.value = toEng(input.value); });
 
-        // خواندن موجودی از سایت و محاسبه هدف ثابت
         setTimeout(() => {
             const domBalance = getCurrentBalanceFromDOM();
             if (domBalance !== null) {
@@ -627,7 +626,6 @@
                 console.log(`موجودی اولیه از سایت خوانده شد: ${currentBalance}`);
             } else {
                 console.warn("ربات: امکان خواندن موجودی سایت در ۱۰ ثانیه اول وجود نداشت.");
-                // اگر موجودی خوانده نشد، از مقدار پیش‌فرض استفاده کن
                 calculateFixedTarget();
             }
         }, 10000);
@@ -999,7 +997,7 @@
         }
     }
 
-    // ====================== ۱۷. هوک‌های بازی با مدیریت موجودی اصلاح‌شده ======================
+    // ====================== ۱۷. هوک‌های بازی ======================
     function safeHook() {
         if (typeof window.game_waiting === 'function') {
             const orig = window.game_waiting;
@@ -1056,7 +1054,7 @@
                     updateVeinTableFromHistory();
                 }
 
-                // مدیریت ریسک (همانند قبل)
+                // مدیریت ریسک
                 if (riskEnabled) {
                     const patterns = scanVeinTable();
                     let match = null;
@@ -1148,16 +1146,14 @@
                     betPlaced = false;
                 }
 
-                // ===== مدیریت موجودی با هدف ثابت =====
+                // مدیریت موجودی با هدف ثابت
                 if (isRunning && isStrategyActive) {
                     const chkBalanceRule = document.getElementById('chk-balance-rule');
                     if (chkBalanceRule && chkBalanceRule.checked) {
                         const domBalance = getCurrentBalanceFromDOM();
                         if (domBalance !== null) {
                             currentBalance = domBalance;
-                            // فقط موجودی را به‌روز کن، هدف را تغییر نده
                             document.getElementById('base-balance').value = Math.floor(currentBalance);
-                            // بررسی رسیدن به هدف ثابت
                             if (currentBalance >= fixedTarget) {
                                 isRunning = false;
                                 document.getElementById('bot-status').textContent = '✅ حد سود روزانه محقق شد! ربات متوقف شد.';
@@ -1173,7 +1169,6 @@
 
     // ====================== ۱۸. راه‌اندازی رویدادها و دکمه‌ها ======================
     function initializeUI() {
-        // دکمه اعمال تغییرات هدف
         document.getElementById('btn-update-target').addEventListener('click', function() {
             if (isRunning) {
                 alert('ربات در حال اجراست. برای تغییر هدف، ابتدا ربات را متوقف کنید.');
@@ -1352,7 +1347,6 @@
             }
         }, 3000);
 
-        // محاسبه هدف اولیه
         calculateFixedTarget();
     }
 

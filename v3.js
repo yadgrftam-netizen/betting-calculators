@@ -167,6 +167,7 @@
     let strategyConfig = { type: 'martingale', multiplier: 2.0, baseAmount: 1 };
     let currentSeqIdx = 0, totalLoss = 0;
     let lastPlacedBet = 0;
+    let betPlaced = false; // پرچم برای جلوگیری از ثبت تکراری
     let currentBalance = 600;
     let targetBalance = 606;
     let bustHistory = [];
@@ -278,7 +279,6 @@
             const lVal = parseFloat(row[lIndex]);
             const uVal = parseFloat(row[uIndex]);
 
-            // شناسه یکتای پیشرفته
             const uniqueKey = `${group}_${a}_${c}_${h}_${q}_${ident}_${rIdent}`;
 
             if (!isNaN(eVal) && eVal > 0) {
@@ -322,7 +322,7 @@
         return null;
     }
 
-    // ====================== تابع افزودن به لاگ (با ذخیره در تاریخچه کامل) ======================
+    // ====================== تابع افزودن به لاگ ======================
     function addRiskLog(message, type) {
         type = type || 'info';
         const logDiv = document.getElementById('risk-log');
@@ -895,22 +895,18 @@
         }
     }
 
-    // ====================== ۱۶. هوک‌های بازی با منطق جدید جبران ======================
+    // ====================== ۱۶. هوک‌های بازی با منطق صحیح تطابق و پرچم betPlaced ======================
     function safeHook() {
         if (typeof window.game_waiting === 'function') {
             const orig = window.game_waiting;
             window.game_waiting = function(data) {
-                // ===== تصمیم‌گیری برای شرط‌بندی =====
                 let shouldBet = false;
                 let betMultiplier = 1;
 
                 if (recoveryMode) {
-                    // در حالت جبران: بدون توجه به تطابق، شرط ببند
                     shouldBet = true;
                     betMultiplier = recoveryMultiplier;
-                    addRiskLog(`🔄 حالت جبران: شرط با مبلغ ${BASE_BET * betMultiplier} بسته می‌شود`, 'info');
                 } else {
-                    // حالت عادی: فقط در صورت تطابق شرط ببند
                     if (riskEnabled && matchFound) {
                         shouldBet = true;
                         betMultiplier = 1;
@@ -920,13 +916,14 @@
                     }
                 }
 
-                if (isRunning && isStrategyActive && shouldBet) {
+                if (isRunning && isStrategyActive && shouldBet && !betPlaced) {
                     let bet = Math.ceil(BASE_BET * betMultiplier);
                     const strategy = getStrategyType(strategyConfig.multiplier);
                     if (strategy === 'LABOUCHERE' && !recoveryMode) {
                         bet = getBetAmount();
                     }
                     lastPlacedBet = bet;
+                    betPlaced = true;
 
                     if (!t_priceAmount || !t_cashoutProduct || !t_setCashBtn) findSiteElements();
                     if (bet > 0 && t_priceAmount && t_cashoutProduct && t_setCashBtn) {
@@ -947,7 +944,6 @@
             window.game_busted = function(data) {
                 const result = data.amount / 100;
 
-                // ===== به‌روزرسانی تاریخچه =====
                 if (result > 0) {
                     fullHistory.unshift(result);
                     bustHistory.unshift(result);
@@ -956,7 +952,7 @@
                     updateVeinTableFromHistory();
                 }
 
-                // ===== مدیریت ریسک (تشخیص تطابق) =====
+                // مدیریت ریسک (تشخیص تطابق)
                 if (riskEnabled) {
                     const patterns = scanVeinTable();
                     const match = findMatchingPattern(result, patterns);
@@ -989,8 +985,8 @@
                     matchFound = true;
                 }
 
-                // ===== مدیریت شرط‌بندی و مارتینگل با جبران =====
-                if (isRunning && isStrategyActive && lastPlacedBet > 0) {
+                // مدیریت نتیجه شرط (فقط در صورت بسته شدن شرط)
+                if (isRunning && isStrategyActive && betPlaced) {
                     if (result >= strategyConfig.multiplier) {
                         // برد
                         addRiskLog(`🎉 شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} برنده شد!`, 'match');
@@ -1013,9 +1009,10 @@
                         updateLossTotalUI();
                         addRiskLog(`🔄 حالت جبران فعال شد. مبلغ شرط بعدی: ${BASE_BET * recoveryMultiplier}`, 'info');
                     }
+                    betPlaced = false;
                 }
 
-                // ===== مدیریت موجودی و حد سود =====
+                // مدیریت موجودی و حد سود
                 if (isRunning && isStrategyActive) {
                     const chkBalanceRule = document.getElementById('chk-balance-rule');
                     if (chkBalanceRule && chkBalanceRule.checked) {
@@ -1204,5 +1201,5 @@
 
     // ====================== ۱۸. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات نهایی با جبران ضرر اولویت‌دار، شناسه یکتای پیشرفته، کپی کل لاگ و جدول ۲۸ ستونی بارگذاری شد.');
+    console.log('🤖 ربات نهایی با رفع مشکل شرط‌بندی بدون بررسی تطابق و ثبت تکراری نتایج بارگذاری شد.');
 })();

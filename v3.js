@@ -84,7 +84,7 @@
             table-layout: auto;
         }
         #statsTableContainer table { min-width: 600px; }
-        #veinTableContainer table { min-width: 2800px; }
+        #veinTableContainer table { min-width: 3000px; }
         
         #statsTableContainer th, #statsTableContainer td,
         #veinTableContainer th, #veinTableContainer td {
@@ -134,6 +134,7 @@
         .risk-log .nomatch { color: #f00; }
         .risk-log .info { color: #ffc107; }
         .risk-log .bet { color: #00bfff; }
+        .risk-log .green { color: #8bc34a; }
     `;
     document.head.appendChild(style);
 
@@ -167,7 +168,7 @@
     let strategyConfig = { type: 'martingale', multiplier: 2.0, baseAmount: 1 };
     let currentSeqIdx = 0, totalLoss = 0;
     let lastPlacedBet = 0;
-    let betPlaced = false; // پرچم برای جلوگیری از ثبت تکراری
+    let betPlaced = false;
     let currentBalance = 600;
     let targetBalance = 606;
     let bustHistory = [];
@@ -181,6 +182,7 @@
     let matchFound = false;
     let riskTargetMultiplier = null;
     let riskSkipCount = 0;
+    let selectedPatternType = 'red'; // 'all', 'red', 'green'
 
     // متغیرهای جبران ضرر
     let recoveryMode = false;
@@ -228,7 +230,7 @@
         return isNaN(balance) ? null : balance;
     }
 
-    // ====================== ۷. توابع مدیریت ریسک با شناسه یکتای پیشرفته ======================
+    // ====================== ۷. توابع مدیریت ریسک (با پشتیبانی از نوع رگه) ======================
     function extractVeinTableData() {
         const container = document.getElementById('veinTableContainer');
         if (!container) return [];
@@ -236,7 +238,8 @@
         const data = [];
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
-            if (cells.length >= 28) {
+            // جدول ۲۹ ستونی (شناسه یکتا + نوع رگه + ۲۷ ستون قبلی)
+            if (cells.length >= 29) {
                 const rowData = [];
                 cells.forEach(cell => {
                     let text = cell.innerText.trim();
@@ -252,21 +255,24 @@
 
     function scanVeinTable() {
         veinTableData = extractVeinTableData();
-        const eIndex = 6;
-        const pIndex = 17;
-        const lIndex = 13;
-        const uIndex = 22;
-        const groupIdx = 1;
-        const aIdx = 2;
-        const cIdx = 4;
-        const hIdx = 9;
-        const qIdx = 18;
-        const iIdx = 10;
-        const rIdx = 19;
+        // اندیس‌های جدید برای جدول ۲۹ ستونی
+        const typeIdx = 1;     // نوع رگه (قرمز/سبز)
+        const eIndex = 7;      // E – ضریب قبل از رگه مبدأ
+        const pIndex = 18;     // P – ضریب قبل از رگه مقصد
+        const lIndex = 14;     // L – ضریب بعد از رگه مبدأ (F1)
+        const uIndex = 23;     // U – ضریب بعد از رگه مقصد (F2)
+        const groupIdx = 2;    // شماره گروه
+        const aIdx = 3;        // A – شماره رگه در لیست معکوس
+        const cIdx = 5;        // C – دنباله‌های مشابه
+        const hIdx = 10;       // H – ضریب‌های رگه مبدأ
+        const qIdx = 19;       // Q – ضریب‌های رگه مقصد
+        const iIdx = 11;       // I – شناسه رگه مبدأ
+        const rIdx = 20;       // R – شناسه رگه مقصد
 
         const patterns = [];
 
         veinTableData.forEach(row => {
+            const type = row[typeIdx] || 'قرمز';
             const group = row[groupIdx] || '';
             const a = row[aIdx] || '';
             const c = JSON.stringify(row[cIdx] || '');
@@ -284,6 +290,7 @@
             if (!isNaN(eVal) && eVal > 0) {
                 patterns.push({
                     key: uniqueKey,
+                    type: type,
                     beforeStart: eVal,
                     beforeEnd: pVal,
                     afterStart: lVal,
@@ -296,6 +303,7 @@
             if (!isNaN(pVal) && pVal > 0 && (pVal !== eVal)) {
                 patterns.push({
                     key: uniqueKey,
+                    type: type,
                     beforeStart: eVal,
                     beforeEnd: pVal,
                     afterStart: lVal,
@@ -310,8 +318,12 @@
         return patterns;
     }
 
-    function findMatchingPattern(coeff, patterns) {
+    function findMatchingPattern(coeff, patterns, selectedType) {
         for (let p of patterns) {
+            // فیلتر بر اساس نوع انتخاب شده
+            if (selectedType !== 'all' && p.type !== selectedType) {
+                continue;
+            }
             if (coeff === p.beforeStart) {
                 return { ...p, matchedField: 'E' };
             }
@@ -424,7 +436,7 @@
     `;
     wrapper.appendChild(paneBalance);
 
-    // پنل مدیریت ریسک
+    // پنل مدیریت ریسک با انتخابگر نوع الگو
     const paneRisk = document.createElement('div');
     paneRisk.className = 'bot-pane';
     paneRisk.id = 'pane-risk';
@@ -432,12 +444,20 @@
         <div class="risk-pane">
             <div class="bot-row">
                 <input type="checkbox" id="chk-risk-enable">
-                <label for="chk-risk-enable" style="font-weight:bold; color:#28a745;">شرط با داده‌های جدول ۲۸ ستون انجام شود</label>
+                <label for="chk-risk-enable" style="font-weight:bold; color:#28a745;">شرط با داده‌های جدول ۲۹ ستون انجام شود</label>
             </div>
             <div class="bot-row">
                 <button class="bot-btn blue" id="btn-scan-vein">🔍 اسکن دستی جدول</button>
                 <button class="bot-btn dark" id="btn-copy-full-log">📋 کپی کل لاگ</button>
                 <span style="font-size:12px; color:#888;" id="risk-scan-status">وضعیت: آماده</span>
+            </div>
+            <div class="bot-row">
+                <span class="bot-label">نوع الگو:</span>
+                <select id="pattern-type-select" style="padding:4px 8px; border-radius:4px; background:#333; color:white; border:1px solid #555;">
+                    <option value="red">فقط قرمز (۰ تا ۱٫۷۹)</option>
+                    <option value="green">فقط سبز (۱٫۸۰ به بالا)</option>
+                    <option value="all">همه الگوها (قرمز و سبز)</option>
+                </select>
             </div>
             <div class="bot-row">
                 <span class="bot-label">تعداد رگه‌ها:</span>
@@ -478,7 +498,7 @@
         const veinMenu = document.createElement('div');
         veinMenu.id = 'vein-table-outer-container';
         veinMenu.innerHTML = `
-            <button class="vein-collapse-btn" id="vein-collapse-btn"><span>📊 جدول رگه‌های قرمز (۲۸ ستونی - شامل شناسه یکتا و فاصله‌ها)</span><span>▶</span></button>
+            <button class="vein-collapse-btn" id="vein-collapse-btn"><span>📊 جدول رگه‌های قرمز و سبز (۲۹ ستونی - شامل نوع رگه)</span><span>▶</span></button>
             <div class="vein-collapse-content" id="vein-collapse-content"><div id="veinTableContainer"></div></div>
         `;
         statsMenu.after(veinMenu);
@@ -560,7 +580,7 @@
         tbody.innerHTML = newRowsHTML;
     }
 
-    // ====================== ۱۲. تابع به‌روزرسانی جدول ۲۸ ستونی ======================
+    // ====================== ۱۲. تابع به‌روزرسانی جدول ۲۹ ستونی (قرمز و سبز) ======================
     function updateVeinTableFromHistory() {
         const container = document.getElementById('veinTableContainer');
         if (!container) return;
@@ -576,10 +596,22 @@
         const n = rev.length;
 
         while (i < n) {
+            let type = null;
+            let start = i;
+            let vein = [];
+            let condition = false;
+
+            // تشخیص نوع رگه: قرمز (۰ تا ۱٫۷۹) یا سبز (≥ ۱٫۸۰)
             if (rev[i] >= 0.00 && rev[i] <= 1.79) {
-                let start = i;
-                let vein = [];
-                while (i < n && rev[i] >= 0.00 && rev[i] <= 1.79) {
+                type = 'قرمز';
+                condition = true;
+            } else if (rev[i] >= 1.80 && rev[i] < 100.00) {
+                type = 'سبز';
+                condition = true;
+            }
+
+            if (condition && type !== null) {
+                while (i < n && ((type === 'قرمز' && rev[i] >= 0.00 && rev[i] <= 1.79) || (type === 'سبز' && rev[i] >= 1.80 && rev[i] < 100.00))) {
                     vein.push(rev[i]);
                     i++;
                 }
@@ -587,7 +619,8 @@
                     startIndex: start,
                     endIndex: i - 1,
                     members: vein,
-                    length: vein.length
+                    length: vein.length,
+                    type: type
                 });
             } else {
                 i++;
@@ -601,9 +634,9 @@
 
         const patternMap = new Map();
         for (let v of veins) {
-            const key = JSON.stringify(v.members);
+            const key = JSON.stringify(v.members) + '_' + v.type;
             if (!patternMap.has(key)) {
-                patternMap.set(key, { pattern: v.members, occurrences: [], count: 0 });
+                patternMap.set(key, { pattern: v.members, type: v.type, occurrences: [], count: 0 });
             }
             const entry = patternMap.get(key);
             entry.occurrences.push(v);
@@ -626,8 +659,9 @@
                 const { before, after } = getBeforeAfter(occ);
                 const members = occ.members;
                 const len = members.length;
+                const type = occ.type;
                 let id = `V${groupNumber}`;
-                let type = (len === 1) ? "تکی" : "چند";
+                let typeLabel = (len === 1) ? "تکی" : "چند";
                 let count = grp.count;
                 if (members.length === 0) continue;
 
@@ -661,6 +695,7 @@
 
                 const row = [
                     uniqueKey,
+                    type,          // ستون جدید: نوع رگه
                     groupNumber,
                     occ.startIndex + 1,
                     occ.length,
@@ -672,7 +707,7 @@
                     JSON.stringify(members),
                     id,
                     count,
-                    type,
+                    typeLabel,
                     (after !== null ? after : "-"),
                     occ.startIndex + 1,
                     occ.startIndex + 2,
@@ -681,7 +716,7 @@
                     JSON.stringify(members),
                     id,
                     count,
-                    type,
+                    typeLabel,
                     (after !== null ? after : "-"),
                     (occ.endIndex + 2 < n ? rev[occ.endIndex + 2] : "پایان"),
                     distance,
@@ -696,6 +731,7 @@
 
         const headers = [
             "شناسه یکتا",
+            "نوع رگه",
             "شماره گروه",
             "A – شماره رگه در لیست معکوس",
             "B – تعداد اعداد بین دو رگه",
@@ -735,6 +771,11 @@
                 let display = cell;
                 if (typeof cell === 'string' && cell.startsWith('[')) {
                     display = `<span class="vein-array">${cell}</span>`;
+                } else if (cell === "قرمز" || cell === "سبز") {
+                    let cls = "vein-badge";
+                    if (cell === "قرمز") cls += " vein-badge-orange";
+                    else if (cell === "سبز") cls += " vein-badge-green";
+                    display = `<span class="${cls}">${cell}</span>`;
                 } else if (cell === "V1" || cell === "V2" || cell === "V3" || cell === "V4" || cell === "V5" || cell === "V6" || cell === "V7" || cell === "V8" || cell === "V9" || cell === "V10" || cell === "V11" || cell === "V12") {
                     display = `<span class="vein-badge">${cell}</span>`;
                 } else if (cell === "تکی" || cell === "چند" || cell === "خارج") {
@@ -895,7 +936,7 @@
         }
     }
 
-    // ====================== ۱۶. هوک‌های بازی با منطق صحیح تطابق و پرچم betPlaced ======================
+    // ====================== ۱۶. هوک‌های بازی با منطق قرمز/سبز ======================
     function safeHook() {
         if (typeof window.game_waiting === 'function') {
             const orig = window.game_waiting;
@@ -952,10 +993,11 @@
                     updateVeinTableFromHistory();
                 }
 
-                // مدیریت ریسک (تشخیص تطابق)
+                // مدیریت ریسک (تشخیص تطابق با فیلتر نوع)
                 if (riskEnabled) {
                     const patterns = scanVeinTable();
-                    const match = findMatchingPattern(result, patterns);
+                    const match = findMatchingPattern(result, patterns, selectedPatternType);
+
                     if (match) {
                         matchFound = true;
                         let target = null;
@@ -966,7 +1008,7 @@
                             document.getElementById('loss-coeff').value = target.toFixed(2);
                             updateLossSequence();
                             document.getElementById('risk-target-display').textContent = target.toFixed(2);
-                            const details = `گروه:${match.group} | A:${match.a} | شناسه:${match.key} | L:${match.afterStart} | U:${match.afterEnd}`;
+                            const details = `نوع:${match.type} | گروه:${match.group} | A:${match.a} | شناسه:${match.key} | L:${match.afterStart} | U:${match.afterEnd}`;
                             addRiskLog(`✅ تطابق با ${match.matchedField} (${details}) → ضریب هدف: ${target.toFixed(2)}`, 'match');
                         } else {
                             matchFound = false;
@@ -1046,6 +1088,14 @@
                 document.querySelectorAll('.bot-pane').forEach(p => p.classList.remove('active'));
                 document.getElementById(this.dataset.target).classList.add('active');
             });
+        });
+
+        // انتخابگر نوع الگو
+        document.getElementById('pattern-type-select').addEventListener('change', function() {
+            selectedPatternType = this.value;
+            addRiskLog(`🔄 نوع الگو به "${this.options[this.selectedIndex].text}" تغییر یافت`, 'info');
+            // ریست وضعیت تطابق برای جلوگیری از شرط‌بندی با الگوی قدیمی
+            matchFound = false;
         });
 
         document.getElementById('chk-martingale').addEventListener('change', function() {
@@ -1201,5 +1251,5 @@
 
     // ====================== ۱۸. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات نهایی با رفع مشکل شرط‌بندی بدون بررسی تطابق و ثبت تکراری نتایج بارگذاری شد.');
+    console.log('🤖 ربات نهایی با تشخیص الگوهای قرمز و سبز (۲۹ ستون) و انتخابگر نوع الگو بارگذاری شد.');
 })();

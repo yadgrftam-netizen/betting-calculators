@@ -1,9 +1,10 @@
-(function() {
+<(function() {
     "use strict";
 
-    // ====================== ۱. استایل‌ها ======================
+    // ====================== ۱. استایل‌ها (همانند قبل) ======================
     const style = document.createElement('style');
     style.textContent = `
+        /* استایل‌های قبلی (برای اختصار حذف شدند، اما در کد نهایی کامل هستند) */
         #bot-ui-wrapper {
             direction: rtl; text-align: right; font-family: Tahoma, sans-serif;
             --bg: #fff; --text: #333; --border: #ddd; --shadow: rgba(0,0,0,0.1);
@@ -84,7 +85,7 @@
             table-layout: auto;
         }
         #statsTableContainer table { min-width: 600px; }
-        #veinTableContainer table { min-width: 3000px; }
+        #veinTableContainer table { min-width: 2800px; }
         
         #statsTableContainer th, #statsTableContainer td,
         #veinTableContainer th, #veinTableContainer td {
@@ -135,6 +136,26 @@
         .risk-log .info { color: #ffc107; }
         .risk-log .bet { color: #00bfff; }
         .risk-log .green { color: #8bc34a; }
+        .risk-log .manual { color: #ff9800; }
+
+        .manual-input-area {
+            width: 100%;
+            height: 80px;
+            padding: 6px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+            text-align: left;
+            resize: vertical;
+        }
+        .manual-input-area:focus {
+            outline: none;
+            border-color: #28a745;
+        }
     `;
     document.head.appendChild(style);
 
@@ -151,30 +172,20 @@
         }
     });
 
-    // ====================== ۳. آرایه دنباله‌های کلاسیک ======================
-    const SEQUENCES = {
-        "1.10": [11, 121, 1331, 14641, 161051],
-        "1.20": [6, 36, 216, 1296, 7776],
-        "1.30": [4, 17, 74, 321, 1391],
-        "1.50": [3, 9, 27, 81, 243],
-        "1.80": [2, 4, 9, 21, 47],
-        "2.00": [2, 3, 7, 15, 31],
-        "3.00": [1, 2, 3, 5, 8],
-        "4.00": [1, 1, 2, 3, 5]
-    };
-
-    // ====================== ۴. متغیرهای اصلی ======================
+    // ====================== ۳. متغیرهای اصلی ======================
     let isRunning = false, isStrategyActive = false;
     let strategyConfig = { type: 'martingale', multiplier: 2.0, baseAmount: 1 };
     let currentSeqIdx = 0, totalLoss = 0;
     let lastPlacedBet = 0;
     let betPlaced = false;
     let currentBalance = 600;
-    let targetBalance = 606;
+    let fixedTarget = 0;          // هدف ثابت (محاسبه شده در ابتدا)
+    let targetLocked = false;     // اگر true، دیگر target تغییر نمی‌کند
     let bustHistory = [];
     let fullHistory = [];
     let initialLoadDone = false;
     let historyClickedOnce = false;
+    let newPatternsCache = {};
 
     // متغیرهای مدیریت ریسک
     let riskEnabled = false;
@@ -182,7 +193,10 @@
     let matchFound = false;
     let riskTargetMultiplier = null;
     let riskSkipCount = 0;
-    let selectedPatternType = 'red'; // 'all', 'red', 'green'
+    let selectedPatternType = 'all';
+    let confidenceThreshold = 0;
+    let minRepeat = 2;
+    let noMatchCounter = 0;
 
     // متغیرهای جبران ضرر
     let recoveryMode = false;
@@ -192,7 +206,7 @@
     // آرایه برای ذخیره کامل لاگ
     let fullLogHistory = [];
 
-    // ====================== ۵. داده‌های جدول آماری ======================
+    // داده‌های آماری
     const STATS_DATA = [
         { id: 'A', coeff: 1.10, fair: 90.9 },
         { id: 'B', coeff: 1.20, fair: 83.3 },
@@ -204,7 +218,7 @@
         { id: 'H', coeff: 4.00, fair: 25.0 }
     ];
 
-    // ====================== ۶. توابع محاسبه پویا ======================
+    // ====================== ۴. توابع محاسبه پویا ======================
     function calculateDynamicBase(coeff) {
         if (coeff <= 1.0) return 1; 
         return Math.ceil(1 / (coeff - 1));
@@ -230,7 +244,7 @@
         return isNaN(balance) ? null : balance;
     }
 
-    // ====================== ۷. توابع مدیریت ریسک (با پشتیبانی از نوع رگه) ======================
+    // ====================== ۵. توابع مدیریت ریسک (جدول ۲۸ ستونی) ======================
     function extractVeinTableData() {
         const container = document.getElementById('veinTableContainer');
         if (!container) return [];
@@ -238,8 +252,7 @@
         const data = [];
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
-            // جدول ۲۹ ستونی (شناسه یکتا + نوع رگه + ۲۷ ستون قبلی)
-            if (cells.length >= 29) {
+            if (cells.length >= 28) {
                 const rowData = [];
                 cells.forEach(cell => {
                     let text = cell.innerText.trim();
@@ -255,19 +268,20 @@
 
     function scanVeinTable() {
         veinTableData = extractVeinTableData();
-        // اندیس‌های جدید برای جدول ۲۹ ستونی
-        const typeIdx = 1;     // نوع رگه (قرمز/سبز)
-        const eIndex = 7;      // E – ضریب قبل از رگه مبدأ
-        const pIndex = 18;     // P – ضریب قبل از رگه مقصد
-        const lIndex = 14;     // L – ضریب بعد از رگه مبدأ (F1)
-        const uIndex = 23;     // U – ضریب بعد از رگه مقصد (F2)
-        const groupIdx = 2;    // شماره گروه
-        const aIdx = 3;        // A – شماره رگه در لیست معکوس
-        const cIdx = 5;        // C – دنباله‌های مشابه
-        const hIdx = 10;       // H – ضریب‌های رگه مبدأ
-        const qIdx = 19;       // Q – ضریب‌های رگه مقصد
-        const iIdx = 11;       // I – شناسه رگه مبدأ
-        const rIdx = 20;       // R – شناسه رگه مقصد
+        const typeIdx = 1;
+        const eIndex = 7;
+        const pIndex = 18;
+        const lIndex = 14;
+        const uIndex = 23;
+        const groupIdx = 2;
+        const aIdx = 3;
+        const cIdx = 5;
+        const hIdx = 10;
+        const qIdx = 19;
+        const iIdx = 11;
+        const rIdx = 20;
+        const repeatIdx = 12;
+        const lastRepeatIdx = 25;
 
         const patterns = [];
 
@@ -284,6 +298,8 @@
             const pVal = parseFloat(row[pIndex]);
             const lVal = parseFloat(row[lIndex]);
             const uVal = parseFloat(row[uIndex]);
+            const repeatCount = parseInt(row[repeatIdx]) || 0;
+            const lastRepeat = parseInt(row[lastRepeatIdx]) || 0;
 
             const uniqueKey = `${group}_${a}_${c}_${h}_${q}_${ident}_${rIdent}`;
 
@@ -296,6 +312,8 @@
                     afterStart: lVal,
                     afterEnd: uVal,
                     group, a, c, h, q, ident, rIdent,
+                    repeatCount: repeatCount,
+                    lastRepeat: lastRepeat,
                     source: 'E',
                     row: row
                 });
@@ -309,6 +327,8 @@
                     afterStart: lVal,
                     afterEnd: uVal,
                     group, a, c, h, q, ident, rIdent,
+                    repeatCount: repeatCount,
+                    lastRepeat: lastRepeat,
                     source: 'P',
                     row: row
                 });
@@ -318,23 +338,16 @@
         return patterns;
     }
 
-    function findMatchingPattern(coeff, patterns, selectedType) {
-        for (let p of patterns) {
-            // فیلتر بر اساس نوع انتخاب شده
-            if (selectedType !== 'all' && p.type !== selectedType) {
-                continue;
-            }
-            if (coeff === p.beforeStart) {
-                return { ...p, matchedField: 'E' };
-            }
-            if (coeff === p.beforeEnd) {
-                return { ...p, matchedField: 'P' };
-            }
-        }
-        return null;
+    function calculateConfidence(pattern, currentRound) {
+        const repeatWeight = 10;
+        const recencyWeight = 5;
+        const repeatScore = pattern.repeatCount * repeatWeight;
+        const recencyScore = (currentRound - pattern.lastRepeat) * recencyWeight;
+        const confidence = repeatScore - recencyScore;
+        return Math.max(0, confidence);
     }
 
-    // ====================== تابع افزودن به لاگ ======================
+    // ====================== ۶. تابع افزودن به لاگ ======================
     function addRiskLog(message, type) {
         type = type || 'info';
         const logDiv = document.getElementById('risk-log');
@@ -355,7 +368,65 @@
         }
     }
 
-    // ====================== ۸. ساختار HTML کادر اصلی ======================
+    // ====================== ۷. تابع بارگذاری دستی ضرایب ======================
+    function loadManualCoefficients() {
+        const textarea = document.getElementById('manual-coeff-input');
+        if (!textarea) return;
+        const rawText = textarea.value.trim();
+        if (!rawText) {
+            alert('لطفاً ضرایب را وارد کنید.');
+            return;
+        }
+
+        const numbers = [];
+        const parts = rawText.split(/[\n\r,;\t]+/);
+        for (let part of parts) {
+            const cleaned = part.trim().replace(/---$/, '').replace(/[^0-9.]/g, '');
+            if (cleaned) {
+                const num = parseFloat(cleaned);
+                if (!isNaN(num) && num >= 0 && num < 100) {
+                    numbers.push(num);
+                }
+            }
+        }
+
+        if (numbers.length === 0) {
+            alert('هیچ عدد معتبری یافت نشد. لطفاً ضرایب را به‌صورت اعداد (مثلاً 1.25--- یا 1.25) وارد کنید.');
+            return;
+        }
+
+        const beforeCount = fullHistory.length;
+        fullHistory = fullHistory.concat(numbers);
+        bustHistory = fullHistory.slice(-50);
+
+        updateStatsTable();
+        updateVeinTableFromHistory();
+        updateLossSequence();
+
+        addRiskLog(`📥 ${numbers.length} ضریب دستی به تاریخچه اضافه شد. (مجموع: ${fullHistory.length})`, 'manual');
+        textarea.value = '';
+
+        if (riskEnabled) {
+            const patterns = scanVeinTable();
+            document.getElementById('risk-vein-count').textContent = patterns.length;
+            addRiskLog('🔍 اسکن مجدد جدول پس از بارگذاری دستی انجام شد. تعداد الگوها: ' + patterns.length, 'info');
+        }
+
+        alert(`${numbers.length} ضریب با موفقیت بارگذاری شد.`);
+    }
+
+    // ====================== ۸. تابع محاسبه هدف ثابت ======================
+    function calculateFixedTarget() {
+        const balance = parseFloat(document.getElementById('base-balance').value) || 0;
+        const percent = parseFloat(document.getElementById('balance-profit-percent').value) || 0;
+        const profit = Math.ceil(balance * (percent / 100));
+        fixedTarget = balance + profit;
+        document.getElementById('balance-profit-amount').value = profit;
+        document.getElementById('balance-target').value = balance + ' + ' + profit + ' = ' + fixedTarget;
+        return fixedTarget;
+    }
+
+    // ====================== ۹. ساختار HTML کادر اصلی ======================
     const wrapper = document.createElement('div');
     wrapper.id = 'bot-ui-wrapper';
     wrapper.innerHTML = '<div id="bot-status">⚡ ربات آماده است</div>';
@@ -413,7 +484,7 @@
     `;
     wrapper.appendChild(paneLoss);
 
-    // پنل مدیریت موجودی
+    // پنل مدیریت موجودی (اصلاح‌شده)
     const paneBalance = document.createElement('div');
     paneBalance.className = 'bot-pane';
     paneBalance.id = 'pane-balance';
@@ -421,22 +492,29 @@
         <div class="bot-row">
             <span class="bot-label">موجودی پایه فعلی:</span>
             <input type="text" class="bot-input readonly-field" id="base-balance" value="600" readonly style="max-width:80px;">
-            <span style="font-size:11px; color:#888;">(در ابتدای کار و پس از هر دور بروزرسانی می‌شود)</span>
+            <span style="font-size:11px; color:#888;">(خوانده شده از سایت)</span>
         </div>
         <div class="bot-row">
             <span class="bot-label">درصد حد سود:</span>
             <input type="text" class="bot-input" id="balance-profit-percent" value="1" style="max-width:60px;">
             <span>%</span>
+            <button class="bot-btn blue" id="btn-update-target" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px; margin-right:8px;">🔄 اعمال</button>
         </div>
         <div class="bot-row"><div class="bot-check-row" style="border:none; margin-top:0;">
-            <input type="checkbox" id="chk-balance-rule" checked><label for="chk-balance-rule" style="font-weight:bold;">فعال‌سازی محاسبه حد سود روزانه</label>
+            <input type="checkbox" id="chk-balance-rule" checked><label for="chk-balance-rule" style="font-weight:bold;">فعال‌سازی حد سود روزانه</label>
         </div></div>
-        <div class="bot-row"><span class="bot-label">مبلغ حد سود:</span><input type="text" class="bot-input readonly-field" id="balance-profit-amount" readonly style="max-width:80px;"></div>
-        <div class="bot-row"><span class="bot-label">جمع کل (هدف):</span><input type="text" class="bot-input readonly-field" id="balance-target" readonly style="max-width:160px;"></div>
+        <div class="bot-row">
+            <span class="bot-label">مبلغ حد سود:</span>
+            <input type="text" class="bot-input readonly-field" id="balance-profit-amount" readonly style="max-width:80px;">
+        </div>
+        <div class="bot-row">
+            <span class="bot-label">جمع کل (هدف ثابت):</span>
+            <input type="text" class="bot-input readonly-field" id="balance-target" readonly style="max-width:160px;">
+        </div>
     `;
     wrapper.appendChild(paneBalance);
 
-    // پنل مدیریت ریسک با انتخابگر نوع الگو
+    // ====================== ۱۰. پنل مدیریت ریسک ======================
     const paneRisk = document.createElement('div');
     paneRisk.className = 'bot-pane';
     paneRisk.id = 'pane-risk';
@@ -444,10 +522,9 @@
         <div class="risk-pane">
             <div class="bot-row">
                 <input type="checkbox" id="chk-risk-enable">
-                <label for="chk-risk-enable" style="font-weight:bold; color:#28a745;">شرط با داده‌های جدول ۲۹ ستون انجام شود</label>
+                <label for="chk-risk-enable" style="font-weight:bold; color:#28a745;">شرط با داده‌های جدول ۲۸ ستون انجام شود</label>
             </div>
             <div class="bot-row">
-                <button class="bot-btn blue" id="btn-scan-vein">🔍 اسکن دستی جدول</button>
                 <button class="bot-btn dark" id="btn-copy-full-log">📋 کپی کل لاگ</button>
                 <span style="font-size:12px; color:#888;" id="risk-scan-status">وضعیت: آماده</span>
             </div>
@@ -456,8 +533,29 @@
                 <select id="pattern-type-select" style="padding:4px 8px; border-radius:4px; background:#333; color:white; border:1px solid #555;">
                     <option value="red">فقط قرمز (۰ تا ۱٫۷۹)</option>
                     <option value="green">فقط سبز (۱٫۸۰ به بالا)</option>
-                    <option value="all">همه الگوها (قرمز و سبز)</option>
+                    <option value="all" selected>همه الگوها (قرمز و سبز)</option>
+                    <option value="combined">الگوهای ترکیبی (قرمز+سبز)</option>
                 </select>
+            </div>
+            <div class="bot-row">
+                <span class="bot-label">حداقل تکرار:</span>
+                <input type="text" class="bot-input" id="min-repeat-input" value="2" style="max-width:50px;">
+                <span style="font-size:11px; color:#888;">(برای الگوهای جدید)</span>
+            </div>
+            <div class="bot-row">
+                <span class="bot-label">آستانه اعتماد:</span>
+                <input type="text" class="bot-input" id="confidence-threshold" value="0" style="max-width:50px;">
+                <span style="font-size:11px; color:#888;">(حداقل امتیاز اعتماد برای شرط)</span>
+            </div>
+            <div class="bot-row" style="flex-wrap: wrap; border-top:1px dashed #555; padding-top:8px; margin-top:4px;">
+                <span class="bot-label" style="min-width:100px;">بارگذاری دستی:</span>
+                <button class="bot-btn blue" id="btn-load-manual" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px;">📥 بارگذاری</button>
+            </div>
+            <div class="bot-row">
+                <textarea class="manual-input-area" id="manual-coeff-input" placeholder="مثال:&#10;1.25---&#10;1.53---&#10;1.69---&#10;2.20---"></textarea>
+            </div>
+            <div class="bot-row" style="font-size:11px; color:#888; margin-top:-4px;">
+                <span>ضرایب را با جداکننده (--- یا خط جدید یا کاما) وارد کنید.</span>
             </div>
             <div class="bot-row">
                 <span class="bot-label">تعداد رگه‌ها:</span>
@@ -478,7 +576,7 @@
     `;
     wrapper.appendChild(paneRisk);
 
-    // ====================== ۹. تزریق به صفحه ======================
+    // ====================== ۱۱. تزریق به صفحه ======================
     function inject() {
         if (!document.body) { setTimeout(inject, 50); return; }
         const selectors = ['.header', '.navbar', '.top-bar', 'header', '#header'];
@@ -498,7 +596,7 @@
         const veinMenu = document.createElement('div');
         veinMenu.id = 'vein-table-outer-container';
         veinMenu.innerHTML = `
-            <button class="vein-collapse-btn" id="vein-collapse-btn"><span>📊 جدول رگه‌های قرمز و سبز (۲۹ ستونی - شامل نوع رگه)</span><span>▶</span></button>
+            <button class="vein-collapse-btn" id="vein-collapse-btn"><span>📊 جدول رگه‌های قرمز و سبز (۲۸ ستونی - شامل نوع رگه، اعتماد و تاریخ آخرین تکرار)</span><span>▶</span></button>
             <div class="vein-collapse-content" id="vein-collapse-content"><div id="veinTableContainer"></div></div>
         `;
         statsMenu.after(veinMenu);
@@ -519,15 +617,18 @@
         document.getElementById('bot-status').textContent = '✅ ربات با موفقیت بارگذاری شد';
         document.querySelectorAll('.bot-input').forEach(input => { input.value = toEng(input.value); });
 
+        // خواندن موجودی از سایت و محاسبه هدف ثابت
         setTimeout(() => {
             const domBalance = getCurrentBalanceFromDOM();
             if (domBalance !== null) {
                 currentBalance = domBalance;
                 document.getElementById('base-balance').value = Math.floor(currentBalance);
-                updateBalanceCalc();
+                calculateFixedTarget();
                 console.log(`موجودی اولیه از سایت خوانده شد: ${currentBalance}`);
             } else {
                 console.warn("ربات: امکان خواندن موجودی سایت در ۱۰ ثانیه اول وجود نداشت.");
+                // اگر موجودی خوانده نشد، از مقدار پیش‌فرض استفاده کن
+                calculateFixedTarget();
             }
         }, 10000);
 
@@ -537,20 +638,7 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
     else inject();
 
-    // ====================== ۱۰. توابع به‌روزرسانی موجودی ======================
-    function updateBalanceCalc() {
-        const baseStr = document.getElementById('base-balance').value;
-        const base = parseFloat(baseStr) || 0;
-        const percentStr = document.getElementById('balance-profit-percent').value;
-        const percent = parseFloat(percentStr) || 0;
-        let profit = Math.ceil(base * (percent / 100));
-        targetBalance = base + profit;
-        document.getElementById('balance-profit-amount').value = profit;
-        document.getElementById('balance-target').value = base + ' + ' + profit + ' = ' + targetBalance;
-        return targetBalance;
-    }
-
-    // ====================== ۱۱. توابع بارگذاری تاریخچه ======================
+    // ====================== ۱۲. توابع بارگذاری تاریخچه ======================
     function updateStatsTable() {
         const tbody = document.getElementById('result-body');
         if (!tbody) return;
@@ -580,7 +668,7 @@
         tbody.innerHTML = newRowsHTML;
     }
 
-    // ====================== ۱۲. تابع به‌روزرسانی جدول ۲۹ ستونی (قرمز و سبز) ======================
+    // ====================== ۱۳. تابع به‌روزرسانی جدول ۲۸ ستونی ======================
     function updateVeinTableFromHistory() {
         const container = document.getElementById('veinTableContainer');
         if (!container) return;
@@ -601,7 +689,6 @@
             let vein = [];
             let condition = false;
 
-            // تشخیص نوع رگه: قرمز (۰ تا ۱٫۷۹) یا سبز (≥ ۱٫۸۰)
             if (rev[i] >= 0.00 && rev[i] <= 1.79) {
                 type = 'قرمز';
                 condition = true;
@@ -636,11 +723,12 @@
         for (let v of veins) {
             const key = JSON.stringify(v.members) + '_' + v.type;
             if (!patternMap.has(key)) {
-                patternMap.set(key, { pattern: v.members, type: v.type, occurrences: [], count: 0 });
+                patternMap.set(key, { pattern: v.members, type: v.type, occurrences: [], count: 0, lastIndex: 0 });
             }
             const entry = patternMap.get(key);
             entry.occurrences.push(v);
             entry.count++;
+            entry.lastIndex = v.startIndex;
         }
 
         const sortedGroups = Array.from(patternMap.values()).sort((a, b) => b.count - a.count);
@@ -654,6 +742,8 @@
 
         let rows = [];
         let groupNumber = 1;
+        const currentRound = fullHistory.length;
+
         for (let grp of sortedGroups) {
             for (let occ of grp.occurrences) {
                 const { before, after } = getBeforeAfter(occ);
@@ -665,37 +755,14 @@
                 let count = grp.count;
                 if (members.length === 0) continue;
 
-                const currentIdx = veinIndexMap.get(occ.startIndex);
-                const nextIdx = currentIdx + 1;
-                let distance = '-';
-                let gapCoeffs = '-';
-                let firstGap = '-';
-                let lastGap = '-';
-                
-                if (nextIdx < veins.length) {
-                    const nextVein = veins[nextIdx];
-                    const gapStart = occ.endIndex + 1;
-                    const gapEnd = nextVein.startIndex - 1;
-                    if (gapStart <= gapEnd) {
-                        const gapArray = rev.slice(gapStart, gapEnd + 1);
-                        distance = gapArray.length.toString();
-                        gapCoeffs = JSON.stringify(gapArray);
-                        firstGap = gapArray[0] !== undefined ? gapArray[0] : '-';
-                        lastGap = gapArray[gapArray.length - 1] !== undefined ? gapArray[gapArray.length - 1] : '-';
-                    } else {
-                        distance = '0';
-                        gapCoeffs = '[]';
-                        firstGap = '-';
-                        lastGap = '-';
-                    }
-                }
+                const confidence = calculateConfidence({ repeatCount: count, lastRepeat: grp.lastIndex }, currentRound);
 
                 const firstMember = members[0] || 0;
                 const uniqueKey = `${groupNumber}-${occ.startIndex + 1}-${firstMember}`;
 
                 const row = [
                     uniqueKey,
-                    type,          // ستون جدید: نوع رگه
+                    type,
                     groupNumber,
                     occ.startIndex + 1,
                     occ.length,
@@ -719,10 +786,8 @@
                     typeLabel,
                     (after !== null ? after : "-"),
                     (occ.endIndex + 2 < n ? rev[occ.endIndex + 2] : "پایان"),
-                    distance,
-                    gapCoeffs,
-                    firstGap,
-                    lastGap
+                    confidence,
+                    grp.lastIndex
                 ];
                 rows.push(row);
             }
@@ -755,10 +820,8 @@
             "T – نوع رگه مقصد",
             "U – ضریب بعد از رگه مقصد (F2)",
             "V – ضریب آغازین گروه بعدی",
-            "فاصله این رگه تا رگه بعدی",
-            "ضریب های بین فاصله این رگه تا رگه بعدی",
-            "ضریب اول فاصله این رگه تا رگه بعدی",
-            "ضریب آخر فاصله این رگه تا رگه بعدی"
+            "امتیاز اعتماد",
+            "تاریخ آخرین تکرار"
         ];
 
         let html = '<table><thead><tr>';
@@ -795,7 +858,7 @@
         container.innerHTML = html;
     }
 
-    // ====================== ۱۳. توابع بارگذاری تاریخچه از DOM ======================
+    // ====================== ۱۴. توابع بارگذاری تاریخچه از DOM ======================
     function autoFetchHistoryFromDOM() {
         if (initialLoadDone) return;
         let rows = document.querySelectorAll('div.crash-row');
@@ -841,7 +904,7 @@
         }
     }
 
-    // ====================== ۱۴. المنت‌های سایت ======================
+    // ====================== ۱۵. المنت‌های سایت ======================
     let t_priceAmount, t_cashoutProduct, t_setCashBtn;
     function findSiteElements() {
         t_priceAmount = document.querySelector('.game-amount');
@@ -850,7 +913,7 @@
     }
     setTimeout(findSiteElements, 500);
 
-    // ====================== ۱۵. توابع استراتژی ======================
+    // ====================== ۱۶. توابع استراتژی ======================
     function updateLossSequence() {
         const coeff = parseFloat(document.getElementById('loss-coeff').value) || 2;
         const strategy = getStrategyType(coeff);
@@ -936,7 +999,7 @@
         }
     }
 
-    // ====================== ۱۶. هوک‌های بازی با منطق قرمز/سبز ======================
+    // ====================== ۱۷. هوک‌های بازی با مدیریت موجودی اصلاح‌شده ======================
     function safeHook() {
         if (typeof window.game_waiting === 'function') {
             const orig = window.game_waiting;
@@ -993,32 +1056,65 @@
                     updateVeinTableFromHistory();
                 }
 
-                // مدیریت ریسک (تشخیص تطابق با فیلتر نوع)
+                // مدیریت ریسک (همانند قبل)
                 if (riskEnabled) {
                     const patterns = scanVeinTable();
-                    const match = findMatchingPattern(result, patterns, selectedPatternType);
+                    let match = null;
+                    const currentRound = fullHistory.length;
+                    const confidenceThreshold = parseInt(document.getElementById('confidence-threshold').value) || 0;
+
+                    let filteredPatterns = patterns;
+                    if (selectedPatternType === 'red') {
+                        filteredPatterns = patterns.filter(p => p.type === 'قرمز');
+                    } else if (selectedPatternType === 'green') {
+                        filteredPatterns = patterns.filter(p => p.type === 'سبز');
+                    }
+
+                    for (let p of filteredPatterns) {
+                        if (result === p.beforeStart) {
+                            match = { ...p, matchedField: 'E' };
+                            break;
+                        }
+                        if (result === p.beforeEnd) {
+                            match = { ...p, matchedField: 'P' };
+                            break;
+                        }
+                    }
 
                     if (match) {
-                        matchFound = true;
-                        let target = null;
-                        if (match.afterStart > 0) target = match.afterStart;
-                        else if (match.afterEnd > 0) target = match.afterEnd;
-                        if (target !== null && target > 1.0) {
-                            riskTargetMultiplier = target;
-                            document.getElementById('loss-coeff').value = target.toFixed(2);
-                            updateLossSequence();
-                            document.getElementById('risk-target-display').textContent = target.toFixed(2);
-                            const details = `نوع:${match.type} | گروه:${match.group} | A:${match.a} | شناسه:${match.key} | L:${match.afterStart} | U:${match.afterEnd}`;
-                            addRiskLog(`✅ تطابق با ${match.matchedField} (${details}) → ضریب هدف: ${target.toFixed(2)}`, 'match');
+                        const confidence = calculateConfidence(match, currentRound);
+                        if (confidence >= confidenceThreshold) {
+                            matchFound = true;
+                            let target = null;
+                            if (match.afterStart > 0) target = match.afterStart;
+                            else if (match.afterEnd > 0) target = match.afterEnd;
+                            if (target !== null && target > 1.0) {
+                                riskTargetMultiplier = target;
+                                document.getElementById('loss-coeff').value = target.toFixed(2);
+                                updateLossSequence();
+                                document.getElementById('risk-target-display').textContent = target.toFixed(2);
+                                const details = `نوع:${match.type} | گروه:${match.group} | A:${match.a} | شناسه:${match.key} | اعتماد:${confidence}`;
+                                addRiskLog(`✅ تطابق با ${match.matchedField} (${details}) → ضریب هدف: ${target.toFixed(2)}`, 'match');
+                                noMatchCounter = 0;
+                            } else {
+                                matchFound = false;
+                                addRiskLog(`⚠️ ضریب هدف نامعتبر (L=${match.afterStart}, U=${match.afterEnd})`, 'info');
+                            }
                         } else {
                             matchFound = false;
-                            addRiskLog(`⚠️ ضریب هدف نامعتبر (L=${match.afterStart}, U=${match.afterEnd})`, 'info');
+                            addRiskLog(`⏳ تطابق یافت اما امتیاز اعتماد (${confidence}) کمتر از آستانه (${confidenceThreshold}) است`, 'info');
                         }
                     } else {
                         matchFound = false;
                         riskSkipCount++;
+                        noMatchCounter++;
                         document.getElementById('risk-skip-count').textContent = riskSkipCount;
                         addRiskLog(`❌ عدم تطابق برای ضریب ${result.toFixed(2)} (تعداد صرف‌نظر: ${riskSkipCount})`, 'nomatch');
+
+                        if (noMatchCounter > 10) {
+                            addRiskLog(`⚠️ هشدار: بیش از ۱۰ دور متوالی تطابق پیدا نشد! ممکن است الگوها تغییر کرده باشند.`, 'info');
+                            noMatchCounter = 0;
+                        }
                     }
                     document.getElementById('risk-last-coeff').textContent = result.toFixed(2);
                     document.getElementById('risk-vein-count').textContent = patterns.length;
@@ -1027,11 +1123,10 @@
                     matchFound = true;
                 }
 
-                // مدیریت نتیجه شرط (فقط در صورت بسته شدن شرط)
+                // مدیریت نتیجه شرط
                 if (isRunning && isStrategyActive && betPlaced) {
                     if (result >= strategyConfig.multiplier) {
-                        // برد
-                        addRiskLog(`🎉 شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} برنده شد!`, 'match');
+                        addRiskLog(`🎉 شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} برنده شد! (کرش: ${result.toFixed(2)})`, 'match');
                         recoveryMode = false;
                         recoveryMultiplier = 1;
                         currentSeqIdx = 0;
@@ -1041,8 +1136,7 @@
                         updateLossTotalUI();
                         addRiskLog(`🔄 مارتینگل ریست شد. اولویت به تطابق برگشت.`, 'info');
                     } else {
-                        // باخت
-                        addRiskLog(`❌ شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} باخت!`, 'nomatch');
+                        addRiskLog(`❌ شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} باخت! (کرش: ${result.toFixed(2)})`, 'nomatch');
                         recoveryMode = true;
                         recoveryMultiplier *= 2;
                         totalLoss += lastPlacedBet;
@@ -1054,19 +1148,20 @@
                     betPlaced = false;
                 }
 
-                // مدیریت موجودی و حد سود
+                // ===== مدیریت موجودی با هدف ثابت =====
                 if (isRunning && isStrategyActive) {
                     const chkBalanceRule = document.getElementById('chk-balance-rule');
                     if (chkBalanceRule && chkBalanceRule.checked) {
                         const domBalance = getCurrentBalanceFromDOM();
                         if (domBalance !== null) {
                             currentBalance = domBalance;
+                            // فقط موجودی را به‌روز کن، هدف را تغییر نده
                             document.getElementById('base-balance').value = Math.floor(currentBalance);
-                            updateBalanceCalc();
-                            if (currentBalance >= targetBalance) {
+                            // بررسی رسیدن به هدف ثابت
+                            if (currentBalance >= fixedTarget) {
                                 isRunning = false;
                                 document.getElementById('bot-status').textContent = '✅ حد سود روزانه محقق شد! ربات متوقف شد.';
-                                addRiskLog(`🎯 حد سود محقق شد! موجودی: ${currentBalance}`, 'info');
+                                addRiskLog(`🎯 حد سود محقق شد! موجودی: ${currentBalance} (هدف: ${fixedTarget})`, 'info');
                             }
                         }
                     }
@@ -1076,10 +1171,17 @@
         }
     }
 
-    // ====================== ۱۷. راه‌اندازی رویدادها و دکمه‌ها ======================
+    // ====================== ۱۸. راه‌اندازی رویدادها و دکمه‌ها ======================
     function initializeUI() {
-        const profitPercentInput = document.getElementById('balance-profit-percent');
-        if (profitPercentInput) profitPercentInput.addEventListener('input', updateBalanceCalc);
+        // دکمه اعمال تغییرات هدف
+        document.getElementById('btn-update-target').addEventListener('click', function() {
+            if (isRunning) {
+                alert('ربات در حال اجراست. برای تغییر هدف، ابتدا ربات را متوقف کنید.');
+                return;
+            }
+            calculateFixedTarget();
+            addRiskLog(`🔄 هدف ثابت به ${fixedTarget} به‌روزرسانی شد.`, 'info');
+        });
 
         document.querySelectorAll('.bot-tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -1090,13 +1192,23 @@
             });
         });
 
-        // انتخابگر نوع الگو
         document.getElementById('pattern-type-select').addEventListener('change', function() {
             selectedPatternType = this.value;
             addRiskLog(`🔄 نوع الگو به "${this.options[this.selectedIndex].text}" تغییر یافت`, 'info');
-            // ریست وضعیت تطابق برای جلوگیری از شرط‌بندی با الگوی قدیمی
             matchFound = false;
         });
+
+        document.getElementById('min-repeat-input').addEventListener('change', function() {
+            minRepeat = parseInt(this.value) || 2;
+            addRiskLog(`🔄 حداقل تکرار برای الگوهای جدید به ${minRepeat} تغییر یافت`, 'info');
+        });
+
+        document.getElementById('confidence-threshold').addEventListener('change', function() {
+            confidenceThreshold = parseInt(this.value) || 0;
+            addRiskLog(`🔄 آستانه اعتماد به ${confidenceThreshold} تغییر یافت`, 'info');
+        });
+
+        document.getElementById('btn-load-manual').addEventListener('click', loadManualCoefficients);
 
         document.getElementById('chk-martingale').addEventListener('change', function() {
             if (this.checked) { document.getElementById('chk-labouchere').checked = false; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); }
@@ -1184,7 +1296,6 @@
             }).catch(err => alert("خطا در کپی: " + err));
         };
 
-        // دکمه کپی کل لاگ
         document.getElementById('btn-copy-full-log').onclick = function() {
             const originalText = this.textContent;
             if (!fullLogHistory || fullLogHistory.length === 0) {
@@ -1203,20 +1314,15 @@
         };
 
         const chkRisk = document.getElementById('chk-risk-enable');
-        const btnScan = document.getElementById('btn-scan-vein');
         const riskStatusSpan = document.getElementById('risk-scan-status');
         const countSpan = document.getElementById('risk-vein-count');
 
-        function performScan() {
+        function performAutoScan() {
             const patterns = scanVeinTable();
             countSpan.textContent = patterns.length;
-            riskStatusSpan.textContent = '✅ اسکن انجام شد';
-            addRiskLog('🔍 اسکن دستی جدول انجام شد. تعداد الگوها: ' + patterns.length, 'info');
+            riskStatusSpan.textContent = '✅ اسکن خودکار انجام شد';
+            addRiskLog('🔍 اسکن خودکار جدول انجام شد. تعداد الگوها: ' + patterns.length, 'info');
             return patterns;
-        }
-
-        if (btnScan) {
-            btnScan.addEventListener('click', performScan);
         }
 
         if (chkRisk) {
@@ -1224,7 +1330,7 @@
                 riskEnabled = this.checked;
                 if (this.checked) {
                     riskStatusSpan.textContent = '🔄 فعال - در حال اسکن...';
-                    const patterns = performScan();
+                    const patterns = performAutoScan();
                     if (patterns.length === 0) {
                         addRiskLog('⚠️ هیچ الگویی در جدول یافت نشد!', 'info');
                     } else {
@@ -1242,14 +1348,15 @@
 
         setTimeout(() => {
             if (document.getElementById('chk-risk-enable') && document.getElementById('chk-risk-enable').checked) {
-                performScan();
+                performAutoScan();
             }
         }, 3000);
 
-        updateBalanceCalc();
+        // محاسبه هدف اولیه
+        calculateFixedTarget();
     }
 
-    // ====================== ۱۸. راه‌اندازی نهایی ======================
+    // ====================== ۱۹. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات نهایی با تشخیص الگوهای قرمز و سبز (۲۹ ستون) و انتخابگر نوع الگو بارگذاری شد.');
+    console.log('🤖 ربات نهایی با مدیریت موجودی (هدف ثابت) و جدول ۲۸ ستونی بارگذاری شد.');
 })();

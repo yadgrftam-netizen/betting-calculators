@@ -1,10 +1,7 @@
 (function() {
     "use strict";
-
-    // ====================== ۱. استایل‌ها ======================
     const style = document.createElement('style');
     style.textContent = `
-        /* ... استایل‌های قبلی (برای اختصار حذف شدند، اما در کد نهایی کامل هستند) ... */
         #bot-ui-wrapper {
             direction: rtl; text-align: right; font-family: Tahoma, sans-serif;
             --bg: #fff; --text: #333; --border: #ddd; --shadow: rgba(0,0,0,0.1);
@@ -21,147 +18,62 @@
             background: #111; border-color: #666;
         }
         #bot-toolbar { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
-        .bot-btn {
-            flex: 1; height: 40px; border: none; border-radius: 6px; font-size: 13px;
-            font-weight: bold; cursor: pointer; color: white; min-width: 70px;
-        }
+        .bot-btn { flex: 1; height: 40px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; color: white; min-width: 70px; }
         .bot-btn.green { background: #28a745; } .bot-btn.red { background: #dc3545; }
         .bot-btn.blue { background: #007bff; } .bot-btn.dark { background: #333; }
         .bot-btn:hover { filter: brightness(0.9); }
 
         #bot-tabs { display: flex; gap: 2px; margin-bottom: 6px; flex-wrap: wrap; }
-        .bot-tab {
-            flex: 1; padding: 10px 4px; background: #555; color: white; border: none;
-            cursor: pointer; font-size: 13px; border-radius: 6px 6px 0 0; text-align: center;
-            min-width: 60px;
-        }
+        .bot-tab { flex: 1; padding: 10px 4px; background: #555; color: white; border: none; cursor: pointer; font-size: 13px; border-radius: 6px 6px 0 0; text-align: center; min-width: 60px; }
         .bot-tab.active { background: #28a745; }
         
-        .bot-pane {
-            display: none; background: var(--bg); color: var(--text); border: 1px solid var(--border);
-            border-radius: 0 0 6px 6px; padding: 12px; margin-bottom: 6px;
-        }
+        .bot-pane { display: none; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 0 0 6px 6px; padding: 12px; margin-bottom: 6px; }
         .bot-pane.active { display: block; }
 
         .bot-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
         .bot-label { font-size: 14px; font-weight: bold; min-width: 60px; flex-shrink: 0; }
-        .bot-input {
-            flex: 1; padding: 6px; border: 1px solid var(--border); border-radius: 4px;
-            background: var(--hover); color: var(--text); font-size: 14px; min-width: 40px; max-width: 70px; text-align: center;
-        }
+        .bot-input { flex: 1; padding: 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--hover); color: var(--text); font-size: 14px; min-width: 40px; max-width: 70px; text-align: center; }
         .bot-input.readonly-field { background: #e9ecef; color: #495057; font-weight: bold; }
-        .bot-input-group {
-            display: flex; gap: 4px; flex: 1; flex-wrap: wrap; justify-content: flex-start;
-        }
+        .bot-input-group { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; justify-content: flex-start; }
         .bot-input-group .bot-input { min-width: 45px; max-width: 55px; }
-        .bot-check-row {
-            display: flex; align-items: center; gap: 8px; padding: 6px 0;
-            border-top: 1px solid var(--border); margin-top: 6px;
-        }
+        .bot-check-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border); margin-top: 6px; }
         .bot-check-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #28a745; }
         
-        #stats-table-outer-container, #vein-table-outer-container {
-            direction: rtl; text-align: right; font-family: Tahoma, sans-serif;
-            max-width: 600px; margin: 10px auto; box-sizing: border-box;
-        }
-        .bot-collapse-btn, .vein-collapse-btn {
-            width: 100%; background: #000; color: white; padding: 10px; border: none;
-            border-radius: 6px 6px 0 0; font-weight: bold; display: flex; justify-content: space-between;
-            cursor: pointer;
-        }
-        .bot-collapse-content, .vein-collapse-content {
-            display: none; border: 1px solid #555; border-top: none; padding: 10px;
-            background: #000; color: white; overflow-x: auto; -webkit-overflow-scrolling: touch;
-        }
-        .bot-collapse-content.open, .vein-collapse-content.open { display: block; }
+        #stats-table-outer-container { direction: rtl; text-align: right; font-family: Tahoma, sans-serif; max-width: 600px; margin: 10px auto; box-sizing: border-box; }
+        .bot-collapse-btn { width: 100%; background: #000; color: white; padding: 10px; border: none; border-radius: 6px 6px 0 0; font-weight: bold; display: flex; justify-content: space-between; cursor: pointer; }
+        .bot-collapse-content { display: none; border: 1px solid #555; border-top: none; padding: 10px; background: #000; color: white; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .bot-collapse-content.open { display: block; }
 
-        #statsTableContainer, #veinTableContainer {
-            border: 1px solid #555; padding: 10px; border-radius: 5px; background: black;
-            color: white; direction: rtl; text-align: right; box-sizing: border-box;
-            width: 100%;
-        }
-        #statsTableContainer table, #veinTableContainer table {
-            width: 100%; border-collapse: collapse; font-size: 11px; color: white; direction: rtl;
-            table-layout: auto;
-        }
-        #statsTableContainer table { min-width: 600px; }
-        #veinTableContainer table { min-width: 2800px; }
-        
-        #statsTableContainer th, #statsTableContainer td,
-        #veinTableContainer th, #veinTableContainer td {
-            border: 1px solid #555; padding: 4px 3px !important; text-align: center;
-            vertical-align: middle; white-space: nowrap;
-        }
-        #statsTableContainer th, #veinTableContainer th { background: #333; color: white; }
-        #statsTableContainer tbody tr:nth-child(even), #veinTableContainer tbody tr:nth-child(even) { background: #1a1a1a; }
-        #statsTableContainer tbody tr:hover, #veinTableContainer tbody tr:hover { background: #2a2a2a; }
-        
-        .vein-badge {
-            display: inline-block; background: #2563eb; color: white; border-radius: 12px;
-            padding: 0 6px; font-weight: bold; font-size: 10px;
-        }
-        .vein-badge-green { background: #16a34a; }
-        .vein-badge-orange { background: #ea580c; }
-        .vein-badge-purple { background: #7c3aed; }
-        .vein-array {
-            font-family: 'Courier New', monospace; font-size: 10px;
-            white-space: nowrap; max-width: 180px; overflow: hidden;
-            text-overflow: ellipsis; display: inline-block;
-        }
-        .bot-night #veinTableContainer, .bot-night #statsTableContainer { background: #111; border-color: #444; }
-        .bot-night #veinTableContainer th, .bot-night #statsTableContainer th { background: #222; }
-        .bot-night #veinTableContainer td, .bot-night #statsTableContainer td { border-color: #444; }
-        .bot-night .vein-collapse-btn, .bot-night .bot-collapse-btn { background: #222; }
+        #statsTableContainer { border: 1px solid #555; padding: 10px; border-radius: 5px; background: black; color: white; direction: rtl; text-align: right; box-sizing: border-box; width: 100%; }
+        #statsTableContainer table { width: 100%; border-collapse: collapse; font-size: 11px; color: white; direction: rtl; table-layout: auto; min-width: 600px; }
+        #statsTableContainer th, #statsTableContainer td { border: 1px solid #555; padding: 4px 3px !important; text-align: center; vertical-align: middle; white-space: nowrap; }
+        #statsTableContainer th { background: #333; color: white; }
+        #statsTableContainer tbody tr:nth-child(even) { background: #1a1a1a; }
+        #statsTableContainer tbody tr:hover { background: #2a2a2a; }
+        .bot-night #statsTableContainer { background: #111; border-color: #444; }
+        .bot-night #statsTableContainer th { background: #222; }
+        .bot-night #statsTableContainer td { border-color: #444; }
+        .bot-night .bot-collapse-btn { background: #222; }
         
         #bot-status { text-align: center; font-size: 14px; font-weight: bold; color: var(--status-color); margin-bottom: 6px; }
 
-        .risk-pane {
-            background: var(--bg); color: var(--text);
-            border: 1px solid var(--border); border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
-        }
+        .risk-pane { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
         .risk-pane .bot-row { margin-bottom: 6px; }
-        .risk-status {
-            background: #1a1a1a; color: #0f0; padding: 6px 10px;
-            border-radius: 4px; font-family: monospace; font-size: 12px;
-        }
-        .risk-log {
-            max-height: 120px; overflow-y: auto; background: #111; color: #aaa;
-            padding: 6px; border-radius: 4px; font-size: 11px; direction: ltr;
-            border: 1px solid #333; margin-top: 6px; text-align: left;
-        }
-        .risk-log .match { color: #0f0; }
-        .risk-log .nomatch { color: #f00; }
-        .risk-log .info { color: #ffc107; }
-        .risk-log .bet { color: #00bfff; }
-        .risk-log .green { color: #8bc34a; }
-        .risk-log .manual { color: #ff9800; }
-        .risk-log .fallback { color: #ff6b6b; }
-        .risk-log .clipboard { color: #ffa500; }
+        .risk-status { background: #1a1a1a; color: #0f0; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+        .risk-log { max-height: 120px; overflow-y: auto; background: #111; color: #aaa; padding: 6px; border-radius: 4px; font-size: 11px; direction: ltr; border: 1px solid #333; margin-top: 6px; text-align: left; }
+        .risk-log .match { color: #0f0; } .risk-log .nomatch { color: #f00; } .risk-log .info { color: #ffc107; }
+        .risk-log .bet { color: #00bfff; } .risk-log .green { color: #8bc34a; } .risk-log .manual { color: #ff9800; }
+        .risk-log .fallback { color: #ff6b6b; } .risk-log .clipboard { color: #ffa500; }
 
-        .manual-input-area {
-            width: 100%;
-            height: 80px;
-            padding: 6px;
-            background: #222;
-            color: #eee;
-            border: 1px solid #555;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: 'Courier New', monospace;
-            direction: ltr;
-            text-align: left;
-            resize: vertical;
-        }
-        .manual-input-area:focus {
-            outline: none;
-            border-color: #28a745;
-        }
+        .manual-input-area { width: 100%; height: 80px; padding: 6px; background: #222; color: #eee; border: 1px solid #555; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; direction: ltr; text-align: left; resize: vertical; }
+        .manual-input-area:focus { outline: none; border-color: #28a745; }
+
+        .pattern-box { border: 1px solid #444; border-radius: 4px; background: #1a1a1a; padding: 6px; max-height: 130px; overflow-y: auto; width: 100%; box-sizing: border-box; margin-top: 4px; }
+        .pattern-box .bot-check-row { border-top: none; margin-top: 2px; padding: 4px 0; }
+        .pattern-box .bot-check-row label { font-size: 12px; color: #ccc; }
     `;
     document.head.appendChild(style);
 
-    // ====================== ۲. توابع کمکی ======================
     const toEng = s => {
         if (!s) return s;
         let result = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
@@ -174,9 +86,8 @@
         }
     });
 
-    // ====================== ۳. متغیرهای اصلی ======================
     let isRunning = false, isStrategyActive = false;
-    let strategyConfig = { type: 'martingale', multiplier: 2.0, baseAmount: 1 };
+    let strategyConfig = { type: 'martingale', multiplier: 2.0, baseAmount: 1, sequence: [] };
     let currentSeqIdx = 0, totalLoss = 0;
     let lastPlacedBet = 0;
     let betPlaced = false;
@@ -187,37 +98,53 @@
     let initialLoadDone = false;
     let historyClickedOnce = false;
 
-    // متغیرهای مدیریت ریسک
     let riskEnabled = false;
     let veinTableData = [];
     let matchFound = false;
     let riskTargetMultiplier = null;
     let riskSkipCount = 0;
-    let selectedPatternType = 'all';
+    let selectedPatternType = 'red';
     let confidenceThreshold = 0;
     let minRepeat = 2;
     let noMatchCounter = 0;
 
-    // متغیرهای جبران ضرر
     let recoveryMode = false;
     let recoveryMultiplier = 1;
     const BASE_BET = 1;
 
-    // ===== متغیرهای جدید برای حالت جایگزین (Fallback) =====
     let fallbackModeActive = false;
     let consecutiveMisses = 0;
     let fallbackLossCount = 0;
     const FALLBACK_PERCENT_THRESHOLD = 54;
     const FALLBACK_TRIGGER_MISSES = 10;
-    const MAX_FALLBACK_LOSSES = 5;
 
-    // آرایه برای ذخیره کامل لاگ
+    let MAX_LOSS_STREAK = 5;
+    let startAfterLossEnabled = false;
+    let startAfterLossStreak = 5;
+    let consecutiveLossesBelow180 = 0;
+
+    let stopAfterWinEnabled = false;
+    let stopAfterWinStreak = 10;
+    let consecutiveWins = 0;
+
+    let minRepeatEnabled = false;
+    let confidenceEnabled = false;
+    let maxLossEnabled = false;
+
+    let patternRedEnabled = false;
+    let patternGreenEnabled = false;
+    let patternCombinedEnabled = false;
+    let patternEndGreenEnabled = false;
+    let patternEndRedEnabled = false;
+
+    let trigger_EndGreen = false;
+    let trigger_EndRed = false;
+    let lastColor = null;
+    let currentRedStreak = 0;
+
     let fullLogHistory = [];
-
-    // ===== متغیر برای کپی خودکار =====
     let autoCopyEnabled = false;
 
-    // داده‌های آماری
     const STATS_DATA = [
         { id: 'A', coeff: 1.10, fair: 90.9 },
         { id: 'B', coeff: 1.20, fair: 83.3 },
@@ -229,7 +156,6 @@
         { id: 'H', coeff: 4.00, fair: 25.0 }
     ];
 
-    // ====================== ۴. توابع محاسبه پویا ======================
     function calculateDynamicBase(coeff) {
         if (coeff <= 1.0) return 1; 
         return Math.ceil(1 / (coeff - 1));
@@ -240,8 +166,6 @@
         const chkLabouchere = document.getElementById('chk-labouchere');
         if (chkMartingale && chkMartingale.checked) return 'MARTINGALE';
         if (chkLabouchere && chkLabouchere.checked) return 'LABOUCHERE';
-        const coeffKey = coeff.toFixed(2);
-        if (SEQUENCES[coeffKey]) return 'SEQUENCES';
         return 'LABOUCHERE';
     }
 
@@ -261,7 +185,6 @@
         return (count / bustHistory.length) * 100;
     }
 
-    // ====================== ۵. تابع کپی خودکار Full History ======================
     function autoCopyFullHistory() {
         if (!autoCopyEnabled) return;
         if (!fullHistory || fullHistory.length === 0) return;
@@ -277,7 +200,6 @@
         }
     }
 
-    // ====================== ۶. تابع استخراج رگه‌ها از تاریخچه ======================
     function extractVeinsFromHistory(history) {
         if (!history || history.length === 0) return [];
         const rev = [...history].reverse();
@@ -315,7 +237,6 @@
         return veins;
     }
 
-    // ====================== ۷. توابع مدیریت ریسک با پشتیبانی از الگوی ترکیبی ======================
     function extractVeinTableData() {
         const container = document.getElementById('veinTableContainer');
         if (!container) return [];
@@ -339,11 +260,10 @@
 
     function scanVeinTable() {
         const veins = extractVeinsFromHistory(fullHistory);
-        veinTableData = extractVeinTableData();
+        const veinTableData = extractVeinTableData();
 
         const patterns = [];
 
-        // ۱. الگوهای معمولی (هر رگه به تنهایی)
         const typeIdx = 1;
         const eIndex = 7;
         const pIndex = 18;
@@ -411,7 +331,6 @@
             }
         });
 
-        // ۲. الگوهای ترکیبی (دو رگه متوالی)
         if (veins.length >= 2) {
             for (let i = 0; i < veins.length - 1; i++) {
                 const v1 = veins[i];
@@ -490,7 +409,6 @@
         return null;
     }
 
-    // ====================== ۸. تابع افزودن به لاگ ======================
     function addRiskLog(message, type) {
         type = type || 'info';
         const logDiv = document.getElementById('risk-log');
@@ -511,7 +429,6 @@
         }
     }
 
-    // ====================== ۹. تابع بارگذاری دستی ضرایب ======================
     function loadManualCoefficients() {
         const textarea = document.getElementById('manual-coeff-input');
         if (!textarea) return;
@@ -558,243 +475,86 @@
         alert(`${numbers.length} ضریب با موفقیت بارگذاری شد.`);
     }
 
-    // ====================== ۱۰. تابع محاسبه هدف ثابت ======================
-    function calculateFixedTarget() {
-        const balance = parseFloat(document.getElementById('base-balance').value) || 0;
-        const percent = parseFloat(document.getElementById('balance-profit-percent').value) || 0;
-        const profit = Math.ceil(balance * (percent / 100));
-        fixedTarget = balance + profit;
-        document.getElementById('balance-profit-amount').value = profit;
-        document.getElementById('balance-target').value = balance + ' + ' + profit + ' = ' + fixedTarget;
-        return fixedTarget;
-    }
-
-    // ====================== ۱۱. ساختار HTML کادر اصلی ======================
-    const wrapper = document.createElement('div');
-    wrapper.id = 'bot-ui-wrapper';
-    wrapper.innerHTML = '<div id="bot-status">⚡ ربات آماده است</div>';
-
-    const toolbar = document.createElement('div');
-    toolbar.id = 'bot-toolbar';
-    toolbar.innerHTML = `
-        <button class="bot-btn dark" id="btn-theme">🌙 شب</button>
-        <button class="bot-btn red" id="btn-copy-last">کپی ۵۰</button>
-        <button class="bot-btn blue" id="btn-copy-all">کپی همه</button>
-        <button class="bot-btn green" id="btn-start">▶ شروع</button>
-        <button class="bot-btn red" id="btn-stop">⏹ توقف</button>
-    `;
-    wrapper.appendChild(toolbar);
-
-    const tabsDiv = document.createElement('div');
-    tabsDiv.id = 'bot-tabs';
-    tabsDiv.innerHTML = `
-        <button class="bot-tab active" data-target="pane-loss">استراتژی شرط</button>
-        <button class="bot-tab" data-target="pane-balance">مدیریت موجودی</button>
-        <button class="bot-tab" data-target="pane-risk">مدیریت ریسک</button>
-    `;
-    wrapper.appendChild(tabsDiv);
-
-    // پنل استراتژی شرط
-    const paneLoss = document.createElement('div');
-    paneLoss.className = 'bot-pane active';
-    paneLoss.id = 'pane-loss';
-    paneLoss.innerHTML = `
-        <div class="bot-row"><span class="bot-label">ضریب:</span><input type="text" class="bot-input" id="loss-coeff" value="2.00" style="max-width:65px;"></div>
-        <div class="bot-row">
-            <input type="checkbox" id="chk-martingale" checked><label for="chk-martingale">شرط با مارتینگل</label>
-            <span class="bot-label" style="min-width:40px;">مبلغ پایه:</span>
-            <input type="text" class="bot-input" id="loss-martingale-base" value="1" style="max-width:60px;">
-        </div>
-        <div class="bot-row">
-            <input type="checkbox" id="chk-labouchere"><label for="chk-labouchere">شرط با لابوشر</label>
-            <span class="bot-label" style="min-width:40px;">مبلغ پایه:</span>
-            <input type="text" class="bot-input" id="loss-lab-base" value="1" style="max-width:60px;">
-        </div>
-        <div class="bot-row" style="border-top:1px dashed var(--border); padding-top:5px; margin-bottom:5px;">
-            <input type="checkbox" id="chk-manual-base"><label for="chk-manual-base" style="font-weight:bold; color:#28a745;">فعال‌سازی مبلغ پایه دستی</label>
-        </div>
-        <div class="bot-row">
-            <span class="bot-label">۴ مرحله بعدی:</span>
-            <div class="bot-input-group">
-                <input type="text" class="bot-input" id="loss-step1" readonly>
-                <input type="text" class="bot-input" id="loss-step2" readonly>
-                <input type="text" class="bot-input" id="loss-step3" readonly>
-                <input type="text" class="bot-input" id="loss-step4" readonly>
-            </div>
-        </div>
-        <div class="bot-row"><span class="bot-label">کل ضرر تا این دور:</span><input type="text" class="bot-input" id="loss-total" readonly style="max-width:80px;"></div>
-        <div class="bot-check-row"><input type="checkbox" id="chk-loss"><label for="chk-loss">فعال‌سازی ربات</label></div>
-    `;
-    wrapper.appendChild(paneLoss);
-
-    // پنل مدیریت موجودی
-    const paneBalance = document.createElement('div');
-    paneBalance.className = 'bot-pane';
-    paneBalance.id = 'pane-balance';
-    paneBalance.innerHTML = `
-        <div class="bot-row">
-            <span class="bot-label">موجودی پایه فعلی:</span>
-            <input type="text" class="bot-input readonly-field" id="base-balance" value="600" readonly style="max-width:80px;">
-            <span style="font-size:11px; color:#888;">(خوانده شده از سایت)</span>
-        </div>
-        <div class="bot-row">
-            <span class="bot-label">درصد حد سود:</span>
-            <input type="text" class="bot-input" id="balance-profit-percent" value="1" style="max-width:60px;">
-            <span>%</span>
-            <button class="bot-btn blue" id="btn-update-target" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px; margin-right:8px;">🔄 اعمال</button>
-        </div>
-        <div class="bot-row"><div class="bot-check-row" style="border:none; margin-top:0;">
-            <input type="checkbox" id="chk-balance-rule" checked><label for="chk-balance-rule" style="font-weight:bold;">فعال‌سازی حد سود روزانه</label>
-        </div></div>
-        <div class="bot-row">
-            <span class="bot-label">مبلغ حد سود:</span>
-            <input type="text" class="bot-input readonly-field" id="balance-profit-amount" readonly style="max-width:80px;">
-        </div>
-        <div class="bot-row">
-            <span class="bot-label">جمع کل (هدف ثابت):</span>
-            <input type="text" class="bot-input readonly-field" id="balance-target" readonly style="max-width:160px;">
-        </div>
-        <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:6px;">
-            <input type="checkbox" id="chk-fallback-mode" checked>
-            <label for="chk-fallback-mode" style="font-weight:bold; color:#ff6b6b;">فعال‌سازی شرط‌بندی جایگزین در نبود الگو</label>
-        </div>
-        <div class="bot-row" style="font-size:11px; color:#888; margin-top:-4px; padding-right:26px;">
-            اگر ضریب ۲.۰۰ بیش از ۵۴٪ باشد و ۱۰ دور متوالی الگویی پیدا نشود، با مارتینگل (حداکثر ۵ باخت) شرط می‌بندد.
-        </div>
-    `;
-    wrapper.appendChild(paneBalance);
-
-    // ====================== ۱۲. پنل مدیریت ریسک با چک‌باکس کپی خودکار ======================
-    const paneRisk = document.createElement('div');
-    paneRisk.className = 'bot-pane';
-    paneRisk.id = 'pane-risk';
-    paneRisk.innerHTML = `
-        <div class="risk-pane">
-            <div class="bot-row">
-                <input type="checkbox" id="chk-risk-enable">
-                <label for="chk-risk-enable" style="font-weight:bold; color:#28a745;">شرط با داده‌های جدول ۲۸ ستون انجام شود</label>
-            </div>
-            <div class="bot-row">
-                <button class="bot-btn dark" id="btn-copy-full-log">📋 کپی کل لاگ</button>
-                <span style="font-size:12px; color:#888;" id="risk-scan-status">وضعیت: آماده</span>
-            </div>
-            <div class="bot-row">
-                <span class="bot-label">نوع الگو:</span>
-                <select id="pattern-type-select" style="padding:4px 8px; border-radius:4px; background:#333; color:white; border:1px solid #555;">
-                    <option value="red">فقط قرمز (۰ تا ۱٫۷۹)</option>
-                    <option value="green">فقط سبز (۱٫۸۰ به بالا)</option>
-                    <option value="all" selected>همه الگوها (قرمز و سبز + ترکیبی)</option>
-                    <option value="combined">فقط الگوهای ترکیبی (دو رگه متوالی)</option>
-                </select>
-            </div>
-            <div class="bot-row">
-                <span class="bot-label">حداقل تکرار:</span>
-                <input type="text" class="bot-input" id="min-repeat-input" value="2" style="max-width:50px;">
-                <span style="font-size:11px; color:#888;">(برای الگوهای جدید)</span>
-            </div>
-            <div class="bot-row">
-                <span class="bot-label">آستانه اعتماد:</span>
-                <input type="text" class="bot-input" id="confidence-threshold" value="0" style="max-width:50px;">
-                <span style="font-size:11px; color:#888;">(حداقل امتیاز اعتماد برای شرط)</span>
-            </div>
-            <!-- ===== چک‌باکس کپی خودکار ===== -->
-            <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:4px;">
-                <input type="checkbox" id="chk-auto-copy">
-                <label for="chk-auto-copy" style="font-weight:bold; color:#ffa500;">📋 کپی خودکار Full History در هر دور</label>
-            </div>
-            <div class="bot-row" style="font-size:11px; color:#888; margin-top:-4px; padding-right:26px;">
-                در صورت فعال بودن، پس از هر دور، تمام ضرایب تاریخچه در کلیپ‌بورد کپی می‌شوند.
-            </div>
-            <div class="bot-row" style="flex-wrap: wrap; border-top:1px dashed #555; padding-top:8px; margin-top:4px;">
-                <span class="bot-label" style="min-width:100px;">بارگذاری دستی:</span>
-                <button class="bot-btn blue" id="btn-load-manual" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px;">📥 بارگذاری</button>
-            </div>
-            <div class="bot-row">
-                <textarea class="manual-input-area" id="manual-coeff-input" placeholder="مثال:&#10;1.25---&#10;1.53---&#10;1.69---&#10;2.20---"></textarea>
-            </div>
-            <div class="bot-row" style="font-size:11px; color:#888; margin-top:-4px;">
-                <span>ضرایب را با جداکننده (--- یا خط جدید یا کاما) وارد کنید.</span>
-            </div>
-            <div class="bot-row">
-                <span class="bot-label">تعداد رگه‌ها:</span>
-                <span id="risk-vein-count">۰</span>
-                <span class="bot-label" style="margin-right:15px;">آخرین ضریب اسکن:</span>
-                <span id="risk-last-coeff">-</span>
-                <span class="bot-label" style="margin-right:15px;">تعداد صرف‌نظر:</span>
-                <span id="risk-skip-count">۰</span>
-            </div>
-            <div class="bot-row">
-                <span class="bot-label">ضریب هدف فعلی:</span>
-                <span id="risk-target-display" style="font-weight:bold; color:#ffc107;">-</span>
-            </div>
-            <div class="risk-log" id="risk-log">
-                <div class="info">[${new Date().toLocaleTimeString('fa-IR')}] منتظر فعال‌سازی مدیریت ریسک...</div>
-            </div>
-        </div>
-    `;
-    wrapper.appendChild(paneRisk);
-
-    // ====================== ۱۳. تزریق به صفحه ======================
-    function inject() {
-        if (!document.body) { setTimeout(inject, 50); return; }
-        const selectors = ['.header', '.navbar', '.top-bar', 'header', '#header'];
-        let target = null;
-        for (const sel of selectors) { target = document.querySelector(sel); if (target) break; }
-        if (target) target.before(wrapper);
-        else document.body.prepend(wrapper);
-
-        const statsMenu = document.createElement('div');
-        statsMenu.id = 'stats-table-outer-container';
-        statsMenu.innerHTML = `
-            <button class="bot-collapse-btn" id="collapse-btn"><span>📊 جدول مقایسه درصد ضریب</span><span>▶</span></button>
-            <div class="bot-collapse-content" id="collapse-content"><div id="statsTableContainer"><table><thead><tr id="header-row-1"><th>ضریب</th><th>منصفانه</th><th>۵۰ دور</th><th>برعکس</th><th>کل تاریخ</th><th>کارمزد</th></tr></thead><tbody id="result-body"></tbody></table></div></div>
-        `;
-        wrapper.after(statsMenu);
-
-        const veinMenu = document.createElement('div');
-        veinMenu.id = 'vein-table-outer-container';
-        veinMenu.innerHTML = `
-            <button class="vein-collapse-btn" id="vein-collapse-btn"><span>📊 جدول رگه‌های قرمز و سبز (۲۸ ستونی - شامل نوع رگه، اعتماد و تاریخ آخرین تکرار)</span><span>▶</span></button>
-            <div class="vein-collapse-content" id="vein-collapse-content"><div id="veinTableContainer"></div></div>
-        `;
-        statsMenu.after(veinMenu);
-
-        document.getElementById('collapse-btn').onclick = function() { 
-            const c=document.getElementById('collapse-content'); 
-            const i=this.querySelector('span:last-child'); 
-            c.classList.toggle('open'); 
-            i.textContent=c.classList.contains('open')?'▼':'▶'; 
-        };
-        document.getElementById('vein-collapse-btn').onclick = function() { 
-            const c=document.getElementById('vein-collapse-content'); 
-            const i=this.querySelector('span:last-child'); 
-            c.classList.toggle('open'); 
-            i.textContent=c.classList.contains('open')?'▼':'▶'; 
-        };
-
-        document.getElementById('bot-status').textContent = '✅ ربات با موفقیت بارگذاری شد';
-        document.querySelectorAll('.bot-input').forEach(input => { input.value = toEng(input.value); });
-
-        setTimeout(() => {
-            const domBalance = getCurrentBalanceFromDOM();
-            if (domBalance !== null) {
-                currentBalance = domBalance;
-                document.getElementById('base-balance').value = Math.floor(currentBalance);
-                calculateFixedTarget();
-                console.log(`موجودی اولیه از سایت خوانده شد: ${currentBalance}`);
-            } else {
-                console.warn("ربات: امکان خواندن موجودی سایت در ۱۰ ثانیه اول وجود نداشت.");
-                calculateFixedTarget();
+    function updateLossSequence() {
+        const coeff = parseFloat(document.getElementById('loss-coeff').value) || 2;
+        const strategy = getStrategyType(coeff);
+        let displaySeq = [];
+        if (strategy === 'MARTINGALE') {
+            let base = parseFloat(document.getElementById('loss-martingale-base').value) || 1;
+            const chkManual = document.getElementById('chk-manual-base');
+            if (!chkManual.checked) { base = calculateDynamicBase(coeff); document.getElementById('loss-martingale-base').value = base; }
+            let simCurrentIdx = currentSeqIdx;
+            let simTotalLoss = totalLoss;
+            for (let i = 0; i < 4; i++) {
+                let val;
+                if (simCurrentIdx === 0) val = Math.ceil(base);
+                else val = Math.ceil((simTotalLoss + base) / (coeff - 1));
+                displaySeq.push(val);
+                simTotalLoss += val;
+                simCurrentIdx++;
             }
-        }, 10000);
-
-        initializeUI();
-        setTimeout(clickGameHistory, 1500);
+        } else if (strategy === 'LABOUCHERE') {
+            let seq = strategyConfig.sequence;
+            let baseAmt = parseFloat(document.getElementById('loss-lab-base').value) || 1;
+            const chkManual = document.getElementById('chk-manual-base');
+            if (!chkManual.checked) { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; }
+            else if (!seq || seq.length === 0 || baseAmt !== strategyConfig.baseAmount) { seq = [1, 2, 3].map(x => Math.ceil(x * baseAmt)); strategyConfig.sequence = seq; strategyConfig.baseAmount = baseAmt; }
+            for (let i = 0; i < 4; i++) { if (i < seq.length) displaySeq.push(seq[i]); else displaySeq.push(0); }
+        } else {
+        }
+        document.getElementById('loss-step1').value = displaySeq[0] || '0';
+        document.getElementById('loss-step2').value = displaySeq[1] || '0';
+        document.getElementById('loss-step3').value = displaySeq[2] || '0';
+        document.getElementById('loss-step4').value = displaySeq[3] || '0';
+        updateLossTotalUI();
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
-    else inject();
 
-    // ====================== ۱۴. توابع بارگذاری تاریخچه ======================
+    function updateLossTotalUI() {
+        const lossTotalInput = document.getElementById('loss-total');
+        if (lossTotalInput) lossTotalInput.value = Math.floor(totalLoss);
+    }
+
+    function resetState() {
+        currentSeqIdx = 0;
+        totalLoss = 0;
+        lastPlacedBet = 0;
+        const coeff = parseFloat(document.getElementById('loss-coeff').value) || 2;
+        const strategy = getStrategyType(coeff);
+        const chkManual = document.getElementById('chk-manual-base');
+        if (strategy === 'LABOUCHERE') {
+            let baseAmt;
+            if (chkManual.checked) baseAmt = parseFloat(document.getElementById('loss-lab-base').value) || 1;
+            else { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; }
+            strategyConfig.sequence = [1, 2, 3].map(x => Math.ceil(x * baseAmt));
+            strategyConfig.baseAmount = baseAmt;
+        } else if (strategy === 'MARTINGALE') {
+            let baseAmt;
+            if (chkManual.checked) baseAmt = parseFloat(document.getElementById('loss-martingale-base').value) || 1;
+            else { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-martingale-base').value = baseAmt; }
+            strategyConfig.baseAmount = baseAmt;
+        }
+        updateLossSequence();
+        updateLossTotalUI();
+    }
+
+    function getBetAmount() {
+        const cfg = strategyConfig;
+        if (!cfg) return 0;
+        const strategy = getStrategyType(cfg.multiplier);
+        if (strategy === 'MARTINGALE') {
+            const base = cfg.baseAmount;
+            if (currentSeqIdx === 0) return Math.ceil(base);
+            let bet = Math.ceil((totalLoss + base) / (cfg.multiplier - 1));
+            return bet;
+        } else if (strategy === 'LABOUCHERE') {
+            if (!cfg.sequence || cfg.sequence.length === 0) { const baseAmt = cfg.baseAmount; cfg.sequence = [1, 2, 3].map(x => Math.ceil(x * baseAmt)); }
+            let bet = Math.ceil(cfg.sequence[0] + cfg.sequence[cfg.sequence.length - 1]);
+            return bet;
+        } else {
+            return 0;
+        }
+    }
+
     function updateStatsTable() {
         const tbody = document.getElementById('result-body');
         if (!tbody) return;
@@ -824,7 +584,6 @@
         tbody.innerHTML = newRowsHTML;
     }
 
-    // ====================== ۱۵. تابع به‌روزرسانی جدول ۲۸ ستونی ======================
     function updateVeinTableFromHistory() {
         const container = document.getElementById('veinTableContainer');
         if (!container) return;
@@ -837,11 +596,6 @@
         const veins = extractVeinsFromHistory(fullHistory);
         const rev = [...fullHistory].reverse();
         const n = rev.length;
-
-        const veinIndexMap = new Map();
-        veins.forEach((v, idx) => {
-            veinIndexMap.set(v.startIndex, idx);
-        });
 
         const patternMap = new Map();
         for (let v of veins) {
@@ -919,33 +673,18 @@
         }
 
         const headers = [
-            "شناسه یکتا",
-            "نوع رگه",
-            "شماره گروه",
-            "A – شماره رگه در لیست معکوس",
-            "B – تعداد اعداد بین دو رگه",
-            "C – دنباله‌های مشابه بین دو رگه",
-            "D – اولین عدد بین دو رگه",
-            "E – ضریب قبل از رگه مبدأ",
-            "F – شماره رگه مبدأ",
-            "G – تعداد اعضای رگه مبدأ",
-            "H – ضریب‌های رگه مبدأ",
-            "I – شناسه رگه مبدأ",
-            "J – تعداد تکرار رگه مبدأ",
-            "K – نوع رگه مبدأ",
-            "L – ضریب بعد از رگه مبدأ (F1)",
-            "M – شماره سطر شروع رگه مبدأ",
-            "N – شماره رگه مقصد",
-            "O – تعداد اعضای رگه مقصد",
-            "P – ضریب قبل از رگه مقصد",
-            "Q – ضریب‌های رگه مقصد",
-            "R – شناسه رگه مقصد",
-            "S – تعداد تکرار رگه مقصد",
-            "T – نوع رگه مقصد",
-            "U – ضریب بعد از رگه مقصد (F2)",
-            "V – ضریب آغازین گروه بعدی",
-            "امتیاز اعتماد",
-            "تاریخ آخرین تکرار"
+            "شناسه یکتا", "نوع رگه", "شماره گروه", "A – شماره رگه در لیست معکوس",
+            "B – تعداد اعداد بین دو رگه", "C – دنباله‌های مشابه بین دو رگه",
+            "D – اولین عدد بین دو رگه", "E – ضریب قبل از رگه مبدأ",
+            "F – شماره رگه مبدأ", "G – تعداد اعضای رگه مبدأ",
+            "H – ضریب‌های رگه مبدأ", "I – شناسه رگه مبدأ",
+            "J – تعداد تکرار رگه مبدأ", "K – نوع رگه مبدأ",
+            "L – ضریب بعد از رگه مبدأ (F1)", "M – شماره سطر شروع رگه مبدأ",
+            "N – شماره رگه مقصد", "O – تعداد اعضای رگه مقصد",
+            "P – ضریب قبل از رگه مقصد", "Q – ضریب‌های رگه مقصد",
+            "R – شناسه رگه مقصد", "S – تعداد تکرار رگه مقصد",
+            "T – نوع رگه مقصد", "U – ضریب بعد از رگه مقصد (F2)",
+            "V – ضریب آغازین گروه بعدی", "امتیاز اعتماد", "تاریخ آخرین تکرار"
         ];
 
         let html = '<table><thead><tr>';
@@ -982,148 +721,6 @@
         container.innerHTML = html;
     }
 
-    // ====================== ۱۶. توابع بارگذاری تاریخچه از DOM ======================
-    function autoFetchHistoryFromDOM() {
-        if (initialLoadDone) return;
-        let rows = document.querySelectorAll('div.crash-row');
-        let tempHistory = [];
-        rows.forEach(row => {
-            let coeffEl = row.querySelector('.h-col-1');
-            if (coeffEl) {
-                let val = parseFloat(coeffEl.innerText.trim());
-                if (!isNaN(val) && val >= 0.00 && val < 100.00) {
-                    tempHistory.push(val);
-                }
-            }
-        });
-        if (tempHistory.length > 0) {
-            bustHistory = tempHistory.slice(-50);
-            fullHistory = tempHistory;
-            initialLoadDone = true;
-            console.log("ربات خودکار شد! " + tempHistory.length + " ضریب بارگذاری شد.");
-            updateStatsTable();
-            updateLossSequence();
-            updateVeinTableFromHistory();
-            setTimeout(() => {
-                if (riskEnabled) {
-                    const patterns = scanVeinTable();
-                    document.getElementById('risk-vein-count').textContent = patterns.length;
-                    addRiskLog('اسکن خودکار جدول پس از بارگذاری تاریخچه انجام شد. تعداد الگوها: ' + patterns.length, 'info');
-                }
-            }, 500);
-        } else {
-            setTimeout(autoFetchHistoryFromDOM, 1000);
-        }
-    }
-
-    function clickGameHistory() {
-        if (historyClickedOnce) return;
-        let element = document.evaluate("//*[contains(text(), 'تاریخچه بازی')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        if (element) {
-            element.click(); 
-            historyClickedOnce = true;
-            setTimeout(autoFetchHistoryFromDOM, 2500);
-        } else {
-            setTimeout(clickGameHistory, 1000);
-        }
-    }
-
-    // ====================== ۱۷. المنت‌های سایت ======================
-    let t_priceAmount, t_cashoutProduct, t_setCashBtn;
-    function findSiteElements() {
-        t_priceAmount = document.querySelector('.game-amount');
-        t_cashoutProduct = document.querySelector('.cashout-amount');
-        t_setCashBtn = document.querySelector('.place-bet');
-    }
-    setTimeout(findSiteElements, 500);
-
-    // ====================== ۱۸. توابع استراتژی ======================
-    function updateLossSequence() {
-        const coeff = parseFloat(document.getElementById('loss-coeff').value) || 2;
-        const strategy = getStrategyType(coeff);
-        let displaySeq = [];
-        if (strategy === 'MARTINGALE') {
-            let base = parseFloat(document.getElementById('loss-martingale-base').value) || 1;
-            const chkManual = document.getElementById('chk-manual-base');
-            if (!chkManual.checked) { base = calculateDynamicBase(coeff); document.getElementById('loss-martingale-base').value = base; }
-            let simCurrentIdx = currentSeqIdx;
-            let simTotalLoss = totalLoss;
-            for (let i = 0; i < 4; i++) {
-                let val;
-                if (simCurrentIdx === 0) val = Math.ceil(base);
-                else val = Math.ceil((simTotalLoss + base) / (coeff - 1));
-                displaySeq.push(val);
-                simTotalLoss += val;
-                simCurrentIdx++;
-            }
-        } else if (strategy === 'LABOUCHERE') {
-            let seq = strategyConfig.sequence;
-            let baseAmt = parseFloat(document.getElementById('loss-lab-base').value) || 1;
-            const chkManual = document.getElementById('chk-manual-base');
-            if (!chkManual.checked) { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; }
-            else if (!seq || seq.length === 0 || baseAmt !== strategyConfig.baseAmount) { seq = [1, 2, 3].map(x => Math.ceil(x * baseAmt)); strategyConfig.sequence = seq; strategyConfig.baseAmount = baseAmt; }
-            for (let i = 0; i < 4; i++) { if (i < seq.length) displaySeq.push(seq[i]); else displaySeq.push(0); }
-        } else {
-            const fullSeq = SEQUENCES[coeff.toFixed(2)];
-            for (let i = 0; i < 4; i++) { let idx = currentSeqIdx + i; if (idx < fullSeq.length) displaySeq.push(fullSeq[idx]); else displaySeq.push(0); }
-        }
-        document.getElementById('loss-step1').value = displaySeq[0] || '0';
-        document.getElementById('loss-step2').value = displaySeq[1] || '0';
-        document.getElementById('loss-step3').value = displaySeq[2] || '0';
-        document.getElementById('loss-step4').value = displaySeq[3] || '0';
-        updateLossTotalUI();
-    }
-
-    function updateLossTotalUI() {
-        const lossTotalInput = document.getElementById('loss-total');
-        if (lossTotalInput) lossTotalInput.value = Math.floor(totalLoss);
-    }
-
-    function resetState() {
-        currentSeqIdx = 0;
-        totalLoss = 0;
-        lastPlacedBet = 0;
-        const coeff = parseFloat(document.getElementById('loss-coeff').value) || 2;
-        const strategy = getStrategyType(coeff);
-        const chkManual = document.getElementById('chk-manual-base');
-        if (strategy === 'LABOUCHERE') {
-            let baseAmt;
-            if (chkManual.checked) baseAmt = parseFloat(document.getElementById('loss-lab-base').value) || 1;
-            else { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; }
-            strategyConfig.sequence = [1, 2, 3].map(x => Math.ceil(x * baseAmt));
-            strategyConfig.baseAmount = baseAmt;
-        } else if (strategy === 'MARTINGALE') {
-            let baseAmt;
-            if (chkManual.checked) baseAmt = parseFloat(document.getElementById('loss-martingale-base').value) || 1;
-            else { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-martingale-base').value = baseAmt; }
-            strategyConfig.baseAmount = baseAmt;
-        }
-        updateLossSequence();
-        updateLossTotalUI();
-    }
-
-    function getBetAmount() {
-        const cfg = strategyConfig;
-        if (!cfg) return 0;
-        const strategy = getStrategyType(cfg.multiplier);
-        if (strategy === 'MARTINGALE') {
-            const base = cfg.baseAmount;
-            if (currentSeqIdx === 0) return Math.ceil(base);
-            let bet = Math.ceil((totalLoss + base) / (cfg.multiplier - 1));
-            return bet;
-        } else if (strategy === 'LABOUCHERE') {
-            if (!cfg.sequence || cfg.sequence.length === 0) { const baseAmt = cfg.baseAmount; cfg.sequence = [1, 2, 3].map(x => Math.ceil(x * baseAmt)); }
-            let bet = Math.ceil(cfg.sequence[0] + cfg.sequence[cfg.sequence.length - 1]);
-            return bet;
-        } else {
-            const coeffKey = cfg.multiplier.toFixed(2);
-            let seq = SEQUENCES[coeffKey] || [];
-            if (currentSeqIdx < seq.length) return seq[currentSeqIdx];
-            else { isStrategyActive = false; return 0; }
-        }
-    }
-
-    // ====================== ۱۹. هوک‌های بازی با کپی خودکار ======================
     function safeHook() {
         if (typeof window.game_waiting === 'function') {
             const orig = window.game_waiting;
@@ -1137,8 +734,21 @@
                 } else if (fallbackModeActive) {
                     shouldBet = true;
                     betMultiplier = recoveryMultiplier || 1;
+                } else if (trigger_EndGreen) {
+                    shouldBet = true;
+                    betMultiplier = 1;
+                    addRiskLog(`🎯 سیگنال پایان رگه سبز فعال شد (ضریب بالا در سبز، دور اول قرمز)`, 'match');
+                } else if (trigger_EndRed) {
+                    shouldBet = true;
+                    betMultiplier = 1;
+                    addRiskLog(`🎯 سیگنال پایان رگه قرمز فعال شد (پایان رگه قرمز بلند، دور اول سبز)`, 'match');
+                } else if (startAfterLossEnabled && consecutiveLossesBelow180 >= startAfterLossStreak) {
+                    shouldBet = true;
+                    betMultiplier = 1;
+                    addRiskLog(`🎯 شروع شرط پس از ${consecutiveLossesBelow180} باخت پیاپی زیر ۱.۸۰`, 'bet');
                 } else {
-                    if (riskEnabled && matchFound) {
+                    let anyPatternActive = patternRedEnabled || patternGreenEnabled || patternCombinedEnabled;
+                    if (riskEnabled && matchFound && anyPatternActive) {
                         shouldBet = true;
                         betMultiplier = 1;
                     } else if (!riskEnabled) {
@@ -1149,9 +759,14 @@
 
                 if (isRunning && isStrategyActive && shouldBet && !betPlaced) {
                     let bet = Math.ceil(BASE_BET * betMultiplier);
-                    if (strategyConfig.type === 'labouchere' && !recoveryMode && !fallbackModeActive) {
+                    if (strategyConfig.type === 'labouchere' && !recoveryMode && !fallbackModeActive && !trigger_EndGreen && !trigger_EndRed && !(startAfterLossEnabled && consecutiveLossesBelow180 >= startAfterLossStreak)) {
+                        bet = getBetAmount();
+                    } else if (strategyConfig.type === 'martingale' && recoveryMode) {
+                        bet = Math.ceil(BASE_BET * recoveryMultiplier);
+                    } else if (strategyConfig.type === 'labouchere' && recoveryMode) {
                         bet = getBetAmount();
                     }
+                    
                     lastPlacedBet = bet;
                     betPlaced = true;
 
@@ -1160,12 +775,8 @@
                         t_priceAmount.value = bet;
                         t_cashoutProduct.value = strategyConfig.multiplier;
                         setTimeout(() => t_setCashBtn.click(), 150);
-                        const mode = fallbackModeActive ? ' (حالت جایگزین)' : '';
+                        const mode = fallbackModeActive ? ' (حالت جایگزین)' : (trigger_EndGreen ? ' (پایان رگه سبز)' : (trigger_EndRed ? ' (پایان رگه قرمز)' : ''));
                         addRiskLog(`💰 شرط بسته شد: مبلغ ${bet} - ضریب ${strategyConfig.multiplier}${mode}`, 'bet');
-                    }
-                } else {
-                    if (!recoveryMode && !fallbackModeActive) {
-                        addRiskLog(`⏸️ شرط بسته نشد (عدم تطابق یا غیرفعال)`, 'info');
                     }
                 }
                 orig.call(this, data);
@@ -1183,12 +794,47 @@
                     if (bustHistory.length > 50) bustHistory.pop();
                     updateStatsTable();
                     updateVeinTableFromHistory();
-
-                    // ===== کپی خودکار Full History =====
                     autoCopyFullHistory();
+
+                    let currentColor = (result >= 0.00 && result <= 1.79) ? 'red' : 'green';
+                    
+                    if (lastColor === 'red' && currentColor === 'red') {
+                        currentRedStreak++;
+                    } else if (lastColor === 'red' && currentColor === 'green') {
+                        if (currentRedStreak >= 4 && patternEndRedEnabled) {
+                            trigger_EndRed = true;
+                            addRiskLog(`📌 سیگنال پایان رگه قرمز فعال شد. رگه قرمز با طول ${currentRedStreak} به پایان رسید.`, 'info');
+                        } else {
+                            trigger_EndRed = false;
+                        }
+                        currentRedStreak = 0;
+                    } else if (lastColor === 'green' && currentColor === 'green') {
+                        if (result > 10 && patternEndGreenEnabled && !trigger_EndGreen) {
+                            trigger_EndGreen = true;
+                            addRiskLog(`📌 سیگنال پایان رگه سبز ثبت شد. ضریب ${result.toFixed(2)} > ۱۰ در رگه سبز مشاهده شد.`, 'info');
+                        }
+                    } else if (lastColor === 'green' && currentColor === 'red') {
+                        if (trigger_EndGreen) {
+                            addRiskLog(`📌 سیگنال پایان رگه سبز فعال شد. رگه سبز تمام شد و به قرمز تغییر کرد.`, 'match');
+                        }
+                        currentRedStreak = 1;
+                    }
+
+                    lastColor = currentColor;
                 }
 
-                // ===== مدیریت ریسک =====
+                if (!recoveryMode && !fallbackModeActive) {
+                    if (result < 1.80) {
+                        consecutiveLossesBelow180++;
+                        addRiskLog(`📉 باخت زیر ۱.۸۰ (ضریب ${result.toFixed(2)}) - شمارنده: ${consecutiveLossesBelow180}`, 'info');
+                    } else {
+                        if (consecutiveLossesBelow180 > 0 && startAfterLossEnabled) {
+                            addRiskLog(`🔄 ضریب ${result.toFixed(2)} (بالای ۱.۸۰)، شمارنده باخت پیاپی ریست شد.`, 'info');
+                        }
+                        consecutiveLossesBelow180 = 0;
+                    }
+                }
+
                 let match = null;
                 let patterns = [];
                 let repeatedExists = false;
@@ -1199,44 +845,44 @@
                     repeatedExists = patterns.some(p => p.repeatCount >= 2 && !p.isCombined);
 
                     if (!fallbackModeActive) {
-                        const confidenceThreshold = parseInt(document.getElementById('confidence-threshold').value) || 0;
-                        match = findMatchingPattern(result, patterns, selectedPatternType);
-
-                        if (match) {
-                            const confidence = match.isCombined ? 0 : calculateConfidence(match, currentRound);
-                            if (match.isCombined || confidence >= confidenceThreshold) {
-                                matchFound = true;
-                                let target = null;
-                                if (match.afterStart > 0) target = match.afterStart;
-                                else if (match.afterEnd > 0) target = match.afterEnd;
-                                if (target !== null && target > 1.0) {
-                                    riskTargetMultiplier = target;
-                                    document.getElementById('loss-coeff').value = target.toFixed(2);
-                                    updateLossSequence();
-                                    document.getElementById('risk-target-display').textContent = target.toFixed(2);
-                                    const details = match.isCombined
-                                        ? `ترکیبی: ${match.v1.type}(${JSON.stringify(match.v1.members)}) → ${match.v2.type}(${JSON.stringify(match.v2.members)})`
-                                        : `نوع:${match.type} | گروه:${match.group} | A:${match.a} | شناسه:${match.key} | اعتماد:${confidence}`;
-                                    addRiskLog(`✅ تطابق ${match.isCombined ? 'الگوی ترکیبی' : ''} با ${match.matchedField} (${details}) → ضریب هدف: ${target.toFixed(2)}`, 'match');
-                                    consecutiveMisses = 0;
+                        let effectiveConfidence = confidenceEnabled ? confidenceThreshold : 0;
+                        let anyPatternActive = patternRedEnabled || patternGreenEnabled || patternCombinedEnabled;
+                        if (anyPatternActive) {
+                            match = findMatchingPattern(result, patterns, selectedPatternType);
+                            if (match) {
+                                const confidence = match.isCombined ? 0 : calculateConfidence(match, currentRound);
+                                if (match.isCombined || confidence >= effectiveConfidence) {
+                                    matchFound = true;
+                                    let target = null;
+                                    if (match.afterStart > 0) target = match.afterStart;
+                                    else if (match.afterEnd > 0) target = match.afterEnd;
+                                    if (target !== null && target > 1.0) {
+                                        riskTargetMultiplier = target;
+                                        document.getElementById('loss-coeff').value = target.toFixed(2);
+                                        updateLossSequence();
+                                        document.getElementById('risk-target-display').textContent = target.toFixed(2);
+                                        addRiskLog(`✅ تطابق ${match.isCombined ? 'الگوی ترکیبی' : ''} با ${match.matchedField} → ضریب هدف: ${target.toFixed(2)}`, 'match');
+                                        consecutiveMisses = 0;
+                                    } else {
+                                        matchFound = false;
+                                        addRiskLog(`⚠️ ضریب هدف نامعتبر (L=${match.afterStart}, U=${match.afterEnd})`, 'info');
+                                    }
                                 } else {
                                     matchFound = false;
-                                    addRiskLog(`⚠️ ضریب هدف نامعتبر (L=${match.afterStart}, U=${match.afterEnd})`, 'info');
+                                    addRiskLog(`⏳ تطابق یافت اما اعتماد (${confidence}) کمتر از آستانه است`, 'info');
                                 }
                             } else {
                                 matchFound = false;
-                                addRiskLog(`⏳ تطابق یافت اما اعتماد (${confidence}) کمتر از آستانه است`, 'info');
+                                consecutiveMisses++;
+                                riskSkipCount++;
+                                document.getElementById('risk-skip-count').textContent = riskSkipCount;
+                                addRiskLog(`❌ عدم تطابق (تعداد صرف‌نظر: ${riskSkipCount})`, 'nomatch');
+                                if (consecutiveMisses > 10) {
+                                    addRiskLog(`⚠️ هشدار: بیش از ۱۰ دور متوالی تطابق پیدا نشد!`, 'info');
+                                }
                             }
                         } else {
                             matchFound = false;
-                            consecutiveMisses++;
-                            riskSkipCount++;
-                            document.getElementById('risk-skip-count').textContent = riskSkipCount;
-                            addRiskLog(`❌ عدم تطابق (تعداد صرف‌نظر: ${riskSkipCount})`, 'nomatch');
-
-                            if (consecutiveMisses > 10) {
-                                addRiskLog(`⚠️ هشدار: بیش از ۱۰ دور متوالی تطابق پیدا نشد!`, 'info');
-                            }
                         }
                     } else {
                         matchFound = true;
@@ -1245,7 +891,6 @@
                     matchFound = true;
                 }
 
-                // ===== منطق فعال‌سازی حالت جایگزین =====
                 const chkFallback = document.getElementById('chk-fallback-mode');
                 const fallbackEnabled = chkFallback && chkFallback.checked;
 
@@ -1263,21 +908,64 @@
                         document.getElementById('loss-coeff').value = '2.00';
                         updateLossSequence();
                         matchFound = true;
-                        addRiskLog(`🚀 حالت جایگزین (Fallback) فعال شد! درصد ضریب ۲: ${pct.toFixed(1)}% (بدون الگوی تکراری)`, 'fallback');
+                        addRiskLog(`🚀 حالت جایگزین (Fallback) فعال شد! درصد ضریب ۲: ${pct.toFixed(1)}%`, 'fallback');
                     }
                 }
 
-                // ===== مدیریت نتیجه شرط و خروج از حالت جایگزین =====
                 if (isRunning && isStrategyActive && betPlaced) {
                     if (result >= strategyConfig.multiplier) {
                         addRiskLog(`🎉 شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} برنده شد! (کرش: ${result.toFixed(2)})`, 'match');
                         
-                        recoveryMode = false;
-                        recoveryMultiplier = 1;
-                        currentSeqIdx = 0;
-                        totalLoss = 0;
-                        updateLossSequence();
-                        updateLossTotalUI();
+                        consecutiveWins++;
+                        addRiskLog(`📈 تعداد بردهای متوالی: ${consecutiveWins}`, 'info');
+                        
+                        if (stopAfterWinEnabled && consecutiveWins >= stopAfterWinStreak) {
+                            isRunning = false;
+                            addRiskLog(`🛑 ربات به دلیل رسیدن به ${consecutiveWins} برد متوالی متوقف شد!`, 'match');
+                            document.getElementById('bot-status').textContent = `🛑 توقف پس از ${consecutiveWins} برد متوالی`;
+                            consecutiveWins = 0;
+                        }
+
+                        if (strategyConfig.type === 'labouchere' && strategyConfig.sequence && strategyConfig.sequence.length > 0) {
+                            if (strategyConfig.sequence.length >= 2) {
+                                strategyConfig.sequence.shift();
+                                strategyConfig.sequence.pop();
+                            } else if (strategyConfig.sequence.length === 1) {
+                                strategyConfig.sequence.shift();
+                            }
+                            if (strategyConfig.sequence.length === 0) {
+                                recoveryMode = false;
+                                recoveryMultiplier = 1;
+                                currentSeqIdx = 0;
+                                totalLoss = 0;
+                                consecutiveLossesBelow180 = 0;
+                                addRiskLog(`✅ جبران ضرر با لابوشر کامل شد.`, 'match');
+                                updateLossSequence();
+                                updateLossTotalUI();
+                            } else {
+                                totalLoss = 0;
+                                updateLossSequence();
+                                updateLossTotalUI();
+                            }
+                        } else {
+                            recoveryMode = false;
+                            recoveryMultiplier = 1;
+                            currentSeqIdx = 0;
+                            totalLoss = 0;
+                            consecutiveLossesBelow180 = 0;
+                            addRiskLog(`✅ جبران ضرر کامل شد.`, 'match');
+                            updateLossSequence();
+                            updateLossTotalUI();
+                        }
+
+                        if (trigger_EndGreen) {
+                            trigger_EndGreen = false;
+                            addRiskLog(`🔄 پرچم پایان رگه سبز پس از برد ریست شد.`, 'info');
+                        }
+                        if (trigger_EndRed) {
+                            trigger_EndRed = false;
+                            addRiskLog(`🔄 پرچم پایان رگه قرمز پس از برد ریست شد.`, 'info');
+                        }
 
                         if (fallbackModeActive) {
                             const chkFallback2 = document.getElementById('chk-fallback-mode');
@@ -1291,9 +979,9 @@
                                 fallbackModeActive = false;
                                 matchFound = false;
                                 consecutiveMisses = 0;
-                                addRiskLog(`🛑 حالت جایگزین غیرفعال شد. دلیل: ${newRepeatedExists ? 'الگوی تکراری شناسایی شد' : shouldExitFallback ? 'درصد ضریب ۲ به زیر ۵۴٪ برگشت' : 'چک‌باکس غیرفعال شد'}`, 'info');
+                                addRiskLog(`🛑 حالت جایگزین غیرفعال شد.`, 'info');
                             } else {
-                                addRiskLog(`⏳ حالت جایگزین ادامه دارد. هنوز الگوی تکراری مشاهده نشد.`, 'info');
+                                addRiskLog(`⏳ حالت جایگزین ادامه دارد.`, 'info');
                             }
                         }
                         matchFound = false;
@@ -1301,28 +989,26 @@
                     } else {
                         addRiskLog(`❌ شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} باخت! (کرش: ${result.toFixed(2)})`, 'nomatch');
                         
-                        if (fallbackModeActive) {
-                            fallbackLossCount++;
-                            if (fallbackLossCount >= MAX_FALLBACK_LOSSES) {
-                                fallbackModeActive = false;
-                                matchFound = false;
-                                consecutiveMisses = 0;
-                                recoveryMode = false;
-                                recoveryMultiplier = 1;
-                                currentSeqIdx = 0;
-                                totalLoss = 0;
-                                updateLossSequence();
-                                updateLossTotalUI();
-                                addRiskLog(`⛔ خروج از حالت جایگزین: به حداکثر باخت (${MAX_FALLBACK_LOSSES}) رسیدیم. بازگشت به حالت منتظر الگو.`, 'fallback');
-                            } else {
-                                recoveryMode = true;
-                                recoveryMultiplier *= 2;
-                                totalLoss += lastPlacedBet;
-                                currentSeqIdx++;
-                                updateLossSequence();
-                                updateLossTotalUI();
-                                addRiskLog(`🔄 حالت جبران (پله ${fallbackLossCount}) فعال شد. مبلغ شرط بعدی: ${BASE_BET * recoveryMultiplier}`, 'info');
+                        if (consecutiveWins > 0) {
+                            addRiskLog(`⛔ زنجیره بردهای متوالی شکسته شد (تعداد برد: ${consecutiveWins})`, 'info');
+                            consecutiveWins = 0;
+                        }
+
+                        if (strategyConfig.type === 'labouchere' && strategyConfig.sequence && strategyConfig.sequence.length > 0) {
+                            let lostAmount = lastPlacedBet;
+                            if (strategyConfig.sequence.length >= 2) {
+                                strategyConfig.sequence.shift();
+                                strategyConfig.sequence.pop();
+                                strategyConfig.sequence.push(lostAmount);
+                            } else if (strategyConfig.sequence.length === 1) {
+                                strategyConfig.sequence.shift();
+                                strategyConfig.sequence.push(lostAmount);
                             }
+                            recoveryMode = true;
+                            totalLoss += lostAmount;
+                            currentSeqIdx++;
+                            updateLossSequence();
+                            updateLossTotalUI();
                         } else {
                             recoveryMode = true;
                             recoveryMultiplier *= 2;
@@ -1330,13 +1016,33 @@
                             currentSeqIdx++;
                             updateLossSequence();
                             updateLossTotalUI();
-                            addRiskLog(`🔄 حالت جبران فعال شد. مبلغ شرط بعدی: ${BASE_BET * recoveryMultiplier}`, 'info');
+                        }
+
+                        if (trigger_EndGreen) {
+                            trigger_EndGreen = false;
+                            addRiskLog(`🔄 پرچم پایان رگه سبز پس از باخت ریست شد.`, 'info');
+                        }
+                        if (trigger_EndRed) {
+                            trigger_EndRed = false;
+                            addRiskLog(`🔄 پرچم پایان رگه قرمز پس از باخت ریست شد.`, 'info');
+                        }
+
+                        let effectiveMaxLoss = maxLossEnabled ? MAX_LOSS_STREAK : 9999;
+                        if (currentSeqIdx >= effectiveMaxLoss) {
+                            recoveryMode = false;
+                            recoveryMultiplier = 1;
+                            currentSeqIdx = 0;
+                            totalLoss = 0;
+                            matchFound = false;
+                            consecutiveLossesBelow180 = 0;
+                            updateLossSequence();
+                            updateLossTotalUI();
+                            addRiskLog(`⛔ به حداکثر باخت پیاپی (${MAX_LOSS_STREAK}) رسیدیم. مارتینگل ریست شد.`, 'info');
                         }
                     }
                     betPlaced = false;
                 }
 
-                // ===== مدیریت موجودی با هدف ثابت =====
                 if (isRunning && isStrategyActive) {
                     const chkBalanceRule = document.getElementById('chk-balance-rule');
                     if (chkBalanceRule && chkBalanceRule.checked) {
@@ -1364,7 +1070,6 @@
         }
     }
 
-    // ====================== ۲۰. راه‌اندازی رویدادها و دکمه‌ها ======================
     function initializeUI() {
         document.getElementById('btn-update-target').addEventListener('click', function() {
             if (isRunning) {
@@ -1375,7 +1080,6 @@
             addRiskLog(`🔄 هدف ثابت به ${fixedTarget} به‌روزرسانی شد.`, 'info');
         });
 
-        // ===== رفتار تب‌ها به‌صورت تاگل (آکاردئون) =====
         document.querySelectorAll('.bot-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const targetId = this.dataset.target;
@@ -1394,176 +1098,148 @@
             });
         });
 
+        document.getElementById('chk-pattern-red').addEventListener('change', function() {
+            patternRedEnabled = this.checked;
+            addRiskLog(`🔄 الگوی قرمز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-green').addEventListener('change', function() {
+            patternGreenEnabled = this.checked;
+            addRiskLog(`🔄 الگوی سبز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-combined').addEventListener('change', function() {
+            patternCombinedEnabled = this.checked;
+            addRiskLog(`🔄 الگوی ترکیبی ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+
+        document.getElementById('chk-pattern-end-green').addEventListener('change', function() {
+            patternEndGreenEnabled = this.checked;
+            if (!this.checked) trigger_EndGreen = false;
+            addRiskLog(`🔄 سیگنال پایان رگه سبز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-end-red').addEventListener('change', function() {
+            patternEndRedEnabled = this.checked;
+            if (!this.checked) trigger_EndRed = false;
+            addRiskLog(`🔄 سیگنال پایان رگه قرمز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+
         document.getElementById('pattern-type-select').addEventListener('change', function() {
             selectedPatternType = this.value;
             addRiskLog(`🔄 نوع الگو به "${this.options[this.selectedIndex].text}" تغییر یافت`, 'info');
             matchFound = false;
         });
 
-        document.getElementById('min-repeat-input').addEventListener('change', function() {
-            minRepeat = parseInt(this.value) || 2;
-            addRiskLog(`🔄 حداقل تکرار برای الگوهای جدید به ${minRepeat} تغییر یافت`, 'info');
-        });
-
-        document.getElementById('confidence-threshold').addEventListener('change', function() {
-            confidenceThreshold = parseInt(this.value) || 0;
-            addRiskLog(`🔄 آستانه اعتماد به ${confidenceThreshold} تغییر یافت`, 'info');
-        });
-
-        // ===== چک‌باکس کپی خودکار =====
-        document.getElementById('chk-auto-copy').addEventListener('change', function() {
-            autoCopyEnabled = this.checked;
-            addRiskLog(`🔄 کپی خودکار Full History ${autoCopyEnabled ? 'فعال' : 'غیرفعال'} شد.`, 'info');
-        });
-
-        document.getElementById('btn-load-manual').addEventListener('click', loadManualCoefficients);
-
-        document.getElementById('chk-martingale').addEventListener('change', function() {
-            if (this.checked) { document.getElementById('chk-labouchere').checked = false; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); }
-            else { if (!document.getElementById('chk-labouchere').checked) { document.getElementById('chk-labouchere').checked = true; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); } }
-        });
-        document.getElementById('chk-labouchere').addEventListener('change', function() {
-            if (this.checked) { document.getElementById('chk-martingale').checked = false; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); }
-            else { if (!document.getElementById('chk-martingale').checked) { document.getElementById('chk-martingale').checked = true; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); } }
-        });
-
-        document.getElementById('loss-lab-base').addEventListener('input', function() { if (document.getElementById('chk-labouchere').checked) updateLossSequence(); });
-        document.getElementById('loss-martingale-base').addEventListener('input', function() { if (document.getElementById('chk-martingale').checked) updateLossSequence(); });
-
-        document.getElementById('loss-coeff').addEventListener('input', function() {
-            const coeff = parseFloat(this.value) || 2;
-            const chkManual = document.getElementById('chk-manual-base');
-            if (!chkManual.checked) { const baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; document.getElementById('loss-martingale-base').value = baseAmt; }
-            if (document.getElementById('chk-loss').checked) resetState();
-            updateLossSequence();
-        });
-
-        document.getElementById('chk-loss').addEventListener('change', function() {
-            if (this.checked) { 
-                const coeff = parseFloat(document.getElementById('loss-coeff').value) || 2; 
-                const strategy = getStrategyType(coeff);
-                const chkManual = document.getElementById('chk-manual-base');
-                let baseAmt = 1;
-                if (strategy === 'MARTINGALE') {
-                    if (chkManual.checked) baseAmt = parseFloat(document.getElementById('loss-martingale-base').value) || 1;
-                    else { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-martingale-base').value = baseAmt; }
-                    strategyConfig = { type:'martingale', multiplier:coeff, baseAmount:baseAmt, sequence:[] }; 
-                } else if (strategy === 'LABOUCHERE') {
-                    if (chkManual.checked) baseAmt = parseFloat(document.getElementById('loss-lab-base').value) || 1;
-                    else { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; }
-                    const labSeq = [1, 2, 3].map(x => Math.ceil(x * baseAmt));
-                    strategyConfig = { type:'labouchere', multiplier:coeff, baseAmount:baseAmt, sequence:labSeq }; 
-                } else { strategyConfig = { type:'loss-chase', multiplier:coeff, baseAmount:1, sequence:[] }; }
-                isStrategyActive = true;
-                resetState();
-            } else { isStrategyActive = false; }
-        });
-
-        document.getElementById('btn-start').onclick = () => { 
-            if (isStrategyActive) { 
-                isRunning = true; 
-                matchFound = true;
-                document.getElementById('bot-status').textContent = '▶ ربات در حال اجرا';
-                addRiskLog('▶ ربات شروع به کار کرد', 'info');
-            } else { 
-                alert('ابتدا حالت شرط‌بندی را انتخاب و تیک بزنید.'); 
-            } 
-        };
-        document.getElementById('btn-stop').onclick = () => { 
-            isRunning = false; 
-            document.getElementById('bot-status').textContent = '⏸ ربات متوقف شد';
-            addRiskLog('⏸ ربات متوقف شد', 'info');
-        };
-        
-        let night = false;
-        document.getElementById('btn-theme').onclick = function() { 
-            night = !night; 
-            wrapper.classList.toggle('bot-night', night); 
-            this.textContent = night ? '☀️ روز' : '🌙 شب'; 
-        };
-
-        document.getElementById('btn-copy-last').onclick = function() {
-            const originalText = this.textContent;
-            if (!bustHistory || bustHistory.length === 0) { alert("ابتدا باید ضرایب بارگذاری شوند!"); return; }
-            var formatted = bustHistory.map(v => v.toFixed(2) + "---\n").join('');
-            navigator.clipboard.writeText(formatted).then(() => {
-                this.textContent = "کپی شد ✅";
-                this.style.background = "#17a2b8";
-                setTimeout(() => { this.textContent = originalText; this.style.background = "#dc3545"; }, 2000);
-            }).catch(err => alert("خطا در کپی: " + err));
-        };
-
-        document.getElementById('btn-copy-all').onclick = function() {
-            const originalText = this.textContent;
-            if (!fullHistory || fullHistory.length === 0) { alert("هیچ ضریبی برای کپی وجود ندارد!"); return; }
-            var formatted = fullHistory.map(v => v.toFixed(2) + "---\n").join('');
-            navigator.clipboard.writeText(formatted).then(() => {
-                this.textContent = "کپی شد ✅";
-                this.style.background = "#17a2b8";
-                setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
-            }).catch(err => alert("خطا در کپی: " + err));
-        };
-
-        document.getElementById('btn-copy-full-log').onclick = function() {
-            const originalText = this.textContent;
-            if (!fullLogHistory || fullLogHistory.length === 0) {
-                alert("لاگی برای کپی وجود ندارد!");
-                return;
-            }
-            const fullLogText = fullLogHistory.map(item => item.full).join('\n');
-            navigator.clipboard.writeText(fullLogText).then(() => {
-                this.textContent = "📋 کپی شد ✅";
-                this.style.background = "#17a2b8";
-                setTimeout(() => {
-                    this.textContent = originalText;
-                    this.style.background = "#333";
-                }, 2000);
-            }).catch(err => alert("خطا در کپی: " + err));
-        };
-
-        const chkRisk = document.getElementById('chk-risk-enable');
-        const riskStatusSpan = document.getElementById('risk-scan-status');
-        const countSpan = document.getElementById('risk-vein-count');
-
-        function performAutoScan() {
-            const patterns = scanVeinTable();
-            countSpan.textContent = patterns.length;
-            riskStatusSpan.textContent = '✅ اسکن خودکار انجام شد';
-            addRiskLog('🔍 اسکن خودکار جدول انجام شد. تعداد الگوها: ' + patterns.length, 'info');
-            return patterns;
-        }
-
-        if (chkRisk) {
-            chkRisk.addEventListener('change', function() {
-                riskEnabled = this.checked;
-                if (this.checked) {
-                    riskStatusSpan.textContent = '🔄 فعال - در حال اسکن...';
-                    const patterns = performAutoScan();
-                    if (patterns.length === 0) {
-                        addRiskLog('⚠️ هیچ الگویی در جدول یافت نشد!', 'info');
-                    } else {
-                        addRiskLog('✅ مدیریت ریسک فعال شد. ' + patterns.length + ' الگو شناسایی شد.', 'info');
-                        document.getElementById('bot-status').textContent = '🛡️ مدیریت ریسک فعال - منتظر تطابق الگو';
-                    }
-                } else {
-                    riskStatusSpan.textContent = '⏸ غیرفعال';
-                    matchFound = true;
-                    addRiskLog('⏸ مدیریت ریسک غیرفعال شد.', 'info');
-                    document.getElementById('bot-status').textContent = '⚡ ربات آماده است';
-                }
-            });
-        }
-
-        setTimeout(() => {
-            if (document.getElementById('chk-risk-enable') && document.getElementById('chk-risk-enable').checked) {
-                performAutoScan();
-            }
-        }, 3000);
-
-        calculateFixedTarget();
     }
 
-    // ====================== ۲۱. راه‌اندازی نهایی ======================
+    function calculateFixedTarget() {
+        const balance = parseFloat(document.getElementById('base-balance').value) || 0;
+        const percent = parseFloat(document.getElementById('balance-profit-percent').value) || 0;
+        const profit = Math.ceil(balance * (percent / 100));
+        fixedTarget = balance + profit;
+        document.getElementById('balance-profit-amount').value = profit;
+        document.getElementById('balance-target').value = balance + ' + ' + profit + ' = ' + fixedTarget;
+        return fixedTarget;
+    }
+
+    let t_priceAmount, t_cashoutProduct, t_setCashBtn;
+    function findSiteElements() {
+        t_priceAmount = document.querySelector('.game-amount');
+        t_cashoutProduct = document.querySelector('.cashout-amount');
+        t_setCashBtn = document.querySelector('.place-bet');
+    }
+    setTimeout(findSiteElements, 500);
+
+    function clickGameHistory() {
+        if (historyClickedOnce) return;
+        let element = document.evaluate("//*[contains(text(), 'تاریخچه بازی')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        if (element) {
+            element.click(); 
+            historyClickedOnce = true;
+            setTimeout(autoFetchHistoryFromDOM, 2500);
+        } else {
+            setTimeout(clickGameHistory, 1000);
+        }
+    }
+
+    function autoFetchHistoryFromDOM() {
+        if (initialLoadDone) return;
+        let rows = document.querySelectorAll('div.crash-row');
+        let tempHistory = [];
+        rows.forEach(row => {
+            let coeffEl = row.querySelector('.h-col-1');
+            if (coeffEl) {
+                let val = parseFloat(coeffEl.innerText.trim());
+                if (!isNaN(val) && val >= 0.00 && val < 100.00) {
+                    tempHistory.push(val);
+                }
+            }
+        });
+        if (tempHistory.length > 0) {
+            bustHistory = tempHistory.slice(-50);
+            fullHistory = tempHistory;
+            initialLoadDone = true;
+            updateStatsTable();
+            updateLossSequence();
+            updateVeinTableFromHistory();
+            setTimeout(() => {
+                if (riskEnabled) {
+                    const patterns = scanVeinTable();
+                    document.getElementById('risk-vein-count').textContent = patterns.length;
+                    addRiskLog('اسکن خودکار جدول پس از بارگذاری تاریخچه انجام شد. تعداد الگوها: ' + patterns.length, 'info');
+                }
+            }, 500);
+        } else {
+            setTimeout(autoFetchHistoryFromDOM, 1000);
+        }
+    }
+
+    function inject() {
+        if (!document.body) { setTimeout(inject, 50); return; }
+        const selectors = ['.header', '.navbar', '.top-bar', 'header', '#header'];
+        let target = null;
+        for (const sel of selectors) { target = document.querySelector(sel); if (target) break; }
+        if (target) target.before(wrapper);
+        else document.body.prepend(wrapper);
+
+        const statsMenu = document.getElementById('stats-table-outer-container');
+        const veinMenu = document.getElementById('vein-table-outer-container');
+        wrapper.after(statsMenu);
+        statsMenu.after(veinMenu);
+
+        document.getElementById('collapse-btn').onclick = function() { 
+            const c=document.getElementById('collapse-content'); 
+            const i=this.querySelector('span:last-child'); 
+            c.classList.toggle('open'); 
+            i.textContent=c.classList.contains('open')?'▼':'▶'; 
+        };
+        document.getElementById('vein-collapse-btn').onclick = function() { 
+            const c=document.getElementById('vein-collapse-content'); 
+            const i=this.querySelector('span:last-child'); 
+            c.classList.toggle('open'); 
+            i.textContent=c.classList.contains('open')?'▼':'▶'; 
+        };
+
+        document.getElementById('bot-status').textContent = '✅ ربات با موفقیت بارگذاری شد';
+        document.querySelectorAll('.bot-input').forEach(input => { input.value = toEng(input.value); });
+
+        setTimeout(() => {
+            const domBalance = getCurrentBalanceFromDOM();
+            if (domBalance !== null) {
+                currentBalance = domBalance;
+                document.getElementById('base-balance').value = Math.floor(currentBalance);
+                calculateFixedTarget();
+                console.log(`موجودی اولیه از سایت خوانده شد: ${currentBalance}`);
+            } else {
+                console.warn("ربات: امکان خواندن موجودی سایت در ۱۰ ثانیه اول وجود نداشت.");
+                calculateFixedTarget();
+            }
+        }, 10000);
+
+        initializeUI();
+        setTimeout(clickGameHistory, 1500);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
+    else inject();
+
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات نهایی با چک‌باکس کپی خودکار Full History بارگذاری شد.');
+    console.log('ربات نهایی با نام‌های جدید (پایان رگه سبز و پایان رگه قرمز) و حذف گزینه همه الگوها بارگذاری شد.');
 })();

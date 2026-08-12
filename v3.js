@@ -500,7 +500,6 @@
             if (!chkManual.checked) { baseAmt = calculateDynamicBase(coeff); document.getElementById('loss-lab-base').value = baseAmt; }
             else if (!seq || seq.length === 0 || baseAmt !== strategyConfig.baseAmount) { seq = [1, 2, 3].map(x => Math.ceil(x * baseAmt)); strategyConfig.sequence = seq; strategyConfig.baseAmount = baseAmt; }
             for (let i = 0; i < 4; i++) { if (i < seq.length) displaySeq.push(seq[i]); else displaySeq.push(0); }
-        } else {
         }
         document.getElementById('loss-step1').value = displaySeq[0] || '0';
         document.getElementById('loss-step2').value = displaySeq[1] || '0';
@@ -1192,6 +1191,129 @@
         }
     }
 
+    const wrapper = document.createElement('div');
+    wrapper.id = 'bot-ui-wrapper';
+    wrapper.innerHTML = '<div id="bot-status">⚡ ربات آماده است</div>';
+
+    const toolbar = document.createElement('div');
+    toolbar.id = 'bot-toolbar';
+    toolbar.innerHTML = `
+        <button class="bot-btn dark" id="btn-theme">🌙 شب</button>
+        <button class="bot-btn red" id="btn-copy-last">کپی ۵۰</button>
+        <button class="bot-btn blue" id="btn-copy-all">کپی همه</button>
+        <button class="bot-btn green" id="btn-start">▶ شروع</button>
+        <button class="bot-btn red" id="btn-stop">⏹ توقف</button>
+    `;
+    wrapper.appendChild(toolbar);
+
+    const tabsDiv = document.createElement('div');
+    tabsDiv.id = 'bot-tabs';
+    tabsDiv.innerHTML = `
+        <button class="bot-tab active" data-target="pane-loss">استراتژی شرط</button>
+        <button class="bot-tab" data-target="pane-balance">مدیریت موجودی</button>
+        <button class="bot-tab" data-target="pane-risk">مدیریت ریسک</button>
+    `;
+    wrapper.appendChild(tabsDiv);
+
+    const paneLoss = document.createElement('div');
+    paneLoss.className = 'bot-pane active';
+    paneLoss.id = 'pane-loss';
+    paneLoss.innerHTML = `
+        <div class="bot-row"><span class="bot-label">ضریب:</span><input type="text" class="bot-input" id="loss-coeff" value="2.00" style="max-width:65px;"></div>
+        <div class="bot-row">
+            <input type="checkbox" id="chk-martingale" checked><label for="chk-martingale">شرط با مارتینگل</label>
+            <span class="bot-label" style="min-width:40px;">مبلغ پایه:</span>
+            <input type="text" class="bot-input" id="loss-martingale-base" value="1" style="max-width:60px;">
+        </div>
+        <div class="bot-row">
+            <input type="checkbox" id="chk-labouchere"><label for="chk-labouchere">شرط با لابوشر</label>
+            <span class="bot-label" style="min-width:40px;">مبلغ پایه:</span>
+            <input type="text" class="bot-input" id="loss-lab-base" value="1" style="max-width:60px;">
+        </div>
+        <div class="bot-row"><input type="checkbox" id="chk-manual-base"><label for="chk-manual-base" style="font-weight:bold; color:#28a745;">فعال‌سازی مبلغ پایه دستی</label></div>
+        <div class="bot-row">
+            <span class="bot-label">۴ مرحله بعدی:</span>
+            <div class="bot-input-group">
+                <input type="text" class="bot-input" id="loss-step1" readonly>
+                <input type="text" class="bot-input" id="loss-step2" readonly>
+                <input type="text" class="bot-input" id="loss-step3" readonly>
+                <input type="text" class="bot-input" id="loss-step4" readonly>
+            </div>
+        </div>
+        <div class="bot-row"><span class="bot-label">کل ضرر تا این دور:</span><input type="text" class="bot-input" id="loss-total" readonly style="max-width:80px;"></div>
+        <div class="bot-check-row"><input type="checkbox" id="chk-loss"><label for="chk-loss">فعال‌سازی ربات</label></div>
+    `;
+    wrapper.appendChild(paneLoss);
+
+    const paneBalance = document.createElement('div');
+    paneBalance.className = 'bot-pane';
+    paneBalance.id = 'pane-balance';
+    paneBalance.innerHTML = `
+        <div class="bot-row">
+            <span class="bot-label">موجودی پایه فعلی:</span>
+            <input type="text" class="bot-input readonly-field" id="base-balance" value="600" readonly style="max-width:80px;">
+            <span style="font-size:11px; color:#888;">(خوانده شده از سایت)</span>
+        </div>
+        <div class="bot-row">
+            <span class="bot-label">درصد حد سود:</span>
+            <input type="text" class="bot-input" id="balance-profit-percent" value="1" style="max-width:60px;">
+            <span>%</span>
+            <button class="bot-btn blue" id="btn-update-target" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px; margin-right:8px;">🔄 اعمال</button>
+        </div>
+        <div class="bot-check-row" style="border:none; margin-top:0;"><input type="checkbox" id="chk-balance-rule" checked><label for="chk-balance-rule" style="font-weight:bold;">فعال‌سازی حد سود روزانه</label></div>
+        <div class="bot-row"><span class="bot-label">مبلغ حد سود:</span><input type="text" class="bot-input readonly-field" id="balance-profit-amount" readonly style="max-width:80px;"></div>
+        <div class="bot-row"><span class="bot-label">جمع کل (هدف ثابت):</span><input type="text" class="bot-input readonly-field" id="balance-target" readonly style="max-width:160px;"></div>
+        <div class="bot-row"><input type="checkbox" id="chk-fallback-mode" checked><label for="chk-fallback-mode" style="font-weight:bold; color:#ff6b6b;">فعال‌سازی شرط‌بندی جایگزین در نبود الگو</label></div>
+    `;
+    wrapper.appendChild(paneBalance);
+
+    const paneRisk = document.createElement('div');
+    paneRisk.className = 'bot-pane';
+    paneRisk.id = 'pane-risk';
+    paneRisk.innerHTML = `
+        <div class="risk-pane">
+            <div class="bot-row"><input type="checkbox" id="chk-risk-enable"><label for="chk-risk-enable" style="font-weight:bold; color:#28a745;">فعال‌سازی مدیریت ریسک (جدول ۲۸ ستون)</label></div>
+            <div class="bot-row"><button class="bot-btn dark" id="btn-copy-full-log">📋 کپی کل لاگ</button><span style="font-size:12px; color:#888;" id="risk-scan-status">وضعیت: آماده</span></div>
+            <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:6px; flex-direction:column; align-items:flex-start;">
+                <label style="font-weight:bold; margin-bottom:4px; color:var(--text); font-size:13px;">انتخاب الگوهای فعال (فقط ۳ الگو قابل مشاهده):</label>
+                <div class="pattern-box">
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-red"><label for="chk-pattern-red" style="font-size:12px;">الگوی قرمز (دقت ۸۰٪) - پیش‌بینی پایان روند نزولی</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-green"><label for="chk-pattern-green" style="font-size:12px;">الگوی سبز (دقت ۵۰٪) - پیش‌بینی ادامه روند صعودی</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-combined"><label for="chk-pattern-combined" style="font-size:12px;">الگوی ترکیبی (دقت ۳۰٪) - تغییرات روند در دو مرحله</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-end-green"><label for="chk-pattern-end-green" style="font-size:12px;">پایان رگه سبز (ضریب بالای ۱۰ در رگه سبز)</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-end-red"><label for="chk-pattern-end-red" style="font-size:12px;">پایان رگه قرمز (پایان رگه قرمز بلند)</label></div>
+                </div>
+            </div>
+            <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:4px;">
+                <span class="bot-label" style="min-width:100px;">نوع الگو (برای جدول):</span>
+                <select id="pattern-type-select" style="padding:4px 8px; border-radius:4px; background:#333; color:white; border:1px solid #555; flex:1;">
+                    <option value="red">فقط قرمز (۰ تا ۱٫۷۹)</option>
+                    <option value="green">فقط سبز (۱٫۸۰ به بالا)</option>
+                    <option value="combined">فقط الگوهای ترکیبی (دو رگه متوالی)</option>
+                </select>
+            </div>
+            <div class="bot-row"><input type="checkbox" id="chk-min-repeat"><label for="chk-min-repeat" style="font-weight:bold; color:#ffa500; font-size:12px;">فعال‌سازی حداقل تکرار</label><input type="text" class="bot-input" id="min-repeat-input" value="2" style="max-width:50px;"></div>
+            <div class="bot-row"><input type="checkbox" id="chk-confidence"><label for="chk-confidence" style="font-weight:bold; color:#ffa500; font-size:12px;">فعال‌سازی آستانه اعتماد</label><input type="text" class="bot-input" id="confidence-threshold" value="0" style="max-width:50px;"></div>
+            <div class="bot-row"><input type="checkbox" id="chk-auto-copy"><label for="chk-auto-copy" style="font-weight:bold; color:#ffa500; font-size:12px;">📋 کپی خودکار Full History</label></div>
+            <div class="bot-row"><input type="checkbox" id="chk-max-loss"><label for="chk-max-loss" style="font-weight:bold; color:#ff6b6b; font-size:12px;">فعال‌سازی محدودیت باخت پیاپی</label><input type="text" class="bot-input" id="max-loss-streak" value="5" style="max-width:50px;"></div>
+            <div class="bot-row"><input type="checkbox" id="chk-start-after-loss"><label for="chk-start-after-loss" style="font-weight:bold; color:#ffa500; font-size:12px;">فعال‌سازی شرط پس از باخت پیاپی</label><input type="text" class="bot-input" id="start-after-loss-streak" value="5" style="max-width:50px;"></div>
+            <div class="bot-row"><input type="checkbox" id="chk-stop-after-win"><label for="chk-stop-after-win" style="font-weight:bold; color:#28a745; font-size:12px;">توقف ربات پس از بردهای متوالی</label><input type="text" class="bot-input" id="stop-after-win-streak" value="10" style="max-width:50px;"></div>
+            <div class="bot-row" style="flex-wrap: wrap; border-top:1px dashed #555; padding-top:8px; margin-top:4px;">
+                <span class="bot-label" style="min-width:100px;">بارگذاری دستی:</span>
+                <button class="bot-btn blue" id="btn-load-manual" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px;">📥 بارگذاری</button>
+            </div>
+            <div class="bot-row"><textarea class="manual-input-area" id="manual-coeff-input" placeholder="مثال:&#10;1.25---&#10;1.53---&#10;1.69---&#10;2.20---"></textarea></div>
+            <div class="bot-row">
+                <span class="bot-label">تعداد رگه‌ها:</span><span id="risk-vein-count">۰</span>
+                <span class="bot-label" style="margin-right:15px;">آخرین ضریب اسکن:</span><span id="risk-last-coeff">-</span>
+                <span class="bot-label" style="margin-right:15px;">تعداد صرف‌نظر:</span><span id="risk-skip-count">۰</span>
+            </div>
+            <div class="bot-row"><span class="bot-label">ضریب هدف فعلی:</span><span id="risk-target-display" style="font-weight:bold; color:#ffc107;">-</span></div>
+            <div class="risk-log" id="risk-log"><div class="info">[${new Date().toLocaleTimeString('fa-IR')}] منتظر فعال‌سازی مدیریت ریسک...</div></div>
+        </div>
+    `;
+    wrapper.appendChild(paneRisk);
+
     function inject() {
         if (!document.body) { setTimeout(inject, 50); return; }
         const selectors = ['.header', '.navbar', '.top-bar', 'header', '#header'];
@@ -1200,9 +1322,20 @@
         if (target) target.before(wrapper);
         else document.body.prepend(wrapper);
 
-        const statsMenu = document.getElementById('stats-table-outer-container');
-        const veinMenu = document.getElementById('vein-table-outer-container');
+        const statsMenu = document.createElement('div');
+        statsMenu.id = 'stats-table-outer-container';
+        statsMenu.innerHTML = `
+            <button class="bot-collapse-btn" id="collapse-btn"><span>📊 جدول مقایسه درصد ضریب</span><span>▶</span></button>
+            <div class="bot-collapse-content" id="collapse-content"><div id="statsTableContainer"><table><thead><tr id="header-row-1"><th>ضریب</th><th>منصفانه</th><th>۵۰ دور</th><th>برعکس</th><th>کل تاریخ</th><th>کارمزد</th></tr></thead><tbody id="result-body"></tbody></table></div></div>
+        `;
         wrapper.after(statsMenu);
+
+        const veinMenu = document.createElement('div');
+        veinMenu.id = 'vein-table-outer-container';
+        veinMenu.innerHTML = `
+            <button class="vein-collapse-btn" id="vein-collapse-btn"><span>📊 جدول رگه‌های قرمز و سبز (۲۸ ستونی)</span><span>▶</span></button>
+            <div class="vein-collapse-content" id="vein-collapse-content"><div id="veinTableContainer"></div></div>
+        `;
         statsMenu.after(veinMenu);
 
         document.getElementById('collapse-btn').onclick = function() { 

@@ -158,6 +158,11 @@
             outline: none;
             border-color: #28a745;
         }
+
+        /* کادر انتخاب الگوها */
+        .pattern-box { border: 1px solid #444; border-radius: 4px; background: #1a1a1a; padding: 6px; max-height: 130px; overflow-y: auto; width: 100%; box-sizing: border-box; margin-top: 4px; }
+        .pattern-box .bot-check-row { border-top: none; margin-top: 2px; padding: 4px 0; }
+        .pattern-box .bot-check-row label { font-size: 12px; color: #ccc; }
     `;
     document.head.appendChild(style);
 
@@ -193,7 +198,7 @@
     let matchFound = false;
     let riskTargetMultiplier = null;
     let riskSkipCount = 0;
-    let selectedPatternType = 'all';
+    let selectedPatternType = 'red'; // تغییر مقدار پیش‌فرض
     let confidenceThreshold = 0;
     let minRepeat = 2;
     let noMatchCounter = 0;
@@ -228,6 +233,19 @@
     let confidenceEnabled = false;
     let maxLossEnabled = false;
 
+    // ===== متغیرهای چک‌باکس الگوها =====
+    let patternRedEnabled = false;
+    let patternGreenEnabled = false;
+    let patternCombinedEnabled = false;
+    let patternEndGreenEnabled = false; // پایان رگه سبز
+    let patternEndRedEnabled = false;   // پایان رگه قرمز
+
+    // ===== پرچم‌های داخلی برای الگوهای جدید =====
+    let trigger_EndGreen = false;
+    let trigger_EndRed = false;
+    let lastColor = null;
+    let currentRedStreak = 0;
+
     // آرایه برای ذخیره کامل لاگ
     let fullLogHistory = [];
 
@@ -257,8 +275,6 @@
         const chkLabouchere = document.getElementById('chk-labouchere');
         if (chkMartingale && chkMartingale.checked) return 'MARTINGALE';
         if (chkLabouchere && chkLabouchere.checked) return 'LABOUCHERE';
-        const coeffKey = coeff.toFixed(2);
-        if (SEQUENCES[coeffKey]) return 'SEQUENCES';
         return 'LABOUCHERE';
     }
 
@@ -360,7 +376,6 @@
 
         const patterns = [];
 
-        // ۱. الگوهای معمولی (هر رگه به تنهایی)
         const typeIdx = 1;
         const eIndex = 7;
         const pIndex = 18;
@@ -428,7 +443,6 @@
             }
         });
 
-        // ۲. الگوهای ترکیبی (دو رگه متوالی)
         if (veins.length >= 2) {
             for (let i = 0; i < veins.length - 1; i++) {
                 const v1 = veins[i];
@@ -484,6 +498,7 @@
         return Math.max(0, confidence);
     }
 
+    // ====================== !!! این بخش اصلاح شده است !!! ======================
     function findMatchingPattern(coeff, patterns, selectedType) {
         let filtered = [];
         if (selectedType === 'red') {
@@ -493,19 +508,21 @@
         } else if (selectedType === 'combined') {
             filtered = patterns.filter(p => p.isCombined === true);
         } else {
-            filtered = patterns;
+            filtered = [];
         }
 
         for (let p of filtered) {
-            if (coeff === p.beforeStart) {
+            // اصلاح: به جای === از Math.abs برای حل مشکل اعشار استفاده می‌کنیم
+            if (Math.abs(coeff - p.beforeStart) < 0.0001) {
                 return { ...p, matchedField: 'E' };
             }
-            if (coeff === p.beforeEnd) {
+            if (Math.abs(coeff - p.beforeEnd) < 0.0001) {
                 return { ...p, matchedField: 'P' };
             }
         }
         return null;
     }
+    // ====================== پایان بخش اصلاح شده ======================
 
     // ====================== ۸. تابع افزودن به لاگ ======================
     function addRiskLog(message, type) {
@@ -681,7 +698,7 @@
     `;
     wrapper.appendChild(paneBalance);
 
-    // ====================== ۱۲. پنل مدیریت ریسک با چک‌باکس‌های جدید (همه غیرفعال پیش‌فرض) ======================
+    // ====================== ۱۲. پنل مدیریت ریسک با چک‌باکس‌های جدید ======================
     const paneRisk = document.createElement('div');
     paneRisk.className = 'bot-pane';
     paneRisk.id = 'pane-risk';
@@ -695,16 +712,30 @@
                 <button class="bot-btn dark" id="btn-copy-full-log">📋 کپی کل لاگ</button>
                 <span style="font-size:12px; color:#888;" id="risk-scan-status">وضعیت: آماده</span>
             </div>
-            <div class="bot-row">
-                <span class="bot-label">نوع الگو:</span>
-                <select id="pattern-type-select" style="padding:4px 8px; border-radius:4px; background:#333; color:white; border:1px solid #555;">
+            
+            <!-- کادر انتخاب الگوها (شامل ۵ گزینه) -->
+            <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:6px; flex-direction:column; align-items:flex-start;">
+                <label style="font-weight:bold; margin-bottom:4px; color:var(--text); font-size:13px;">انتخاب الگوهای فعال (فقط ۳ الگو قابل مشاهده):</label>
+                <div class="pattern-box">
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-red"><label for="chk-pattern-red" style="font-size:12px;">الگوی قرمز (دقت ۸۰٪) - پیش‌بینی پایان روند نزولی</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-green"><label for="chk-pattern-green" style="font-size:12px;">الگوی سبز (دقت ۵۰٪) - پیش‌بینی ادامه روند صعودی</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-combined"><label for="chk-pattern-combined" style="font-size:12px;">الگوی ترکیبی (دقت ۳۰٪) - تغییرات روند در دو مرحله</label></div>
+                    <!-- دو الگوی جدید اضافه شده -->
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-end-green"><label for="chk-pattern-end-green" style="font-size:12px;">پایان رگه سبز (ضریب بالای ۱۰ در رگه سبز)</label></div>
+                    <div class="bot-check-row"><input type="checkbox" id="chk-pattern-end-red"><label for="chk-pattern-end-red" style="font-size:12px;">پایان رگه قرمز (پایان رگه قرمز بلند)</label></div>
+                </div>
+            </div>
+
+            <!-- منوی نوع الگو (گزینه همه الگوها حذف شد) -->
+            <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:4px;">
+                <span class="bot-label" style="min-width:100px;">نوع الگو (برای جدول):</span>
+                <select id="pattern-type-select" style="padding:4px 8px; border-radius:4px; background:#333; color:white; border:1px solid #555; flex:1;">
                     <option value="red">فقط قرمز (۰ تا ۱٫۷۹)</option>
                     <option value="green">فقط سبز (۱٫۸۰ به بالا)</option>
-                    <option value="all" selected>همه الگوها (قرمز و سبز + ترکیبی)</option>
                     <option value="combined">فقط الگوهای ترکیبی (دو رگه متوالی)</option>
                 </select>
             </div>
-            
+
             <!-- ===== حداقل تکرار با چک‌باکس ===== -->
             <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:4px;">
                 <input type="checkbox" id="chk-min-repeat">
@@ -741,7 +772,7 @@
                 <span style="font-size:11px; color:#888;">(پس از این تعداد باخت، مارتینگل ریست می‌شود)</span>
             </div>
 
-            <!-- ===== شروع شرط پس از باخت پیاپی (دارای چک‌باکس) ===== -->
+            <!-- ===== شروع شرط پس از باخت پیاپی ===== -->
             <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:6px;">
                 <input type="checkbox" id="chk-start-after-loss">
                 <label for="chk-start-after-loss" style="font-weight:bold; color:#ffa500;">فعال‌سازی شرط پس از باخت‌های پیاپی زیر ۱٫۸۰</label>
@@ -750,7 +781,7 @@
                 <span style="font-size:11px; color:#888;">(پس از این تعداد باخت پیاپی، در دور بعدی شرط ببند)</span>
             </div>
 
-            <!-- ===== توقف پس از بردهای متوالی (دارای چک‌باکس) ===== -->
+            <!-- ===== توقف پس از بردهای متوالی ===== -->
             <div class="bot-row" style="border-top:1px solid #555; padding-top:8px; margin-top:6px;">
                 <input type="checkbox" id="chk-stop-after-win">
                 <label for="chk-stop-after-win" style="font-weight:bold; color:#28a745;">توقف ربات پس از بردهای متوالی</label>
@@ -1192,8 +1223,15 @@
                 } else if (fallbackModeActive) {
                     shouldBet = true;
                     betMultiplier = recoveryMultiplier || 1;
+                } else if (trigger_EndGreen) {
+                    shouldBet = true;
+                    betMultiplier = 1;
+                    addRiskLog(`🎯 سیگنال پایان رگه سبز فعال شد (ضریب بالا در سبز)`, 'match');
+                } else if (trigger_EndRed) {
+                    shouldBet = true;
+                    betMultiplier = 1;
+                    addRiskLog(`🎯 سیگنال پایان رگه قرمز فعال شد (پایان رگه قرمز بلند)`, 'match');
                 } else if (startAfterLossEnabled && consecutiveLossesBelow180 >= startAfterLossStreak) {
-                    // حالت شروع شرط پس از باخت پیاپی زیر ۱.۸۰
                     shouldBet = true;
                     betMultiplier = 1;
                     addRiskLog(`🎯 شروع شرط پس از ${consecutiveLossesBelow180} باخت پیاپی زیر ۱.۸۰`, 'bet');
@@ -1209,14 +1247,11 @@
 
                 if (isRunning && isStrategyActive && shouldBet && !betPlaced) {
                     let bet = Math.ceil(BASE_BET * betMultiplier);
-                    // اگر لابوشر است و در حالت recovery یا شروع پس از باخت نیستیم، از getBetAmount استفاده کن
-                    if (strategyConfig.type === 'labouchere' && !recoveryMode && !fallbackModeActive && !(startAfterLossEnabled && consecutiveLossesBelow180 >= startAfterLossStreak)) {
+                    if (strategyConfig.type === 'labouchere' && !recoveryMode && !fallbackModeActive && !trigger_EndGreen && !trigger_EndRed && !(startAfterLossEnabled && consecutiveLossesBelow180 >= startAfterLossStreak)) {
                         bet = getBetAmount();
                     } else if (strategyConfig.type === 'martingale' && recoveryMode) {
-                        // در مارتینگل و حالت جبران، recoveryMultiplier مقدار را کنترل می‌کند
                         bet = Math.ceil(BASE_BET * recoveryMultiplier);
                     } else if (strategyConfig.type === 'labouchere' && recoveryMode) {
-                        // در لابوشر و حالت جبران، آرایه sequence مقدار را کنترل می‌کند
                         bet = getBetAmount();
                     }
                     
@@ -1228,7 +1263,7 @@
                         t_priceAmount.value = bet;
                         t_cashoutProduct.value = strategyConfig.multiplier;
                         setTimeout(() => t_setCashBtn.click(), 150);
-                        const mode = fallbackModeActive ? ' (حالت جایگزین)' : (startAfterLossEnabled && consecutiveLossesBelow180 >= startAfterLossStreak) ? ' (پس از باخت پیاپی)' : '';
+                        const mode = fallbackModeActive ? ' (حالت جایگزین)' : (trigger_EndGreen ? ' (پایان رگه سبز)' : (trigger_EndRed ? ' (پایان رگه قرمز)' : ''));
                         addRiskLog(`💰 شرط بسته شد: مبلغ ${bet} - ضریب ${strategyConfig.multiplier}${mode}`, 'bet');
                     }
                 } else {
@@ -1262,16 +1297,13 @@
                         consecutiveLossesBelow180++;
                         addRiskLog(`📉 باخت زیر ۱.۸۰ (ضریب ${result.toFixed(2)}) - شمارنده: ${consecutiveLossesBelow180}`, 'info');
                     } else {
-                        // اگر ضریب بالا رفت و هنوز شرطی بسته نشده، شمارنده ریست می‌شود
                         if (consecutiveLossesBelow180 > 0 && startAfterLossEnabled) {
                             addRiskLog(`🔄 ضریب ${result.toFixed(2)} (بالای ۱.۸۰)، شمارنده باخت پیاپی ریست شد.`, 'info');
                         }
                         consecutiveLossesBelow180 = 0;
                     }
                 } else {
-                    // در حالت جبران، شمارنده را ریست نمی‌کنیم ولی افزایش هم نمی‌دهیم تا گیج نشویم
                     if (recoveryMode && result >= 1.80) {
-                        // اگر در recovery و ضریب بالا آمد، شمارنده را ریست نمی‌کنیم تا بعد از جبران از صفر شروع شود
                     }
                 }
 
@@ -1286,9 +1318,16 @@
                     repeatedExists = patterns.some(p => p.repeatCount >= 2 && !p.isCombined);
 
                     if (!fallbackModeActive) {
-                        // ===== اعمال چک‌باکس آستانه اعتماد =====
                         let effectiveConfidence = confidenceEnabled ? confidenceThreshold : 0;
-                        match = findMatchingPattern(result, patterns, selectedPatternType);
+                        
+                        // ===========================================================
+                        // ⚠️ این بخش اصلاح اصلی است:
+                        // به جای مقایسه ضریب جدید (result) با الگوها، ضریب قبلی
+                        // (fullHistory[1]) را استخراج کرده و با الگوها تطابق می‌دهیم.
+                        // ===========================================================
+                        const prevCoeff = fullHistory.length > 1 ? fullHistory[1] : null;
+                        match = prevCoeff !== null ? findMatchingPattern(prevCoeff, patterns, selectedPatternType) : null;
+                        // ===========================================================
 
                         if (match) {
                             const confidence = match.isCombined ? 0 : calculateConfidence(match, currentRound);
@@ -1355,27 +1394,53 @@
                     }
                 }
 
+                // ===== منطق تشخیص رگه‌های جدید (پایان رگه سبز و قرمز) =====
+                if (result > 0) {
+                    let currentColor = (result >= 0.00 && result <= 1.79) ? 'red' : 'green';
+                    
+                    if (lastColor === 'red' && currentColor === 'red') {
+                        currentRedStreak++;
+                    } else if (lastColor === 'red' && currentColor === 'green') {
+                        if (currentRedStreak >= 4 && patternEndRedEnabled) {
+                            trigger_EndRed = true;
+                            addRiskLog(`📌 سیگنال پایان رگه قرمز فعال شد. رگه قرمز با طول ${currentRedStreak} به پایان رسید.`, 'info');
+                        } else {
+                            trigger_EndRed = false;
+                        }
+                        currentRedStreak = 0;
+                    } else if (lastColor === 'green' && currentColor === 'green') {
+                        if (result > 10 && patternEndGreenEnabled && !trigger_EndGreen) {
+                            trigger_EndGreen = true;
+                            addRiskLog(`📌 سیگنال پایان رگه سبز ثبت شد. ضریب ${result.toFixed(2)} > ۱۰ در رگه سبز مشاهده شد.`, 'info');
+                        }
+                    } else if (lastColor === 'green' && currentColor === 'red') {
+                        if (trigger_EndGreen) {
+                            addRiskLog(`📌 سیگنال پایان رگه سبز فعال شد. رگه سبز تمام شد و به قرمز تغییر کرد.`, 'match');
+                        }
+                        currentRedStreak = 1;
+                    }
+
+                    lastColor = currentColor;
+                }
+
                 // ===== مدیریت نتیجه شرط و خروج از حالت‌ها =====
                 if (isRunning && isStrategyActive && betPlaced) {
                     if (result >= strategyConfig.multiplier) {
                         // ===== برد =====
                         addRiskLog(`🎉 شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} برنده شد! (کرش: ${result.toFixed(2)})`, 'match');
                         
-                        // ===== افزایش شمارنده بردهای متوالی =====
                         consecutiveWins++;
                         addRiskLog(`📈 تعداد بردهای متوالی: ${consecutiveWins}`, 'info');
                         
-                        // ===== بررسی شرط توقف پس از بردهای متوالی =====
                         if (stopAfterWinEnabled && consecutiveWins >= stopAfterWinStreak) {
                             isRunning = false;
                             addRiskLog(`🛑 ربات به دلیل رسیدن به ${consecutiveWins} برد متوالی متوقف شد!`, 'match');
                             document.getElementById('bot-status').textContent = `🛑 توقف پس از ${consecutiveWins} برد متوالی`;
-                            consecutiveWins = 0; // ریست برای شروع مجدد
+                            consecutiveWins = 0;
                         }
 
-                        // ===== مدیریت لابوشر در صورت برد =====
+                        // ===== مدیریت لابوشر =====
                         if (strategyConfig.type === 'labouchere' && strategyConfig.sequence && strategyConfig.sequence.length > 0) {
-                            // حذف اولین و آخرین عدد از آرایه لابوشر
                             if (strategyConfig.sequence.length >= 2) {
                                 strategyConfig.sequence.shift();
                                 strategyConfig.sequence.pop();
@@ -1385,35 +1450,41 @@
                                 addRiskLog(`📉 آرایه لابوشر خالی شد. جبران کامل شد.`, 'info');
                             }
                             
-                            // اگر آرایه خالی شد، یعنی جبران کامل شده
                             if (strategyConfig.sequence.length === 0) {
                                 recoveryMode = false;
                                 recoveryMultiplier = 1;
                                 currentSeqIdx = 0;
                                 totalLoss = 0;
-                                consecutiveLossesBelow180 = 0; // ریست شمارنده باخت پیاپی
+                                consecutiveLossesBelow180 = 0;
                                 addRiskLog(`✅ جبران ضرر با لابوشر کامل شد. منتظر باخت‌های پیاپی بعدی...`, 'match');
                                 updateLossSequence();
                                 updateLossTotalUI();
                             } else {
-                                // همچنان در حالت recovery هستیم ولی ضرر کم شده
-                                totalLoss = 0; // لابوشر totalLoss رو مستقیم مدیریت نمی‌کنه، ولی می‌تونیم ریستش کنیم
+                                totalLoss = 0;
                                 updateLossSequence();
                                 updateLossTotalUI();
                             }
                         } else {
-                            // ===== مارتینگل (یا سایر) =====
                             recoveryMode = false;
                             recoveryMultiplier = 1;
                             currentSeqIdx = 0;
                             totalLoss = 0;
-                            consecutiveLossesBelow180 = 0; // ریست شمارنده باخت پیاپی
+                            consecutiveLossesBelow180 = 0;
                             addRiskLog(`✅ جبران ضرر کامل شد. منتظر باخت‌های پیاپی بعدی...`, 'match');
                             updateLossSequence();
                             updateLossTotalUI();
                         }
 
-                        // اگر حالت fallback فعال بود، آن را غیرفعال کن
+                        // ریست پرچم‌های الگوهای جدید
+                        if (trigger_EndGreen) {
+                            trigger_EndGreen = false;
+                            addRiskLog(`🔄 پرچم پایان رگه سبز پس از برد ریست شد.`, 'info');
+                        }
+                        if (trigger_EndRed) {
+                            trigger_EndRed = false;
+                            addRiskLog(`🔄 پرچم پایان رگه قرمز پس از برد ریست شد.`, 'info');
+                        }
+
                         if (fallbackModeActive) {
                             const chkFallback2 = document.getElementById('chk-fallback-mode');
                             const fallbackEnabled2 = chkFallback2 && chkFallback2.checked;
@@ -1437,15 +1508,12 @@
                         // ===== باخت =====
                         addRiskLog(`❌ شرط با مبلغ ${lastPlacedBet} و ضریب ${strategyConfig.multiplier} باخت! (کرش: ${result.toFixed(2)})`, 'nomatch');
                         
-                        // ===== ریست شمارنده بردهای متوالی =====
                         if (consecutiveWins > 0) {
                             addRiskLog(`⛔ زنجیره بردهای متوالی شکسته شد (تعداد برد: ${consecutiveWins})`, 'info');
                             consecutiveWins = 0;
                         }
 
-                        // ===== مدیریت باخت با استراتژی لابوشر =====
                         if (strategyConfig.type === 'labouchere' && strategyConfig.sequence && strategyConfig.sequence.length > 0) {
-                            // حذف اولین و آخرین و اضافه کردن مبلغ باخته به انتها
                             let lostAmount = lastPlacedBet;
                             if (strategyConfig.sequence.length >= 2) {
                                 strategyConfig.sequence.shift();
@@ -1457,14 +1525,12 @@
                                 strategyConfig.sequence.push(lostAmount);
                                 addRiskLog(`📉 آرایه لابوشر به‌روزرسانی شد: [${strategyConfig.sequence.join(', ')}]`, 'info');
                             }
-                            // حالت recovery رو فعال نگهدار
                             recoveryMode = true;
                             totalLoss += lostAmount;
                             currentSeqIdx++;
                             updateLossSequence();
                             updateLossTotalUI();
                         } else {
-                            // ===== مارتینگل (یا سایر) =====
                             recoveryMode = true;
                             recoveryMultiplier *= 2;
                             totalLoss += lastPlacedBet;
@@ -1473,15 +1539,24 @@
                             updateLossTotalUI();
                         }
 
+                        // ریست پرچم‌های الگوهای جدید
+                        if (trigger_EndGreen) {
+                            trigger_EndGreen = false;
+                            addRiskLog(`🔄 پرچم پایان رگه سبز پس از باخت ریست شد.`, 'info');
+                        }
+                        if (trigger_EndRed) {
+                            trigger_EndRed = false;
+                            addRiskLog(`🔄 پرچم پایان رگه قرمز پس از باخت ریست شد.`, 'info');
+                        }
+
                         // ===== اعمال چک‌باکس محدودیت باخت پیاپی =====
-                        let effectiveMaxLoss = maxLossEnabled ? MAX_LOSS_STREAK : 9999; // اگر غیرفعال باشد، محدودیت نداریم
+                        let effectiveMaxLoss = maxLossEnabled ? MAX_LOSS_STREAK : 9999;
                         if (currentSeqIdx >= effectiveMaxLoss) {
                             recoveryMode = false;
                             recoveryMultiplier = 1;
                             currentSeqIdx = 0;
                             totalLoss = 0;
                             matchFound = false;
-                            // در صورت رسیدن به حد باخت (فقط اگر فعال باشد)، ریست کامل و شروع مجدد شمارش
                             consecutiveLossesBelow180 = 0;
                             updateLossSequence();
                             updateLossTotalUI();
@@ -1615,10 +1690,10 @@
             }
         });
 
-        // ===== باکس شروع شرط پس از باخت پیاپی =====
+        // ===== چک‌باکس شروع شرط پس از باخت پیاپی =====
         document.getElementById('chk-start-after-loss').addEventListener('change', function() {
             startAfterLossEnabled = this.checked;
-            consecutiveLossesBelow180 = 0; // ریست شمارنده
+            consecutiveLossesBelow180 = 0;
             addRiskLog(`🔄 شرط پس از باخت پیاپی زیر ۱.۸۰ ${startAfterLossEnabled ? 'فعال' : 'غیرفعال'} شد.`, 'info');
         });
         document.getElementById('start-after-loss-streak').addEventListener('change', function() {
@@ -1628,10 +1703,10 @@
             }
         });
 
-        // ===== باکس توقف پس از بردهای متوالی =====
+        // ===== چک‌باکس توقف پس از بردهای متوالی =====
         document.getElementById('chk-stop-after-win').addEventListener('change', function() {
             stopAfterWinEnabled = this.checked;
-            consecutiveWins = 0; // ریست شمارنده
+            consecutiveWins = 0;
             addRiskLog(`🔄 توقف پس از بردهای متوالی ${stopAfterWinEnabled ? 'فعال' : 'غیرفعال'} شد.`, 'info');
         });
         document.getElementById('stop-after-win-streak').addEventListener('change', function() {
@@ -1639,6 +1714,30 @@
                 stopAfterWinStreak = Math.max(1, parseInt(this.value) || 10);
                 addRiskLog(`🔄 تعداد برد متوالی برای توقف به ${stopAfterWinStreak} تغییر یافت`, 'info');
             }
+        });
+
+        // ===== چک‌باکس‌های الگوهای جدید =====
+        document.getElementById('chk-pattern-red').addEventListener('change', function() {
+            patternRedEnabled = this.checked;
+            addRiskLog(`🔄 الگوی قرمز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-green').addEventListener('change', function() {
+            patternGreenEnabled = this.checked;
+            addRiskLog(`🔄 الگوی سبز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-combined').addEventListener('change', function() {
+            patternCombinedEnabled = this.checked;
+            addRiskLog(`🔄 الگوی ترکیبی ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-end-green').addEventListener('change', function() {
+            patternEndGreenEnabled = this.checked;
+            if (!this.checked) trigger_EndGreen = false;
+            addRiskLog(`🔄 سیگنال پایان رگه سبز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
+        });
+        document.getElementById('chk-pattern-end-red').addEventListener('change', function() {
+            patternEndRedEnabled = this.checked;
+            if (!this.checked) trigger_EndRed = false;
+            addRiskLog(`🔄 سیگنال پایان رگه قرمز ${this.checked ? 'فعال' : 'غیرفعال'} شد.`, 'info');
         });
 
         // ===== بارگذاری دستی =====
@@ -1795,5 +1894,5 @@
 
     // ====================== ۲۱. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات نهایی با چک‌باکس‌های جداگانه برای همه تنظیمات ریسک (پیش‌فرض غیرفعال) به‌روزرسانی شد.');
+    console.log('🤖 ربات نهایی با اصلاح باگ تطابق الگو (ضریب قبلی) به‌روزرسانی شد.');
 })();

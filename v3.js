@@ -498,6 +498,7 @@
         return Math.max(0, confidence);
     }
 
+    // ====================== !!! این بخش اصلاح شده است !!! ======================
     function findMatchingPattern(coeff, patterns, selectedType) {
         let filtered = [];
         if (selectedType === 'red') {
@@ -511,15 +512,17 @@
         }
 
         for (let p of filtered) {
-            if (coeff === p.beforeStart) {
+            // اصلاح: به جای === از Math.abs برای حل مشکل اعشار استفاده می‌کنیم
+            if (Math.abs(coeff - p.beforeStart) < 0.0001) {
                 return { ...p, matchedField: 'E' };
             }
-            if (coeff === p.beforeEnd) {
+            if (Math.abs(coeff - p.beforeEnd) < 0.0001) {
                 return { ...p, matchedField: 'P' };
             }
         }
         return null;
     }
+    // ====================== پایان بخش اصلاح شده ======================
 
     // ====================== ۸. تابع افزودن به لاگ ======================
     function addRiskLog(message, type) {
@@ -1883,5 +1886,5 @@
 
     // ====================== ۲۱. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات نهایی با چک‌باکس‌های جدید (پایان رگه سبز و قرمز) و حذف گزینه همه الگوها به‌روزرسانی شد.');
+    console.log('🤖 ربات نهایی با رفع باگ اعشار (Math.abs) به‌روزرسانی شد.');
 })();

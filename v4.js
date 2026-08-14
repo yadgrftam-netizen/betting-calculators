@@ -227,13 +227,12 @@
         return veins;
     }
 
-    // ===== تغییر ۱: تابع تولید کلید اصلاح‌شده =====
+    // ===== تابع کلید جدید (شامل ضریب قبل و بعد) =====
     function generateVeinKey(vein, coeffBefore) {
-        // حالا کلید شامل: نوع_طول_اعضا_ضریب قبل_ضریب بعد است
         return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}_${(coeffBefore || 0).toFixed(2)}_${(vein.afterCoeff || 0).toFixed(2)}`;
     }
 
-    // ===== تغییر ۲: تابع ثبت‌کننده اصلاح‌شده =====
+    // ===== تابع ثبت‌کننده اصلاح‌شده =====
     function updateVeinRegistry(history) {
         const veins = extractVeins(history);
         const registryMap = new Map();
@@ -241,8 +240,6 @@
         for (const v of veins) {
             const rev = [...history].reverse();
             const coeffBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
-            
-            // استفاده از کلید جدید که شامل ضریب قبل و بعد هم هست
             const key = generateVeinKey(v, coeffBefore);
             
             if (!registryMap.has(key)) {
@@ -282,7 +279,6 @@
                     if (sampleVein.type === 'قرمز') {
                         const cBefore = coeffBefore || 0;
                         const cAfter = sampleVein.afterCoeff;
-                        // فقط وقتی ضریب بعدی وجود دارد (null نباشد) ثبت کن
                         if (cAfter !== null && cAfter !== undefined) {
                             if (cBefore >= 1.80 && cAfter >= 1.80) {
                                 shouldAdd = true;
@@ -291,7 +287,6 @@
                     } else if (sampleVein.type === 'سبز') {
                         const cBefore = coeffBefore || 0;
                         const cAfter = sampleVein.afterCoeff;
-                        // فقط وقتی ضریب بعدی وجود دارد (null نباشد) ثبت کن
                         if (cAfter !== null && cAfter !== undefined) {
                             if (cBefore <= 1.79 && cAfter <= 1.79) {
                                 shouldAdd = true;
@@ -1125,4 +1120,4 @@
     // ====================== ۱۲. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
     console.log('🤖 ربات با الگوی سبز نوع ۱ و ماشین حالت سه‌مرحله‌ای با ثبت‌کننده بارگذاری شد.');
-})();
+})(); /* EOF */

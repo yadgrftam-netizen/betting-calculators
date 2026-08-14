@@ -215,11 +215,11 @@
                 const afterCoeff = (endIndex + 1 < n) ? rev[endIndex + 1] : null;
                 
                 veins.push({ 
-                    startIndex, 
-                    endIndex, 
-                    members, 
-                    length: members.length, 
-                    type,
+                    startIndex: startIndex,
+                    endIndex: endIndex,
+                    members: members,
+                    length: members.length,
+                    type: type,
                     afterCoeff: afterCoeff
                 });
             } else { i++; }
@@ -231,6 +231,7 @@
         return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}`;
     }
 
+    // ===== تابع اصلاح‌شده برای رفع مشکل ثبت رگه‌ها قبل از مشخص شدن ضریب بعدی =====
     function updateVeinRegistry(history) {
         const veins = extractVeins(history);
         const registryMap = new Map();
@@ -243,17 +244,21 @@
             registryMap.get(key).count++;
         }
 
+        // ۱. به‌روزرسانی رگه‌های موجود
         for (let i = 0; i < veinRegistry.length; i++) {
             const regItem = veinRegistry[i];
             const mapItem = registryMap.get(regItem.key);
             if (mapItem) {
                 regItem.occurrenceCount = mapItem.count;
-                regItem.afterCoeff = mapItem.afterCoeff;
+                if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
+                    regItem.afterCoeff = mapItem.afterCoeff;
+                }
             } else {
                 regItem.occurrenceCount = 0;
             }
         }
 
+        // ۲. اضافه کردن رگه‌های جدید (اصلاح شرط‌ها برای جلوگیری از ثبت زودهنگام)
         for (const [key, value] of registryMap) {
             const exists = veinRegistry.some(item => item.key === key);
             if (!exists) {
@@ -264,17 +269,26 @@
                     
                     let shouldAdd = false;
                     
+                    // شرط فیلتر برای رگه قرمز
                     if (sampleVein.type === 'قرمز') {
                         const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff || 0;
-                        if (cBefore >= 1.80 && cAfter >= 1.80) {
-                            shouldAdd = true;
+                        const cAfter = sampleVein.afterCoeff;
+                        // فقط وقتی ضریب بعدی وجود دارد (null نباشد) ثبت کن
+                        if (cAfter !== null && cAfter !== undefined) {
+                            if (cBefore >= 1.80 && cAfter >= 1.80) {
+                                shouldAdd = true;
+                            }
                         }
-                    } else if (sampleVein.type === 'سبز') {
+                    } 
+                    // شرط فیلتر برای رگه سبز (اصلاح اصلی برای رفع مشکل شما)
+                    else if (sampleVein.type === 'سبز') {
                         const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff || 0;
-                        if (cBefore <= 1.79 && cAfter <= 1.79) {
-                            shouldAdd = true;
+                        const cAfter = sampleVein.afterCoeff;
+                        // فقط وقتی ضریب بعدی وجود دارد (null نباشد) ثبت کن
+                        if (cAfter !== null && cAfter !== undefined) {
+                            if (cBefore <= 1.79 && cAfter <= 1.79) {
+                                shouldAdd = true;
+                            }
                         }
                     }
 
@@ -286,7 +300,7 @@
                             length: sampleVein.length,
                             members: sampleVein.members,
                             coeffBefore: coeffBefore || 0,
-                            afterCoeff: sampleVein.afterCoeff || 0,
+                            afterCoeff: sampleVein.afterCoeff || 0, // اگر 0 باشد در جدول '-' نمایش داده می‌شود
                             occurrenceCount: value.count
                         });
                     }
@@ -352,10 +366,10 @@
             const beforeEnd = (v.endIndex > 0) ? rev[v.endIndex - 1] : null;
 
             if (beforeStart !== null && beforeStart > 0) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart, beforeEnd: beforeEnd || 0 });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart: beforeStart, beforeEnd: beforeEnd || 0 });
             }
             if (beforeEnd !== null && beforeEnd > 0 && beforeEnd !== beforeStart) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd: beforeEnd });
             }
         }
         return patterns;
@@ -1060,7 +1074,7 @@
                 this.style.background = "#17a2b8";
                 setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
             }).catch(err => alert("خطا در کپی: " + err));
-        };
+        });
 
         document.getElementById('chk-green-pattern').addEventListener('change', function() {
             greenPatternEnabled = this.checked;

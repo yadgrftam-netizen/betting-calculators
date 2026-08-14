@@ -80,7 +80,6 @@
         .bot-night #statsTableContainer td { border-color: #444; }
         .bot-night .bot-collapse-btn { background: #222; }
         
-        /* استایل پنل الگوی سبز */
         .pattern-status-box {
             background: #1a1a1a; color: #0f0; padding: 8px 12px; border-radius: 4px;
             font-family: monospace; font-size: 13px; border: 1px solid #333; margin-top: 6px;
@@ -95,7 +94,57 @@
         .pattern-log-box .nomatch { color: #f00; }
         .pattern-log-box .info { color: #ffc107; }
         .pattern-log-box .bet { color: #00bfff; }
-        .pattern-log-box .clipboard { color: #ffa500; }
+        .pattern-log-box .step { color: #ff9800; }
+
+        #vein-registry-container {
+            margin-top: 15px;
+            border-top: 1px solid #555;
+            padding-top: 15px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        #vein-registry-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            color: #eee;
+            min-width: 900px;
+        }
+        #vein-registry-container th, #vein-registry-container td {
+            border: 1px solid #444;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        #vein-registry-container th {
+            background: #2a2a2a;
+            color: #ffc107;
+        }
+        #vein-registry-container td {
+            background: #000 !important;
+        }
+        #vein-registry-container tbody tr:hover td {
+            background: #1a1a1a !important;
+        }
+        
+        .vein-members-cell {
+            font-family: monospace;
+            font-size: 10px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            direction: ltr;
+            text-align: left;
+        }
+        .vein-id-badge {
+            display: inline-block;
+            background: #6f42c1;
+            color: white;
+            border-radius: 10px;
+            padding: 0 6px;
+            font-weight: bold;
+            font-size: 10px;
+        }
     `;
     document.head.appendChild(style);
 
@@ -125,16 +174,25 @@
     let initialLoadDone = false;
     let historyClickedOnce = false;
 
-    // ===== متغیرهای الگوی سبز نوع ۱ =====
     let greenPatternEnabled = false;
-    let matchFound = false;
-    let allPatterns = [];
+    let structuralPatternEnabled = false;
+    let allGreenPatterns = [];
     let patternLog = [];
 
-    // ===== استراتژی‌ها =====
-    const BASE_BET = 1;
+    let veinRegistry = [];
+    let nextVeinId = 1;
 
-    // ====================== ۴. توابع استخراج الگوی سبز نوع ۱ (دقیقاً مثل بک‌تست) ======================
+    let stateMachine = {
+        step: 0,
+        members: [],
+        currentIndex: 0,
+        coeffBefore: 0,
+        afterCoeff: 0,
+        matchFound: false,
+        targetVeinId: 0
+    };
+
+    // ====================== ۴. توابع استخراج رگه و ثبت‌کننده ======================
     function extractVeins(history) {
         const rev = [...history].reverse();
         const veins = [];
@@ -152,12 +210,155 @@
                     members.push(rev[i]);
                     i++;
                 }
-                veins.push({ startIndex: i - members.length, endIndex: i - 1, members, length: members.length, type });
+                const startIndex = i - members.length;
+                const endIndex = i - 1;
+                const afterCoeff = (endIndex + 1 < n) ? rev[endIndex + 1] : null;
+                
+                veins.push({ 
+                    startIndex: startIndex,
+                    endIndex: endIndex,
+                    members: members,
+                    length: members.length,
+                    type: type,
+                    afterCoeff: afterCoeff
+                });
             } else { i++; }
         }
         return veins;
     }
 
+    function generateVeinKey(vein) {
+        return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}`;
+    }
+
+    // ===== تابع اصلاح‌شده برای ثبت رگه‌ها و به‌روزرسانی خودکار ضریب بعدی =====
+    function updateVeinRegistry(history) {
+        const veins = extractVeins(history);
+        const registryMap = new Map();
+        
+        for (const v of veins) {
+            const key = generateVeinKey(v);
+            if (!registryMap.has(key)) {
+                registryMap.set(key, { count: 0, beforeCoeff: null, afterCoeff: v.afterCoeff });
+            }
+            registryMap.get(key).count++;
+        }
+
+        // ۱. به‌روزرسانی رگه‌های موجود
+        for (let i = 0; i < veinRegistry.length; i++) {
+            const regItem = veinRegistry[i];
+            const mapItem = registryMap.get(regItem.key);
+            if (mapItem) {
+                regItem.occurrenceCount = mapItem.count;
+                if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
+                    regItem.afterCoeff = mapItem.afterCoeff;
+                }
+            } else {
+                regItem.occurrenceCount = 0;
+            }
+        }
+
+        // ۲. اضافه کردن رگه‌های جدید (بدون حذف هیچ رگه‌ای)
+        for (const [key, value] of registryMap) {
+            const exists = veinRegistry.some(item => item.key === key);
+            if (!exists) {
+                const sampleVein = veins.find(v => generateVeinKey(v) === key);
+                if (sampleVein) {
+                    const rev = [...history].reverse();
+                    const coeffBefore = (sampleVein.startIndex > 0) ? rev[sampleVein.startIndex - 1] : null;
+                    
+                    let shouldAdd = false;
+                    
+                    // شرط فیلتر برای رگه قرمز
+                    if (sampleVein.type === 'قرمز') {
+                        const cBefore = coeffBefore || 0;
+                        const cAfter = sampleVein.afterCoeff;
+                        if (cAfter !== null && cAfter !== undefined) {
+                            if (cBefore >= 1.80 && cAfter >= 1.80) {
+                                shouldAdd = true;
+                            }
+                        } else {
+                            if (cBefore >= 1.80) {
+                                shouldAdd = true;
+                            }
+                        }
+                    } 
+                    // شرط فیلتر برای رگه سبز
+                    else if (sampleVein.type === 'سبز') {
+                        const cBefore = coeffBefore || 0;
+                        const cAfter = sampleVein.afterCoeff;
+                        if (cAfter !== null && cAfter !== undefined) {
+                            if (cBefore <= 1.79 && cAfter <= 1.79) {
+                                shouldAdd = true;
+                            }
+                        } else {
+                            if (cBefore <= 1.79) {
+                                shouldAdd = true;
+                            }
+                        }
+                    }
+
+                    if (shouldAdd) {
+                        veinRegistry.push({
+                            id: nextVeinId++,
+                            key: key,
+                            type: sampleVein.type,
+                            length: sampleVein.length,
+                            members: sampleVein.members,
+                            coeffBefore: coeffBefore || 0,
+                            afterCoeff: sampleVein.afterCoeff || 0,
+                            occurrenceCount: value.count
+                        });
+                    }
+                }
+            }
+        }
+
+        veinRegistry.sort((a, b) => a.id - b.id);
+        renderVeinRegistryTable();
+    }
+
+    function renderVeinRegistryTable() {
+        const container = document.getElementById('vein-registry-container');
+        if (!container) return;
+
+        if (veinRegistry.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#888; padding:10px;">هیچ رگه‌ای با شرایط تعیین‌شده تاکنون ثبت نشده است.</div>';
+            return;
+        }
+
+        let html = `<table>
+            <thead>
+                <tr>
+                    <th>شناسه</th>
+                    <th>نوع</th>
+                    <th>طول</th>
+                    <th>اعضای رگه</th>
+                    <th>ضریب قبل</th>
+                    <th>ضریب بعد</th>
+                    <th>تعداد تکرار</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        
+        for (const item of veinRegistry) {
+            const color = item.type === 'سبز' ? '#28a745' : '#dc3545';
+            const membersStr = item.members.map(m => m.toFixed(2)).join(', ');
+            html += `<tr>
+                <td><span class="vein-id-badge">${item.id}</span></td>
+                <td style="color:${color}; font-weight:bold;">${item.type}</td>
+                <td>${item.length}</td>
+                <td class="vein-members-cell" title="${membersStr}">${membersStr}</td>
+                <td>${item.coeffBefore > 0 ? item.coeffBefore.toFixed(2) : '-'}</td>
+                <td>${item.afterCoeff > 0 ? item.afterCoeff.toFixed(2) : '-'}</td>
+                <td>${item.occurrenceCount}</td>
+            </tr>`;
+        }
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
+    // ====================== ۵. توابع استراتژی و موجودی ======================
     function generateGreenPatterns(history) {
         const veins = extractVeins(history);
         const rev = [...history].reverse();
@@ -165,27 +366,23 @@
         const patterns = [];
 
         for (const v of veins) {
-            if (v.type !== 'سبز') continue; // فقط رگه‌های سبز
-
+            if (v.type !== 'سبز') continue;
             const idx = v.startIndex;
             const beforeStart = (idx > 0) ? rev[idx - 1] : null;
             const beforeEnd = (v.endIndex > 0) ? rev[v.endIndex - 1] : null;
 
-            // --- الگوهای نوع ۱ (بر اساس ضریب قبل از رگه) ---
             if (beforeStart !== null && beforeStart > 0) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart, beforeEnd: beforeEnd || 0 });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart: beforeStart, beforeEnd: beforeEnd || 0 });
             }
             if (beforeEnd !== null && beforeEnd > 0 && beforeEnd !== beforeStart) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd: beforeEnd });
             }
         }
         return patterns;
     }
 
     function findMatchingGreenPattern(coeff, patterns) {
-        // فقط الگوهای سبز نوع ۱ را فیلتر می‌کنیم
         const filtered = patterns.filter(p => p.type === 'سبز');
-        
         for (const p of filtered) {
             if (coeff === p.beforeStart || coeff === p.beforeEnd) {
                 return p;
@@ -194,7 +391,6 @@
         return null;
     }
 
-    // ====================== ۵. توابع استراتژی ======================
     function calculateDynamicBase(coeff) {
         if (coeff <= 1.0) return 1; 
         return Math.ceil(1 / (coeff - 1));
@@ -250,7 +446,7 @@
         currentSeqIdx = 0;
         totalLoss = 0;
         lastPlacedBet = 0;
-        matchFound = false;
+        stateMachine = { step: 0, members: [], currentIndex: 0, coeffBefore: 0, afterCoeff: 0, matchFound: false, targetVeinId: 0 };
         const coeff = 2.00;
         const strategy = getStrategyType();
         const chkManual = document.getElementById('chk-manual-base');
@@ -288,7 +484,6 @@
         return 0;
     }
 
-    // ====================== ۶. توابع موجودی و آمار ======================
     function getCurrentBalanceFromDOM() {
         const chipsDiv = document.querySelector('.top-link.chips-amount');
         if (!chipsDiv) return null; 
@@ -372,30 +567,36 @@
             initialLoadDone = true;
             updateStatsTable();
             updateLossSequence();
-            updateGreenPatterns();
-            document.getElementById('green-status').textContent = `✅ بارگذاری شد (تعداد ضرایب: ${fullHistory.length})`;
+            updateAllPatterns();
+            document.getElementById('pattern-status').textContent = `✅ بارگذاری شد (تعداد ضرایب: ${fullHistory.length})`;
         } else {
             setTimeout(autoFetchHistoryFromDOM, 1000);
         }
     }
 
-    // ====================== ۷. به‌روزرسانی الگوهای سبز ======================
-    function updateGreenPatterns() {
+    // ====================== ۶. به‌روزرسانی الگوها ======================
+    function updateAllPatterns() {
         if (fullHistory.length < 5) {
-            allPatterns = [];
+            allGreenPatterns = [];
             document.getElementById('green-pattern-count').textContent = '۰';
+            veinRegistry = [];
+            nextVeinId = 1;
+            renderVeinRegistryTable();
             return;
         }
-        allPatterns = generateGreenPatterns(fullHistory);
-        document.getElementById('green-pattern-count').textContent = allPatterns.length;
-        addPatternLog(`🔍 الگوهای سبز بروزرسانی شد (تعداد: ${allPatterns.length})`, 'info');
+        allGreenPatterns = generateGreenPatterns(fullHistory);
+        document.getElementById('green-pattern-count').textContent = allGreenPatterns.length;
+        updateVeinRegistry(fullHistory);
+        
+        addPatternLog(`🔍 الگوهای سبز بروزرسانی شد (تعداد: ${allGreenPatterns.length})`, 'info');
+        addPatternLog(`🔍 ماشین حالت سه‌مرحله‌ای آماده است.`, 'info');
+        addPatternLog(`📋 تعداد رگه‌های منحصربه‌فرد ثبت‌شده: ${veinRegistry.length}`, 'info');
     }
 
     function addPatternLog(message, type = 'info') {
-        const logDiv = document.getElementById('green-log');
+        const logDiv = document.getElementById('pattern-log');
         const time = new Date().toLocaleTimeString('fa-IR');
         const fullMessage = `[${time}] ${message}`;
-        patternLog.push({ time, message, type, full: fullMessage });
         if (logDiv) {
             const entry = document.createElement('div');
             entry.className = type;
@@ -406,7 +607,7 @@
         }
     }
 
-    // ====================== ۸. المنت‌های سایت ======================
+    // ====================== ۷. المنت‌های سایت ======================
     let t_priceAmount, t_cashoutProduct, t_setCashBtn;
     function findSiteElements() {
         t_priceAmount = document.querySelector('.game-amount');
@@ -415,31 +616,43 @@
     }
     setTimeout(findSiteElements, 500);
 
-    // ====================== ۹. هوک‌های بازی (نسخه الگوی سبز نوع ۱) ======================
+    // ====================== ۸. هوک‌های بازی ======================
     function safeHook() {
         if (typeof window.game_waiting === 'function') {
             const orig = window.game_waiting;
             window.game_waiting = function(data) {
                 let shouldBet = false;
+                let matchedPattern = '';
 
-                // بررسی الگوی سبز نوع ۱
                 if (greenPatternEnabled && fullHistory.length >= 2) {
-                    const prevCoeff = fullHistory[1]; // ضریب دور قبل
-                    const match = findMatchingGreenPattern(prevCoeff, allPatterns);
-                    
+                    const prevCoeff = fullHistory[1];
+                    const match = findMatchingGreenPattern(prevCoeff, allGreenPatterns);
                     if (match) {
-                        matchFound = true;
                         shouldBet = true;
-                        addPatternLog(`✅ تطابق الگوی سبز پیدا شد! ضریب قبل: ${prevCoeff.toFixed(2)}`, 'match');
-                        document.getElementById('green-last-match').textContent = `${prevCoeff.toFixed(2)} → تطابق`;
+                        matchedPattern = 'سبز نوع ۱';
+                        addPatternLog(`✅ تطابق الگوی سبز! ضریب قبل: ${prevCoeff.toFixed(2)}`, 'match');
+                        document.getElementById('last-match').textContent = `${prevCoeff.toFixed(2)} → سبز`;
                     } else {
-                        matchFound = false;
-                        shouldBet = false;
-                        addPatternLog(`❌ عدم تطابق الگوی سبز برای ضریب ${prevCoeff.toFixed(2)}`, 'nomatch');
-                        document.getElementById('green-last-match').textContent = `${prevCoeff.toFixed(2)} → عدم تطابق`;
+                        addPatternLog(`❌ عدم تطابق سبز برای ضریب ${prevCoeff.toFixed(2)}`, 'nomatch');
+                        document.getElementById('last-match').textContent = `${prevCoeff.toFixed(2)} → عدم تطابق سبز`;
                     }
-                } else if (!greenPatternEnabled) {
-                    // اگر الگو غیرفعال باشد، همیشه شرط می‌بندد (حالت عادی)
+                }
+
+                if (structuralPatternEnabled && !shouldBet) {
+                    if (stateMachine.matchFound) {
+                        shouldBet = true;
+                        matchedPattern = 'سه‌مرحله‌ای';
+                        addPatternLog(`🎯 سیگنال سه‌مرحله‌ای تکمیل شد! شرط در این دور بسته می‌شود.`, 'step');
+                        document.getElementById('last-match').textContent = `سه‌مرحله‌ای → تأیید نهایی (شناسه ${stateMachine.targetVeinId})`;
+                        
+                        stateMachine = { step: 0, members: [], currentIndex: 0, coeffBefore: 0, afterCoeff: 0, matchFound: false, targetVeinId: 0 };
+                    } else {
+                        addPatternLog(`⏳ منتظر تکمیل مراحل ماشین حالت... (گام: ${stateMachine.step})`, 'info');
+                        document.getElementById('last-match').textContent = `سه‌مرحله‌ای → گام ${stateMachine.step}`;
+                    }
+                }
+
+                if (!greenPatternEnabled && !structuralPatternEnabled) {
                     shouldBet = true;
                 }
 
@@ -452,13 +665,13 @@
                     if (!t_priceAmount || !t_cashoutProduct || !t_setCashBtn) findSiteElements();
                     if (bet > 0 && t_priceAmount && t_cashoutProduct && t_setCashBtn) {
                         t_priceAmount.value = bet;
-                        t_cashoutProduct.value = 2.00; // ضریب ثابت ۲.۰۰
+                        t_cashoutProduct.value = 2.00;
                         setTimeout(() => t_setCashBtn.click(), 150);
-                        const mode = greenPatternEnabled ? ' (بر اساس الگوی سبز)' : '';
+                        const mode = matchedPattern ? ` (بر اساس ${matchedPattern})` : '';
                         addPatternLog(`💰 شرط بسته شد: مبلغ ${bet} - ضریب ۲.۰۰${mode}`, 'bet');
                     }
-                } else if (isRunning && isStrategyActive && !shouldBet && greenPatternEnabled) {
-                    addPatternLog(`⏸️ شرط بسته نشد (الگوی سبز تطابق نداشت)`, 'info');
+                } else if (isRunning && isStrategyActive && !shouldBet && (greenPatternEnabled || structuralPatternEnabled)) {
+                    addPatternLog(`⏸️ شرط بسته نشد (هیچ الگویی تطابق نداشت)`, 'info');
                 }
                 orig.call(this, data);
             };
@@ -474,15 +687,79 @@
                     bustHistory.unshift(result);
                     if (bustHistory.length > 50) bustHistory.pop();
                     updateStatsTable();
-                    // بروزرسانی الگوها پس از هر دور
-                    updateGreenPatterns();
+                    updateAllPatterns();
+
+                    if (structuralPatternEnabled && result > 0) {
+                        const chronological = [...fullHistory].reverse();
+                        const veins = extractVeins(chronological);
+                        
+                        if (veins.length > 0) {
+                            const lastVein = veins[veins.length - 1];
+                            
+                            if (stateMachine.step === 0) {
+                                if (lastVein.startIndex > 0) {
+                                    const coeffBefore = chronological[lastVein.startIndex - 1];
+                                    if (result === coeffBefore) {
+                                        const veinKey = generateVeinKey(lastVein);
+                                        const regItem = veinRegistry.find(item => item.key === veinKey);
+                                        
+                                        if (regItem) {
+                                            stateMachine.step = 1;
+                                            stateMachine.members = regItem.members;
+                                            stateMachine.currentIndex = 0;
+                                            stateMachine.coeffBefore = regItem.coeffBefore;
+                                            stateMachine.afterCoeff = regItem.afterCoeff;
+                                            stateMachine.targetVeinId = regItem.id;
+
+                                            addPatternLog(`📌 سیگنال اول تأیید شد! ضریب ${result.toFixed(2)} برابر با ضریب قبل از رگه (شناسه ${stateMachine.targetVeinId})`, 'step');
+                                            document.getElementById('last-match').textContent = `سیگنال ۱ → ${result.toFixed(2)} (شناسه ${stateMachine.targetVeinId})`;
+                                        } else {
+                                            addPatternLog(`⚠️ رگه با کلید ${veinKey} در جدول ثبت نشده است. سیگنال لغو شد.`, 'nomatch');
+                                            stateMachine = { step: 0, members: [], currentIndex: 0, coeffBefore: 0, afterCoeff: 0, matchFound: false, targetVeinId: 0 };
+                                            document.getElementById('last-match').textContent = `سیگنال ۱ → لغو (عدم ثبت در جدول)`;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            else if (stateMachine.step === 1) {
+                                if (stateMachine.currentIndex < stateMachine.members.length) {
+                                    const expected = stateMachine.members[stateMachine.currentIndex];
+                                    if (result === expected) {
+                                        stateMachine.currentIndex++;
+                                        addPatternLog(`📌 سیگنال دوم: عضو ${stateMachine.currentIndex}/${stateMachine.members.length} تأیید شد (${expected.toFixed(2)})`, 'step');
+                                        
+                                        if (stateMachine.currentIndex === stateMachine.members.length) {
+                                            stateMachine.step = 2;
+                                            addPatternLog(`✅ سیگنال دوم کامل شد! تمام اعضای رگه با موفقیت بازتولید شدند (شناسه ${stateMachine.targetVeinId}).`, 'step');
+                                            document.getElementById('last-match').textContent = `سیگنال ۲ → کامل (شناسه ${stateMachine.targetVeinId})`;
+                                            
+                                            const afterCoeff = stateMachine.afterCoeff;
+                                            if (afterCoeff !== null && afterCoeff > 0 && afterCoeff >= 1.80) {
+                                                stateMachine.step = 3;
+                                                stateMachine.matchFound = true;
+                                                addPatternLog(`✅ سیگنال سوم تأیید شد! ضریب بعد از رگه در جدول (${afterCoeff.toFixed(2)}) >= ۱.۸۰ است. آماده شرط در دور بعدی (شناسه ${stateMachine.targetVeinId}).`, 'step');
+                                                document.getElementById('last-match').textContent = `سیگنال ۳ → ${afterCoeff.toFixed(2)} (شناسه ${stateMachine.targetVeinId})`;
+                                            } else {
+                                                addPatternLog(`❌ سیگنال سوم شکست! ضریب بعد از رگه در جدول (${afterCoeff ? afterCoeff.toFixed(2) : 'نامشخص'}) >= ۱.۸۰ نیست. ریست شد (شناسه ${stateMachine.targetVeinId}).`, 'nomatch');
+                                                stateMachine = { step: 0, members: [], currentIndex: 0, coeffBefore: 0, afterCoeff: 0, matchFound: false, targetVeinId: 0 };
+                                                document.getElementById('last-match').textContent = `سیگنال ۳ → شکست (شناسه ${stateMachine.targetVeinId})`;
+                                            }
+                                        }
+                                    } else {
+                                        addPatternLog(`❌ سیگنال دوم شکست! انتظار ${expected.toFixed(2)} ولی ${result.toFixed(2)} آمد. ریست شد.`, 'nomatch');
+                                        stateMachine = { step: 0, members: [], currentIndex: 0, coeffBefore: 0, afterCoeff: 0, matchFound: false, targetVeinId: 0 };
+                                        document.getElementById('last-match').textContent = `سیگنال ۲ → شکست`;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                // ===== مدیریت شرط و استراتژی =====
                 if (isRunning && isStrategyActive && betPlaced) {
-                    if (result >= 2.00) { // برد
+                    if (result >= 2.00) {
                         addPatternLog(`🎉 شرط با مبلغ ${lastPlacedBet} و ضریب ۲.۰۰ برنده شد! (کرش: ${result.toFixed(2)})`, 'match');
-                        
                         if (strategyConfig.type === 'labouchere' && strategyConfig.sequence && strategyConfig.sequence.length > 0) {
                             if (strategyConfig.sequence.length >= 2) {
                                 strategyConfig.sequence.shift();
@@ -500,10 +777,8 @@
                         }
                         updateLossSequence();
                         updateLossTotalUI();
-
-                    } else { // باخت
+                    } else {
                         addPatternLog(`❌ شرط با مبلغ ${lastPlacedBet} و ضریب ۲.۰۰ باخت! (کرش: ${result.toFixed(2)})`, 'nomatch');
-                        
                         if (strategyConfig.type === 'labouchere' && strategyConfig.sequence && strategyConfig.sequence.length > 0) {
                             let lostAmount = lastPlacedBet;
                             if (strategyConfig.sequence.length >= 2) {
@@ -523,11 +798,9 @@
                         updateLossSequence();
                         updateLossTotalUI();
                     }
-                    
                     betPlaced = false;
                 }
 
-                // ===== مدیریت موجودی با هدف ثابت =====
                 if (isRunning && isStrategyActive) {
                     const chkBalanceRule = document.getElementById('chk-balance-rule');
                     if (chkBalanceRule && chkBalanceRule.checked) {
@@ -549,10 +822,10 @@
         }
     }
 
-    // ====================== ۱۰. ساختار HTML کادر اصلی ======================
+    // ====================== ۹. ساختار HTML کادر اصلی ======================
     const wrapper = document.createElement('div');
     wrapper.id = 'bot-ui-wrapper';
-    wrapper.innerHTML = '<div id="bot-status">⚡ ربات آماده است (الگوی سبز نوع ۱)</div>';
+    wrapper.innerHTML = '<div id="bot-status">⚡ ربات آماده است (الگوهای سبز و سه‌مرحله‌ای)</div>';
 
     const toolbar = document.createElement('div');
     toolbar.id = 'bot-toolbar';
@@ -570,11 +843,10 @@
     tabsDiv.innerHTML = `
         <button class="bot-tab active" data-target="pane-loss">استراتژی شرط</button>
         <button class="bot-tab" data-target="pane-balance">مدیریت موجودی</button>
-        <button class="bot-tab" data-target="pane-pattern">الگوی سبز نوع ۱</button>
+        <button class="bot-tab" data-target="pane-pattern">الگوها</button>
     `;
     wrapper.appendChild(tabsDiv);
 
-    // پنل استراتژی شرط
     const paneLoss = document.createElement('div');
     paneLoss.className = 'bot-pane active';
     paneLoss.id = 'pane-loss';
@@ -607,7 +879,6 @@
     `;
     wrapper.appendChild(paneLoss);
 
-    // پنل مدیریت موجودی
     const paneBalance = document.createElement('div');
     paneBalance.className = 'bot-pane';
     paneBalance.id = 'pane-balance';
@@ -637,33 +908,47 @@
     `;
     wrapper.appendChild(paneBalance);
 
-    // پنل الگوی سبز نوع ۱
     const panePattern = document.createElement('div');
     panePattern.className = 'bot-pane';
     panePattern.id = 'pane-pattern';
     panePattern.innerHTML = `
         <div class="bot-row">
             <input type="checkbox" id="chk-green-pattern">
-            <label for="chk-green-pattern" style="font-weight:bold; color:#28a745;">فعال‌سازی شرط‌بندی فقط با الگوی سبز نوع ۱</label>
+            <label for="chk-green-pattern" style="font-weight:bold; color:#28a745;">الگوی سبز نوع ۱ (تطابق با ضریب قبل از رگه سبز)</label>
         </div>
         <div class="bot-row" style="font-size:11px; color:#888; margin-top:-4px; padding-right:26px;">
-            شرط فقط زمانی بسته می‌شود که ضریب دور قبل با شروع یا پایان یک رگه سبز در تاریخچه تطابق داشته باشد. ضریب شرط همیشه ۲.۰۰ است.
+            شرط زمانی بسته می‌شود که ضریب دور قبل با شروع یا پایان یک رگه سبز در تاریخچه تطابق داشته باشد.
+        </div>
+        <div class="bot-row" style="border-top:1px solid #555; padding-top:8px;">
+            <input type="checkbox" id="chk-structural-pattern">
+            <label for="chk-structural-pattern" style="font-weight:bold; color:#6f42c1;">ماشین حالت سه‌مرحله‌ای (بر اساس جدول ثبت‌کننده)</label>
+        </div>
+        <div class="bot-row" style="font-size:11px; color:#888; margin-top:-4px; padding-right:26px;">
+            مرحله ۱: ضریب جدید با ضریب قبل از شروع رگه (در جدول) برابر باشد.<br>
+            مرحله ۲: همه اعضای رگه (در جدول) به‌ترتیب ظاهر شوند.<br>
+            مرحله ۳: ضریب بعد از رگه (در جدول) >= ۱.۸۰ باشد.
         </div>
         <div class="bot-row" style="border-top:1px solid #555; padding-top:8px;">
             <span class="bot-label">تعداد الگوهای سبز:</span>
             <span id="green-pattern-count" style="font-weight:bold; color:#ffc107;">۰</span>
-            <span class="bot-label" style="margin-right:15px;">آخرین تطابق:</span>
-            <span id="green-last-match" style="font-weight:bold; color:#aaa;">-</span>
+        </div>
+        <div class="bot-row">
+            <span class="bot-label">آخرین رویداد:</span>
+            <span id="last-match" style="font-weight:bold; color:#aaa;">-</span>
             <button class="bot-btn blue" id="btn-refresh-patterns" style="flex:0 0 auto; padding:0 12px; height:32px; font-size:12px; margin-right:8px;">🔄 بروزرسانی الگوها</button>
         </div>
-        <div class="pattern-status-box" id="green-status">⏳ منتظر بارگذاری تاریخچه...</div>
-        <div class="pattern-log-box" id="green-log">
-            <div class="info">[${new Date().toLocaleTimeString('fa-IR')}] منتظر فعال‌سازی الگوی سبز...</div>
+        <div class="pattern-status-box" id="pattern-status">⏳ منتظر بارگذاری تاریخچه...</div>
+        <div class="pattern-log-box" id="pattern-log">
+            <div class="info">[${new Date().toLocaleTimeString('fa-IR')}] منتظر فعال‌سازی الگوها...</div>
+        </div>
+        
+        <div id="vein-registry-container">
+            <div style="text-align:center; color:#888; padding:10px;">در حال بارگذاری جدول ثبت رگه‌ها...</div>
         </div>
     `;
     wrapper.appendChild(panePattern);
 
-    // ====================== ۱۱. تزریق به صفحه ======================
+    // ====================== ۱۰. تزریق به صفحه ======================
     function inject() {
         if (!document.body) { setTimeout(inject, 50); return; }
         const selectors = ['.header', '.navbar', '.top-bar', 'header', '#header'];
@@ -687,7 +972,7 @@
             i.textContent = c.classList.contains('open')?'▼':'▶'; 
         };
 
-        document.getElementById('bot-status').textContent = '✅ ربات بارگذاری شد (الگوی سبز نوع ۱)';
+        document.getElementById('bot-status').textContent = '✅ ربات بارگذاری شد (الگوهای سبز و سه‌مرحله‌ای با ثبت‌کننده)';
         document.querySelectorAll('.bot-input').forEach(input => { input.value = toEng(input.value); });
 
         setTimeout(() => {
@@ -707,7 +992,7 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
     else inject();
 
-    // ====================== ۱۲. راه‌اندازی رویدادها ======================
+    // ====================== ۱۱. راه‌اندازی رویدادها ======================
     function initializeUI() {
         document.getElementById('btn-update-target').addEventListener('click', function() {
             if (isRunning) { alert('ربات در حال اجراست. برای تغییر هدف، ابتدا ربات را متوقف کنید.'); return; }
@@ -731,7 +1016,6 @@
             });
         });
 
-        // چک‌باکس‌های استراتژی
         document.getElementById('chk-martingale').addEventListener('change', function() {
             if (this.checked) { document.getElementById('chk-labouchere').checked = false; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); }
             else { if (!document.getElementById('chk-labouchere').checked) { document.getElementById('chk-labouchere').checked = true; if (document.getElementById('chk-loss').checked) resetState(); updateLossSequence(); } }
@@ -744,7 +1028,6 @@
         document.getElementById('loss-lab-base').addEventListener('input', function() { if (document.getElementById('chk-labouchere').checked) updateLossSequence(); });
         document.getElementById('loss-martingale-base').addEventListener('input', function() { if (document.getElementById('chk-martingale').checked) updateLossSequence(); });
 
-        // چک‌باکس فعال‌سازی استراتژی
         document.getElementById('chk-loss').addEventListener('change', function() {
             if (this.checked) { 
                 const coeff = 2.00; 
@@ -766,20 +1049,17 @@
             } else { isStrategyActive = false; }
         });
 
-        // دکمه‌های اصلی
         document.getElementById('btn-start').onclick = () => { 
-            if (isStrategyActive) { isRunning = true; document.getElementById('bot-status').textContent = '▶ ربات در حال اجرا (ضریب ۲.۰۰ و الگوی سبز)'; } 
+            if (isStrategyActive) { isRunning = true; document.getElementById('bot-status').textContent = '▶ ربات در حال اجرا (ضریب ۲.۰۰ و الگوها)'; } 
             else { alert('ابتدا حالت شرط‌بندی را انتخاب و تیک بزنید.'); } 
         };
         document.getElementById('btn-stop').onclick = () => { isRunning = false; document.getElementById('bot-status').textContent = '⏸ ربات متوقف شد'; };
         
-        // تم شب
         let night = false;
         document.getElementById('btn-theme').onclick = function() { 
             night = !night; wrapper.classList.toggle('bot-night', night); this.textContent = night ? '☀️ روز' : '🌙 شب'; 
         };
 
-        // دکمه‌های کپی
         document.getElementById('btn-copy-last').onclick = function() {
             const originalText = this.textContent;
             if (!bustHistory || bustHistory.length === 0) { alert("ابتدا باید ضرایب بارگذاری شوند!"); return; }
@@ -800,19 +1080,32 @@
                 this.style.background = "#17a2b8";
                 setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
             }).catch(err => alert("خطا در کپی: " + err));
-        };
+        });
 
-        // ===== مدیریت الگوی سبز =====
         document.getElementById('chk-green-pattern').addEventListener('change', function() {
             greenPatternEnabled = this.checked;
             if (this.checked) {
-                addPatternLog('✅ الگوی سبز نوع ۱ فعال شد. شرط فقط با تطابق الگو بسته می‌شود.', 'info');
-                document.getElementById('green-status').textContent = '🟢 فعال - در حال اسکن الگوها...';
-                updateGreenPatterns();
+                addPatternLog('✅ الگوی سبز نوع ۱ فعال شد.', 'info');
+                document.getElementById('pattern-status').textContent = '🟢 سبز فعال - در حال اسکن...';
+                updateAllPatterns();
             } else {
-                addPatternLog('⏸️ الگوی سبز نوع ۱ غیرفعال شد. شرط در هر دور بسته می‌شود.', 'info');
-                document.getElementById('green-status').textContent = '⚪ غیرفعال';
-                matchFound = false;
+                addPatternLog('⏸️ الگوی سبز نوع ۱ غیرفعال شد.', 'info');
+                document.getElementById('pattern-status').textContent = '⚪ سبز غیرفعال';
+                if (!structuralPatternEnabled) document.getElementById('pattern-status').textContent = '⚪ هیچ الگویی فعال نیست';
+            }
+        });
+
+        document.getElementById('chk-structural-pattern').addEventListener('change', function() {
+            structuralPatternEnabled = this.checked;
+            if (this.checked) {
+                stateMachine = { step: 0, members: [], currentIndex: 0, coeffBefore: 0, afterCoeff: 0, matchFound: false, targetVeinId: 0 };
+                addPatternLog('✅ ماشین حالت سه‌مرحله‌ای (بر اساس جدول ثبت‌کننده) فعال شد.', 'step');
+                document.getElementById('pattern-status').textContent = '🟣 سه‌مرحله‌ای فعال - منتظر سیگنال‌ها...';
+                updateAllPatterns();
+            } else {
+                addPatternLog('⏸️ ماشین حالت سه‌مرحله‌ای غیرفعال شد.', 'info');
+                document.getElementById('pattern-status').textContent = '⚪ سه‌مرحله‌ای غیرفعال';
+                if (!greenPatternEnabled) document.getElementById('pattern-status').textContent = '⚪ هیچ الگویی فعال نیست';
             }
         });
 
@@ -821,14 +1114,14 @@
                 alert('هیچ داده تاریخی برای اسکن وجود ندارد. صبر کنید تا تاریخچه بارگذاری شود.');
                 return;
             }
-            updateGreenPatterns();
+            updateAllPatterns();
             addPatternLog('🔄 الگوها به‌صورت دستی بروزرسانی شدند.', 'info');
         });
 
         calculateFixedTarget();
     }
 
-    // ====================== ۱۳. راه‌اندازی نهایی ======================
+    // ====================== ۱۲. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات با الگوی سبز نوع ۱ و ضریب ثابت ۲.۰۰ بارگذاری شد.');
+    console.log('🤖 ربات با الگوی سبز نوع ۱ و ماشین حالت سه‌مرحله‌ای با ثبت‌کننده بارگذاری شد.');
 })();

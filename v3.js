@@ -80,7 +80,6 @@
         .bot-night #statsTableContainer td { border-color: #444; }
         .bot-night .bot-collapse-btn { background: #222; }
         
-        /* استایل پنل الگوها */
         .pattern-status-box {
             background: #1a1a1a; color: #0f0; padding: 8px 12px; border-radius: 4px;
             font-family: monospace; font-size: 13px; border: 1px solid #333; margin-top: 6px;
@@ -97,12 +96,11 @@
         .pattern-log-box .bet { color: #00bfff; }
         .pattern-log-box .step { color: #ff9800; }
 
-        /* استایل جدول ثبت رگه‌های منحصربه‌فرد */
         #vein-registry-container {
             margin-top: 15px;
             border-top: 1px solid #555;
             padding-top: 15px;
-            overflow-x: auto; /* اسکرول افقی */
+            overflow-x: auto;
             white-space: nowrap;
         }
         #vein-registry-container table {
@@ -110,7 +108,7 @@
             border-collapse: collapse;
             font-size: 11px;
             color: #eee;
-            min-width: 900px; /* عرض حداقل برای نمایش کامل ستون‌ها */
+            min-width: 900px;
         }
         #vein-registry-container th, #vein-registry-container td {
             border: 1px solid #444;
@@ -122,7 +120,6 @@
             background: #2a2a2a;
             color: #ffc107;
         }
-        /* پس‌زمینه سلول‌ها کاملاً سیاه */
         #vein-registry-container td {
             background: #000 !important;
         }
@@ -177,17 +174,14 @@
     let initialLoadDone = false;
     let historyClickedOnce = false;
 
-    // ===== متغیرهای الگوها =====
     let greenPatternEnabled = false;
     let structuralPatternEnabled = false;
     let allGreenPatterns = [];
     let patternLog = [];
 
-    // ===== ثبت‌کننده رگه‌های منحصربه‌فرد =====
     let veinRegistry = [];
     let nextVeinId = 1;
 
-    // ===== متغیرهای حالت سه‌مرحله‌ای =====
     let stateMachine = {
         step: 0,
         members: [],
@@ -237,7 +231,6 @@
         return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}`;
     }
 
-    // ====== تغییر اصلی: اصلاح شرط‌های ورود رگه‌ها به جدول ======
     function updateVeinRegistry(history) {
         const veins = extractVeins(history);
         const registryMap = new Map();
@@ -271,16 +264,13 @@
                     
                     let shouldAdd = false;
                     
-                    // ===== شرط‌های جدید دقیقاً طبق فرمایش شما =====
                     if (sampleVein.type === 'قرمز') {
-                        // رگه قرمز: ضریب قبل و بعد از رگه باید بین 1.80 تا 99.99 باشد
                         const cBefore = coeffBefore || 0;
                         const cAfter = sampleVein.afterCoeff || 0;
                         if (cBefore >= 1.80 && cAfter >= 1.80) {
                             shouldAdd = true;
                         }
                     } else if (sampleVein.type === 'سبز') {
-                        // رگه سبز: ضریب قبل و بعد از رگه باید بین 0.00 تا 1.79 باشد
                         const cBefore = coeffBefore || 0;
                         const cAfter = sampleVein.afterCoeff || 0;
                         if (cBefore <= 1.79 && cAfter <= 1.79) {
@@ -677,7 +667,7 @@
                     bustHistory.unshift(result);
                     if (bustHistory.length > 50) bustHistory.pop();
                     updateStatsTable();
-                    updateAllPatterns(); // رگه‌ها بلافاصله پس از پایان به جدول اضافه می‌شوند
+                    updateAllPatterns();
 
                     if (structuralPatternEnabled && result > 0) {
                         const chronological = [...fullHistory].reverse();
@@ -695,11 +685,11 @@
                                         
                                         if (regItem) {
                                             stateMachine.step = 1;
-                                            stateMachine.members = regItem.members;       // اعضای رگه از جدول
+                                            stateMachine.members = regItem.members;
                                             stateMachine.currentIndex = 0;
-                                            stateMachine.coeffBefore = regItem.coeffBefore; // ضریب قبل از جدول
-                                            stateMachine.afterCoeff = regItem.afterCoeff;   // ضریب بعد از جدول
-                                            stateMachine.targetVeinId = regItem.id;        // شناسه منحصربه‌فرد از جدول
+                                            stateMachine.coeffBefore = regItem.coeffBefore;
+                                            stateMachine.afterCoeff = regItem.afterCoeff;
+                                            stateMachine.targetVeinId = regItem.id;
 
                                             addPatternLog(`📌 سیگنال اول تأیید شد! ضریب ${result.toFixed(2)} برابر با ضریب قبل از رگه (شناسه ${stateMachine.targetVeinId})`, 'step');
                                             document.getElementById('last-match').textContent = `سیگنال ۱ → ${result.toFixed(2)} (شناسه ${stateMachine.targetVeinId})`;
@@ -724,7 +714,6 @@
                                             addPatternLog(`✅ سیگنال دوم کامل شد! تمام اعضای رگه با موفقیت بازتولید شدند (شناسه ${stateMachine.targetVeinId}).`, 'step');
                                             document.getElementById('last-match').textContent = `سیگنال ۲ → کامل (شناسه ${stateMachine.targetVeinId})`;
                                             
-                                            // سیگنال ۳
                                             const afterCoeff = stateMachine.afterCoeff;
                                             if (afterCoeff !== null && afterCoeff > 0 && afterCoeff >= 1.80) {
                                                 stateMachine.step = 3;
@@ -838,7 +827,6 @@
     `;
     wrapper.appendChild(tabsDiv);
 
-    // پنل استراتژی شرط
     const paneLoss = document.createElement('div');
     paneLoss.className = 'bot-pane active';
     paneLoss.id = 'pane-loss';
@@ -871,7 +859,6 @@
     `;
     wrapper.appendChild(paneLoss);
 
-    // پنل مدیریت موجودی
     const paneBalance = document.createElement('div');
     paneBalance.className = 'bot-pane';
     paneBalance.id = 'pane-balance';
@@ -901,7 +888,6 @@
     `;
     wrapper.appendChild(paneBalance);
 
-    // پنل الگوها
     const panePattern = document.createElement('div');
     panePattern.className = 'bot-pane';
     panePattern.id = 'pane-pattern';
@@ -1074,9 +1060,8 @@
                 this.style.background = "#17a2b8";
                 setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
             }).catch(err => alert("خطا در کپی: " + err));
-        });
+        };
 
-        // ===== مدیریت الگوها =====
         document.getElementById('chk-green-pattern').addEventListener('change', function() {
             greenPatternEnabled = this.checked;
             if (this.checked) {
@@ -1118,5 +1103,5 @@
 
     // ====================== ۱۲. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
-    console.log('🤖 ربات با الگوی سبز نوع ۱ و ماشین حالت سه‌مرحله‌ای با ثبت‌کننده فیلترشده بارگذاری شد.');
+    console.log('🤖 ربات با الگوی سبز نوع ۱ و ماشین حالت سه‌مرحله‌ای با ثبت‌کننده بارگذاری شد.');
 })();

@@ -227,92 +227,96 @@
         return veins;
     }
 
-    // ===== تابع کلید جدید (شامل ضریب قبل و بعد) =====
-    function generateVeinKey(vein, coeffBefore) {
-        return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}_${(coeffBefore || 0).toFixed(2)}_${(vein.afterCoeff || 0).toFixed(2)}`;
-    }
+// تابع تولید کلید جدید
+function generateVeinKey(vein, coeffBefore) {
+    // حالا کلید شامل: نوع_طول_اعضا_ضریب قبل_ضریب بعد است
+    return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}_${(coeffBefore || 0).toFixed(2)}_${(vein.afterCoeff || 0).toFixed(2)}`;
+}
 
-    // ===== تابع ثبت‌کننده اصلاح‌شده =====
-    function updateVeinRegistry(history) {
-        const veins = extractVeins(history);
-        const registryMap = new Map();
+// تابع ثبت‌کننده اصلاح‌شده
+function updateVeinRegistry(history) {
+    const veins = extractVeins(history);
+    const registryMap = new Map();
+    
+    for (const v of veins) {
+        // استخراج ضریب قبل از رگه
+        const rev = [...history].reverse();
+        const coeffBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
         
-        for (const v of veins) {
-            const rev = [...history].reverse();
-            const coeffBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
-            const key = generateVeinKey(v, coeffBefore);
-            
-            if (!registryMap.has(key)) {
-                registryMap.set(key, { count: 0, beforeCoeff: coeffBefore, afterCoeff: v.afterCoeff });
-            }
-            registryMap.get(key).count++;
+        // استفاده از کلید جدید که شامل ضریب قبل و بعد هم هست
+        const key = generateVeinKey(v, coeffBefore);
+        
+        if (!registryMap.has(key)) {
+            registryMap.set(key, { count: 0, beforeCoeff: coeffBefore, afterCoeff: v.afterCoeff });
         }
-
-        for (let i = 0; i < veinRegistry.length; i++) {
-            const regItem = veinRegistry[i];
-            const mapItem = registryMap.get(regItem.key);
-            if (mapItem) {
-                regItem.occurrenceCount = mapItem.count;
-                if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
-                    regItem.afterCoeff = mapItem.afterCoeff;
-                }
-            } else {
-                regItem.occurrenceCount = 0;
-            }
-        }
-
-        for (const [key, value] of registryMap) {
-            const exists = veinRegistry.some(item => item.key === key);
-            if (!exists) {
-                const sampleVein = veins.find(v => {
-                    const rev = [...history].reverse();
-                    const cBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
-                    return generateVeinKey(v, cBefore) === key;
-                });
-
-                if (sampleVein) {
-                    const rev = [...history].reverse();
-                    const coeffBefore = (sampleVein.startIndex > 0) ? rev[sampleVein.startIndex - 1] : null;
-                    
-                    let shouldAdd = false;
-                    
-                    if (sampleVein.type === 'قرمز') {
-                        const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff;
-                        if (cAfter !== null && cAfter !== undefined) {
-                            if (cBefore >= 1.80 && cAfter >= 1.80) {
-                                shouldAdd = true;
-                            }
-                        }
-                    } else if (sampleVein.type === 'سبز') {
-                        const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff;
-                        if (cAfter !== null && cAfter !== undefined) {
-                            if (cBefore <= 1.79 && cAfter <= 1.79) {
-                                shouldAdd = true;
-                            }
-                        }
-                    }
-
-                    if (shouldAdd) {
-                        veinRegistry.push({
-                            id: nextVeinId++,
-                            key: key,
-                            type: sampleVein.type,
-                            length: sampleVein.length,
-                            members: sampleVein.members,
-                            coeffBefore: coeffBefore || 0,
-                            afterCoeff: sampleVein.afterCoeff || 0,
-                            occurrenceCount: value.count
-                        });
-                    }
-                }
-            }
-        }
-
-        veinRegistry.sort((a, b) => a.id - b.id);
-        renderVeinRegistryTable();
+        registryMap.get(key).count++;
     }
+
+    for (let i = 0; i < veinRegistry.length; i++) {
+        const regItem = veinRegistry[i];
+        const mapItem = registryMap.get(regItem.key);
+        if (mapItem) {
+            regItem.occurrenceCount = mapItem.count;
+            if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
+                regItem.afterCoeff = mapItem.afterCoeff;
+            }
+        } else {
+            regItem.occurrenceCount = 0;
+        }
+    }
+
+    for (const [key, value] of registryMap) {
+        const exists = veinRegistry.some(item => item.key === key);
+        if (!exists) {
+            const sampleVein = veins.find(v => {
+                const rev = [...history].reverse();
+                const cBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
+                return generateVeinKey(v, cBefore) === key;
+            });
+
+            if (sampleVein) {
+                const rev = [...history].reverse();
+                const coeffBefore = (sampleVein.startIndex > 0) ? rev[sampleVein.startIndex - 1] : null;
+                
+                let shouldAdd = false;
+                
+                if (sampleVein.type === 'قرمز') {
+                    const cBefore = coeffBefore || 0;
+                    const cAfter = sampleVein.afterCoeff;
+                    if (cAfter !== null && cAfter !== undefined) {
+                        if (cBefore >= 1.80 && cAfter >= 1.80) {
+                            shouldAdd = true;
+                        }
+                    }
+                } else if (sampleVein.type === 'سبز') {
+                    const cBefore = coeffBefore || 0;
+                    const cAfter = sampleVein.afterCoeff;
+                    if (cAfter !== null && cAfter !== undefined) {
+                        if (cBefore <= 1.79 && cAfter <= 1.79) {
+                            shouldAdd = true;
+                        }
+                    }
+                }
+
+                if (shouldAdd) {
+                    veinRegistry.push({
+                        id: nextVeinId++,
+                        key: key,
+                        type: sampleVein.type,
+                        length: sampleVein.length,
+                        members: sampleVein.members,
+                        coeffBefore: coeffBefore || 0,
+                        afterCoeff: sampleVein.afterCoeff || 0,
+                        occurrenceCount: value.count
+                    });
+                }
+            }
+        }
+    }
+
+    veinRegistry.sort((a, b) => a.id - b.id);
+    renderVeinRegistryTable();
+}
 
     function renderVeinRegistryTable() {
         const container = document.getElementById('vein-registry-container');
@@ -696,7 +700,7 @@
                                 if (lastVein.startIndex > 0) {
                                     const coeffBefore = chronological[lastVein.startIndex - 1];
                                     if (result === coeffBefore) {
-                                        const veinKey = generateVeinKey(lastVein, coeffBefore);
+                                        const veinKey = generateVeinKey(lastVein);
                                         const regItem = veinRegistry.find(item => item.key === veinKey);
                                         
                                         if (regItem) {
@@ -1076,7 +1080,7 @@
                 this.style.background = "#17a2b8";
                 setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
             }).catch(err => alert("خطا در کپی: " + err));
-        });
+        };
 
         document.getElementById('chk-green-pattern').addEventListener('change', function() {
             greenPatternEnabled = this.checked;
@@ -1120,4 +1124,4 @@
     // ====================== ۱۲. راه‌اندازی نهایی ======================
     setTimeout(safeHook, 1000);
     console.log('🤖 ربات با الگوی سبز نوع ۱ و ماشین حالت سه‌مرحله‌ای با ثبت‌کننده بارگذاری شد.');
-})(); /* EOF */
+})();

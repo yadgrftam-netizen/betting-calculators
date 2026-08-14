@@ -214,12 +214,12 @@
                 const endIndex = i - 1;
                 const afterCoeff = (endIndex + 1 < n) ? rev[endIndex + 1] : null;
                 
-                veins.push({
-                    startIndex: startIndex,
-                    endIndex: endIndex,
-                    members: members,
-                    length: members.length,
-                    type: type,
+                veins.push({ 
+                    startIndex, 
+                    endIndex, 
+                    members, 
+                    length: members.length, 
+                    type,
                     afterCoeff: afterCoeff
                 });
             } else { i++; }
@@ -248,9 +248,7 @@
             const mapItem = registryMap.get(regItem.key);
             if (mapItem) {
                 regItem.occurrenceCount = mapItem.count;
-                if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
-                    regItem.afterCoeff = mapItem.afterCoeff;
-                }
+                regItem.afterCoeff = mapItem.afterCoeff;
             } else {
                 regItem.occurrenceCount = 0;
             }
@@ -268,19 +266,15 @@
                     
                     if (sampleVein.type === 'قرمز') {
                         const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff;
-                        if (cAfter !== null && cAfter !== undefined) {
-                            if (cBefore >= 1.80 && cAfter >= 1.80) {
-                                shouldAdd = true;
-                            }
+                        const cAfter = sampleVein.afterCoeff || 0;
+                        if (cBefore >= 1.80 && cAfter >= 1.80) {
+                            shouldAdd = true;
                         }
                     } else if (sampleVein.type === 'سبز') {
                         const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff;
-                        if (cAfter !== null && cAfter !== undefined) {
-                            if (cBefore <= 1.79 && cAfter <= 1.79) {
-                                shouldAdd = true;
-                            }
+                        const cAfter = sampleVein.afterCoeff || 0;
+                        if (cBefore <= 1.79 && cAfter <= 1.79) {
+                            shouldAdd = true;
                         }
                     }
 
@@ -358,10 +352,10 @@
             const beforeEnd = (v.endIndex > 0) ? rev[v.endIndex - 1] : null;
 
             if (beforeStart !== null && beforeStart > 0) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart: beforeStart, beforeEnd: beforeEnd || 0 });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart, beforeEnd: beforeEnd || 0 });
             }
             if (beforeEnd !== null && beforeEnd > 0 && beforeEnd !== beforeStart) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd: beforeEnd });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd });
             }
         }
         return patterns;
@@ -1066,7 +1060,7 @@
                 this.style.background = "#17a2b8";
                 setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
             }).catch(err => alert("خطا در کپی: " + err));
-        });
+        };
 
         document.getElementById('chk-green-pattern').addEventListener('change', function() {
             greenPatternEnabled = this.checked;

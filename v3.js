@@ -215,11 +215,11 @@
                 const afterCoeff = (endIndex + 1 < n) ? rev[endIndex + 1] : null;
                 
                 veins.push({ 
-                    startIndex, 
-                    endIndex, 
-                    members, 
-                    length: members.length, 
-                    type,
+                    startIndex: startIndex,
+                    endIndex: endIndex,
+                    members: members,
+                    length: members.length,
+                    type: type,
                     afterCoeff: afterCoeff
                 });
             } else { i++; }
@@ -244,13 +244,12 @@
             registryMap.get(key).count++;
         }
 
-        // ۱. به‌روزرسانی رگه‌های موجود (اصلاح اصلی اینجاست)
+        // ۱. به‌روزرسانی رگه‌های موجود
         for (let i = 0; i < veinRegistry.length; i++) {
             const regItem = veinRegistry[i];
             const mapItem = registryMap.get(regItem.key);
             if (mapItem) {
                 regItem.occurrenceCount = mapItem.count;
-                // اگر ضریب بعدی در تاریخچه جدید وجود دارد و null نیست، آن را جایگزین کن
                 if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
                     regItem.afterCoeff = mapItem.afterCoeff;
                 }
@@ -274,13 +273,11 @@
                     if (sampleVein.type === 'قرمز') {
                         const cBefore = coeffBefore || 0;
                         const cAfter = sampleVein.afterCoeff;
-                        // اگر ضریب بعدی موجود است، هر دو شرط را چک کن
                         if (cAfter !== null && cAfter !== undefined) {
                             if (cBefore >= 1.80 && cAfter >= 1.80) {
                                 shouldAdd = true;
                             }
                         } else {
-                            // اگر ضریب بعدی هنوز موجود نیست، فقط ضریب قبل را چک کن و ثبت کن
                             if (cBefore >= 1.80) {
                                 shouldAdd = true;
                             }
@@ -309,7 +306,7 @@
                             length: sampleVein.length,
                             members: sampleVein.members,
                             coeffBefore: coeffBefore || 0,
-                            afterCoeff: sampleVein.afterCoeff || 0, // اگر null است 0 می‌شود (که در جدول '-' نمایش داده می‌شود)
+                            afterCoeff: sampleVein.afterCoeff || 0,
                             occurrenceCount: value.count
                         });
                     }
@@ -375,10 +372,10 @@
             const beforeEnd = (v.endIndex > 0) ? rev[v.endIndex - 1] : null;
 
             if (beforeStart !== null && beforeStart > 0) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart, beforeEnd: beforeEnd || 0 });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeStart}`, beforeStart: beforeStart, beforeEnd: beforeEnd || 0 });
             }
             if (beforeEnd !== null && beforeEnd > 0 && beforeEnd !== beforeStart) {
-                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd });
+                patterns.push({ type: 'سبز', key: `سبز_${beforeEnd}`, beforeStart: beforeStart || 0, beforeEnd: beforeEnd });
             }
         }
         return patterns;

@@ -227,18 +227,26 @@
         return veins;
     }
 
-    function generateVeinKey(vein) {
-        return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}`;
+    // ===== تغییر ۱: تابع تولید کلید اصلاح‌شده =====
+    function generateVeinKey(vein, coeffBefore) {
+        // حالا کلید شامل: نوع_طول_اعضا_ضریب قبل_ضریب بعد است
+        return `${vein.type}_${vein.length}_${JSON.stringify(vein.members)}_${(coeffBefore || 0).toFixed(2)}_${(vein.afterCoeff || 0).toFixed(2)}`;
     }
 
+    // ===== تغییر ۲: تابع ثبت‌کننده اصلاح‌شده =====
     function updateVeinRegistry(history) {
         const veins = extractVeins(history);
         const registryMap = new Map();
         
         for (const v of veins) {
-            const key = generateVeinKey(v);
+            const rev = [...history].reverse();
+            const coeffBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
+            
+            // استفاده از کلید جدید که شامل ضریب قبل و بعد هم هست
+            const key = generateVeinKey(v, coeffBefore);
+            
             if (!registryMap.has(key)) {
-                registryMap.set(key, { count: 0, beforeCoeff: null, afterCoeff: v.afterCoeff });
+                registryMap.set(key, { count: 0, beforeCoeff: coeffBefore, afterCoeff: v.afterCoeff });
             }
             registryMap.get(key).count++;
         }
@@ -248,7 +256,9 @@
             const mapItem = registryMap.get(regItem.key);
             if (mapItem) {
                 regItem.occurrenceCount = mapItem.count;
-                regItem.afterCoeff = mapItem.afterCoeff;
+                if (mapItem.afterCoeff !== null && mapItem.afterCoeff !== undefined) {
+                    regItem.afterCoeff = mapItem.afterCoeff;
+                }
             } else {
                 regItem.occurrenceCount = 0;
             }
@@ -257,7 +267,12 @@
         for (const [key, value] of registryMap) {
             const exists = veinRegistry.some(item => item.key === key);
             if (!exists) {
-                const sampleVein = veins.find(v => generateVeinKey(v) === key);
+                const sampleVein = veins.find(v => {
+                    const rev = [...history].reverse();
+                    const cBefore = (v.startIndex > 0) ? rev[v.startIndex - 1] : null;
+                    return generateVeinKey(v, cBefore) === key;
+                });
+
                 if (sampleVein) {
                     const rev = [...history].reverse();
                     const coeffBefore = (sampleVein.startIndex > 0) ? rev[sampleVein.startIndex - 1] : null;
@@ -266,15 +281,21 @@
                     
                     if (sampleVein.type === 'قرمز') {
                         const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff || 0;
-                        if (cBefore >= 1.80 && cAfter >= 1.80) {
-                            shouldAdd = true;
+                        const cAfter = sampleVein.afterCoeff;
+                        // فقط وقتی ضریب بعدی وجود دارد (null نباشد) ثبت کن
+                        if (cAfter !== null && cAfter !== undefined) {
+                            if (cBefore >= 1.80 && cAfter >= 1.80) {
+                                shouldAdd = true;
+                            }
                         }
                     } else if (sampleVein.type === 'سبز') {
                         const cBefore = coeffBefore || 0;
-                        const cAfter = sampleVein.afterCoeff || 0;
-                        if (cBefore <= 1.79 && cAfter <= 1.79) {
-                            shouldAdd = true;
+                        const cAfter = sampleVein.afterCoeff;
+                        // فقط وقتی ضریب بعدی وجود دارد (null نباشد) ثبت کن
+                        if (cAfter !== null && cAfter !== undefined) {
+                            if (cBefore <= 1.79 && cAfter <= 1.79) {
+                                shouldAdd = true;
+                            }
                         }
                     }
 
@@ -680,7 +701,7 @@
                                 if (lastVein.startIndex > 0) {
                                     const coeffBefore = chronological[lastVein.startIndex - 1];
                                     if (result === coeffBefore) {
-                                        const veinKey = generateVeinKey(lastVein);
+                                        const veinKey = generateVeinKey(lastVein, coeffBefore);
                                         const regItem = veinRegistry.find(item => item.key === veinKey);
                                         
                                         if (regItem) {
@@ -1060,7 +1081,7 @@
                 this.style.background = "#17a2b8";
                 setTimeout(() => { this.textContent = originalText; this.style.background = "#007bff"; }, 2000);
             }).catch(err => alert("خطا در کپی: " + err));
-        };
+        });
 
         document.getElementById('chk-green-pattern').addEventListener('change', function() {
             greenPatternEnabled = this.checked;
